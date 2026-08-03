@@ -4098,6 +4098,60 @@ app.post("/api/agent/ai/gemini", async (req, res) => {
   }
 });
 
+// ── Multi-Provider AI Router (MR Multi Model AI Coder) ──────────────────────
+// POST /api/agent/ai/multi — Routes to configured provider (Gemini / MR Router / auto)
+app.post("/api/agent/ai/multi", async (req, res) => {
+  try {
+    const { prompt, model, system_prompt, temperature, max_tokens, provider: reqProvider } = req.body ?? {};
+    if (!prompt) return res.status(400).json({ error: "prompt requerido" });
+
+    // Allow per-request provider override
+    const effectiveProvider = reqProvider || process.env.AI_PROVIDER || "gemini";
+    const originalProvider = process.env.AI_PROVIDER;
+    process.env.AI_PROVIDER = effectiveProvider;
+
+    try {
+      // Dynamic import of the AI router module
+      const { generateFromRouter, getAvailableModels } = await import("./src/lib/ai-router.ts");
+
+      // If requesting available models
+      if (req.body?.list_models) {
+        return res.json({ models: getAvailableModels(), activeProvider: effectiveProvider });
+      }
+
+      const result = await generateFromRouter({
+        prompt,
+        model,
+        systemPrompt: system_prompt,
+        temperature,
+        maxTokens: max_tokens,
+      });
+
+      // Track usage async
+      const costUsd = (result.tokensIn * 0.000000075) + (result.tokensOut * 0.0000003);
+      pgPool.query(
+        `INSERT INTO api_usage_logs (api_name, endpoint, cost_usd, tokens_in, tokens_out)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [result.provider, model || "default", costUsd, result.tokensIn, result.tokensOut]
+      ).catch(() => {});
+
+      res.json({
+        text: result.text,
+        provider: result.provider,
+        model: result.model,
+        tokensIn: result.tokensIn,
+        tokensOut: result.tokensOut,
+        costUsd,
+      });
+    } finally {
+      process.env.AI_PROVIDER = originalProvider;
+    }
+  } catch (err: any) {
+    console.error("[Multi-Provider AI Router]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/ai/chat — Multi-turn chat with role personas and custom model speeds
 app.post("/api/ai/chat", async (req, res) => {
   try {

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ActiveTab } from './types';
+import { useAuth } from './lib/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { OverviewTab } from './components/OverviewTab';
@@ -41,51 +42,21 @@ import PublicWebsite from './components/PublicWebsite';
 import { AuthButton } from './components/AuthButton';
 
 export default function App() {
+  const { user, loading: authLoading, refreshSession, notifyAuthChange } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [currency, setCurrency] = useState('USD');
   const [region, setRegion] = useState('LATAM (All)');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
-
-  const fetchSession = async () => {
-    try {
-      const res = await fetch('/api/auth/me', {
-        headers: { 'Cache-Control': 'no-cache' }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.user) {
-          setCurrentUser(data.user.username);
-          return;
-        }
-      }
-      setCurrentUser(null);
-    } catch (err) {
-      console.warn('[App] Session check failed:', err);
-      setCurrentUser(null);
-    }
-  };
+  const currentUser = user?.username ?? null;
 
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      setCurrentUser(null);
-      window.dispatchEvent(new Event('auth-changed'));
+      notifyAuthChange();
     } catch (err) {
       console.error(err);
     }
   };
-
-  useEffect(() => {
-    fetchSession();
-    const handleAuthChange = () => {
-      fetchSession();
-    };
-    window.addEventListener('auth-changed', handleAuthChange);
-    return () => {
-      window.removeEventListener('auth-changed', handleAuthChange);
-    };
-  }, []);
 
   if (activeTab === 'public_website') {
     return (

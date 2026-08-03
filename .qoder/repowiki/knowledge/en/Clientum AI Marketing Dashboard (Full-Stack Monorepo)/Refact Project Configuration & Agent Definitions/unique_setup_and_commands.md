@@ -1,1 +1,0 @@
-No build or setup commands; the directory is consumed directly by the Refact tooling. The `schema_version: 1` field in `project_information.yaml` indicates versioned configuration semantics that must be respected when editing.

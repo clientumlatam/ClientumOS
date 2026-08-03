@@ -1,1 +1,0 @@
-Full-stack React + Express application that powers the Clientum AI marketing dashboard, combining a Vite-built SPA frontend with an Express backend serving auth, CRM, Gemini AI, email, and PostgreSQL-backed APIs.

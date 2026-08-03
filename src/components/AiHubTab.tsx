@@ -1,39 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Mic, Search, MapPin, Zap, Brain, Send, Volume2, Save, Cloud, Shield, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../lib/AuthContext';
 
 export function AiHubTab() {
+  const { user: currentUser } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState<'grounding' | 'thinking' | 'voice' | 'flash_lite' | 'cloud_sync'>('grounding');
-  const [currentUser, setCurrentUser] = useState<any>(null);
-
-  const fetchSessionUser = async () => {
-    try {
-      const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.user) {
-          setCurrentUser(data.user);
-          return;
-        }
-      }
-      setCurrentUser(null);
-    } catch (err) {
-      console.warn('[AiHubTab] Error fetching session user:', err);
-      setCurrentUser(null);
-    }
-  };
-
-  useEffect(() => {
-    fetchSessionUser();
-
-    const handleAuthChange = () => {
-      fetchSessionUser();
-    };
-
-    window.addEventListener('auth-changed', handleAuthChange);
-    return () => {
-      window.removeEventListener('auth-changed', handleAuthChange);
-    };
-  }, []);
 
   const [queryText, setQueryText] = useState('Tendencias de marketing B2B en Patagonia Argentina 2026');
   const [groundingType, setGroundingType] = useState<'search' | 'maps'>('search');

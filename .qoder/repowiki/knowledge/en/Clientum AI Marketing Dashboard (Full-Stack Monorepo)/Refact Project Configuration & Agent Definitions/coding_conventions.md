@@ -1,3 +1,0 @@
-- Configuration files use a top-level `enabled` flag per section to opt-in/out features, paired with size-limit fields like `max_chars`, `max_items`, or `max_depth` to bound context size.
-- Each subdirectory groups related agent/tooling definitions under a single namespace (e.g., `buddy/`, `subagents/`, `toolbox_commands/`) rather than mixing unrelated configs in the same folder.
-- Runtime artifacts are kept separate from static config: persistent logs like `runtime_queue.jsonl` live alongside but are clearly distinguished by their `.jsonl` extension and event-schema structure.

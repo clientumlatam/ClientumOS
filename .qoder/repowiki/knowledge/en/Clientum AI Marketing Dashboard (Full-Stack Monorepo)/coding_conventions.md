@@ -1,5 +1,0 @@
-- All API routes are registered directly on the Express `app` instance in `server.ts` rather than split into separate router files.
-- Authentication uses session-based cookies (no JWT); user identity is stored in `req.session.userId` / `username` / `role` and re-validated against the database on protected endpoints.
-- Environment-sensitive services (database, session store, SMTP, Neon Auth, Gemini) are gated behind `process.env` checks with explicit local/mock fallbacks when configuration is missing.
-- Database operations go through a single `pg.Pool` instance created at module load, with transactions wrapped in `BEGIN`/`COMMIT`/`ROLLBACK` around write paths that mutate shared state.
-- Error responses follow a uniform `{ error: string }` JSON shape across all endpoints, with HTTP status codes derived from validation or upstream service responses.

@@ -1,1 +1,0 @@
-React application root that mounts the app, manages active tab routing across all feature tabs, handles session/authentication state, and composes the sidebar, header, breadcrumbs, command palette, and public website view.

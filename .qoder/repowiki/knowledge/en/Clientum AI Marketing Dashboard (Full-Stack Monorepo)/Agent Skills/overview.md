@@ -1,1 +1,0 @@
-Placeholder directory for agent skill definitions under .agents/skills, currently empty with no source files present.

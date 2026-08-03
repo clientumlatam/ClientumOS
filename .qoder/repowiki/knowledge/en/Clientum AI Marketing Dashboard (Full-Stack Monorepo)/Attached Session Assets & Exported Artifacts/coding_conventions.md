@@ -1,2 +1,0 @@
-- Every filename follows a `<descriptive-prefix>_<unix-milliseconds>.<ext>` naming scheme, preserving both human context and a precise timestamp for ordering.
-- Artifacts are kept as raw, unprocessed exports (no transformation, indexing, or schema) so they remain faithful copies of their source sessions.

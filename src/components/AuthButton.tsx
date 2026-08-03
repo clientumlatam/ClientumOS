@@ -1,20 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LogIn, LogOut, User as UserIcon, Shield, X, Loader2, KeyRound, Mail, UserPlus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-
-interface SessionUser {
-  id: number;
-  username: string;
-  role: string;
-}
+import { useAuth, type SessionUser } from '../lib/AuthContext';
 
 interface AuthButtonProps {
   compact?: boolean;
 }
 
 export function AuthButton({ compact = false }: AuthButtonProps) {
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [checkingSession, setCheckingSession] = useState(true);
+  const { user, loading: checkingSession, setUser, notifyAuthChange } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
 
@@ -24,40 +18,6 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchSession = async () => {
-    try {
-      const res = await fetch('/api/auth/me', {
-        headers: { 'Cache-Control': 'no-cache' }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.user) {
-          setUser(data.user);
-          return;
-        }
-      }
-      setUser(null);
-    } catch (err) {
-      console.warn('[AuthButton] Session check failed:', err);
-      setUser(null);
-    } finally {
-      setCheckingSession(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSession();
-
-    const handleAuthChange = () => {
-      fetchSession();
-    };
-
-    window.addEventListener('auth-changed', handleAuthChange);
-    return () => {
-      window.removeEventListener('auth-changed', handleAuthChange);
-    };
-  }, []);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,7 +96,7 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
       setShowModal(false);
       setPassword('');
       setConfirmPassword('');
-      window.dispatchEvent(new Event('auth-changed'));
+      notifyAuthChange();
     } catch (err: any) {
       setError(err.message || 'Error al procesar la solicitud.');
     } finally {
@@ -153,7 +113,7 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
         // ignore
       }
       setUser(null);
-      window.dispatchEvent(new Event('auth-changed'));
+      notifyAuthChange();
     } catch (err) {
       console.error('[AuthButton] Error logging out:', err);
     } finally {

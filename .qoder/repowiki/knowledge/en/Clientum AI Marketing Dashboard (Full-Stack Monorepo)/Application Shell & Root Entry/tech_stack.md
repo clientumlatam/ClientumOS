@@ -1,1 +1,0 @@
-React 18 with `createRoot` (no framework like Vite/Remix in this scope), Tailwind CSS loaded via `@import "tailwindcss"`, and plain `fetch` for API calls against `/api/auth/*` endpoints.

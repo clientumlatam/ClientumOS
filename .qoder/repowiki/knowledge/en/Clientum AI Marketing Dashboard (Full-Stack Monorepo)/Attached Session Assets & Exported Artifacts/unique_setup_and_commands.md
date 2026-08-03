@@ -1,1 +1,0 @@
-No setup or build commands apply. Files appear to be manually or tool-exported snapshots (the `.md` files are powered by Claude Exporter; the CSV is a Vercel log export) and should be treated as immutable reference material.

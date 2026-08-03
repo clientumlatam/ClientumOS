@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "summary": {},
+  "dimensions": [
+    {
+      "id": "task-understanding"
+    },
+    {
+      "id": "controlled-execution"
+    },
+    {
+      "id": "change-validation"
+    },
+    {
+      "id": "reliable-delivery"
+    },
+    {
+      "id": "learning-capture"
+    }
+  ],
+  "findings": [
+    {
+      "id": "server-monolith-context-barrier"
+    },
+    {
+      "id": "no-behavioral-validation-surface"
+    },
+    {
+      "id": "no-task-routing-documentation"
+    },
+    {
+      "id": "core-diagnostic-route-blocked"
+    },
+    {
+      "id": "skills-configured-without-observed-use"
+    }
+  ]
+}

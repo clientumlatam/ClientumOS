@@ -1,4 +1,0 @@
-- Feature tabs are registered by adding a new string literal to the `ActiveTab` union in `types.ts` and then adding a corresponding conditional JSX branch in `App.tsx` — there is no router or registry file.
-- Authentication state is propagated across components using a custom `auth-changed` DOM event dispatched via `window.dispatchEvent(new Event('auth-changed'))` rather than a centralized store.
-- Each feature tab is imported directly at the top of `App.tsx` and rendered through a simple `activeTab === 'key' && <Component/>` pattern instead of lazy loading or dynamic imports.
-- Global UI state (active tab, currency, region, command palette visibility, current user) is kept in local `useState` hooks within `App` and passed down as props to children.

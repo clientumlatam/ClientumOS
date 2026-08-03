@@ -1,0 +1,192 @@
+{
+  "summary": {
+    "projectName": "Clientum CRM — react-example",
+    "locale": "en",
+    "modelId": "agent-work-loop-v4",
+    "reportContractVersion": 25,
+    "overview": "The project has setup and diagnostic scripts, and three configured Skills, but lacks tests, behavioral validation, agent routing documentation, and the Express server is a 5169-line monolith without a structured diagnostic route.",
+    "aiAgentPractice": {
+      "inspectedSurfaces": [
+        "Skills"
+      ],
+      "coverageRows": [
+        {
+          "surface": "Skills",
+          "scopes": [
+            "Project"
+          ],
+          "count": 3,
+          "paths": [
+            ".qoder/skills/neon-vercel-deploy/SKILL.md",
+            ".agents/skills/supabase/SKILL.md",
+            ".agents/skills/supabase-postgres-best-practices/SKILL.md"
+          ]
+        },
+        {
+          "surface": "Custom Agents",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Rules",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "MCP",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Hooks",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        }
+      ]
+    },
+    "assignmentSummaries": [],
+    "dimensions": [
+      {
+        "id": "task-understanding",
+        "label": "Task Understanding",
+        "score": 45,
+        "summary": "No AGENTS.md or architecture documentation; the agent must infer context boundaries, risks, and owner routes from code structure alone.",
+        "findingRefs": [
+          "server-monolith-context-barrier",
+          "no-task-routing-documentation"
+        ]
+      },
+      {
+        "id": "controlled-execution",
+        "label": "Controlled Execution",
+        "score": 62,
+        "summary": "Startup, build, and doctor scripts are functional and the environment can start, but permission configuration and state isolation are not documented.",
+        "findingRefs": [
+          "core-diagnostic-route-blocked"
+        ]
+      },
+      {
+        "id": "change-validation",
+        "label": "Change Validation",
+        "score": 35,
+        "summary": "The only check is tsc --noEmit; no unit, integration, E2E tests, or CI pipeline exist. Behavioral changes have no safety net.",
+        "findingRefs": [
+          "server-monolith-context-barrier",
+          "no-behavioral-validation-surface",
+          "core-diagnostic-route-blocked"
+        ]
+      },
+      {
+        "id": "reliable-delivery",
+        "label": "Reliable Delivery",
+        "score": 45,
+        "summary": "Vercel deployment infrastructure exists but there is no evidence of real-boundary acceptance, rollback, or documented recovery.",
+        "findingRefs": [
+          "no-behavioral-validation-surface"
+        ]
+      },
+      {
+        "id": "learning-capture",
+        "label": "Learning Capture",
+        "score": 40,
+        "summary": "Three Skills are configured but none show observed use in tasks; no evidence of reusable opportunity detection or validated improvement.",
+        "findingRefs": [
+          "skills-configured-without-observed-use"
+        ]
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "server-monolith-context-barrier",
+      "title": "server.ts concentrates 5169 lines of authentication, database, session, and API route logic in a single file",
+      "severity": "High",
+      "reason": "server.ts contains the Express server, PostgreSQL pool, session handling, bcrypt authentication, Google GenAI integration, lead management, and business logic — all in one module. Any change requires understanding the entire file, and edits in one section can affect unrelated behaviors. The agent cannot trace context boundaries or assess change risk without reading all 5169 lines.",
+      "expectedOutput": [
+        "Each concern (auth, DB, sessions, API routes) has its own file with clear boundaries",
+        "server.ts reduces to top-level composition and middleware",
+        "The agent can assess change risk by opening only the affected module"
+      ],
+      "expectedArtifact": "Decomposed modules in src/routes/ or src/services/",
+      "aiFixPrompt": "/better-harness fix this issue\n\nExtract authentication routes, database management, and API logic from server.ts into independent modules with delimited responsibilities.\n\n## Validation\n\n- Run `npx tsc --noEmit` to confirm compilation passes\n- Verify each exported module has a single responsibility\n- Confirm the server starts with `npm run dev`",
+      "dimensionRefs": [
+        "task-understanding",
+        "change-validation"
+      ]
+    },
+    {
+      "id": "no-behavioral-validation-surface",
+      "title": "No automated tests or behavioral validation pipeline exists",
+      "severity": "High",
+      "reason": "The project has no test files (.test.*, .spec.*) outside node_modules. The lint script is only tsc --noEmit which checks static types but not behavior. No CI configuration exists (.github, .gitlab, vercel.json with checks). Changes to authentication logic, external API integrations (Google GenAI, Apify, Supabase), or React components have no behavioral verification. The agent cannot confirm that a change produces the correct result.",
+      "expectedOutput": [
+        "An `npm test` script runs tests with actionable results",
+        "Critical routes (auth, DB, API) have at least one behavioral test",
+        "The agent can run relevant verification after each change"
+      ],
+      "expectedArtifact": "Test files in src/__tests__/ or alongside modules",
+      "aiFixPrompt": "/better-harness fix this issue\n\nAdd minimal tests covering critical change routes: authentication, database connection, and at least one component render smoke test.\n\n## Validation\n\n- Run tests with a dedicated command\n- Confirm tests fail when an incorrect change is introduced\n- Add a `test` script to package.json",
+      "dimensionRefs": [
+        "change-validation",
+        "reliable-delivery"
+      ]
+    },
+    {
+      "id": "no-task-routing-documentation",
+      "title": "No task routing documentation (AGENTS.md or equivalent) for a project with 54 components and multiple integrations",
+      "severity": "Medium",
+      "reason": "The project has 54 TSX component files, integrations with Supabase, Google GenAI, Firebase, Apify, PostgreSQL, and a 5169-line Express server, but no AGENTS.md, technical README, or architecture document to guide the agent to the correct owner, context boundaries, material risks, or next steps. The agent must infer the entire structure from source code without indication of which files are core, which are supporting, or where risks lie.",
+      "expectedOutput": [
+        "The agent can identify the owner module for a task without reading all code",
+        "Context boundaries and risks are explicit",
+        "Support commands (setup, dev, build, lint, doctor) are documented"
+      ],
+      "expectedArtifact": "AGENTS.md at project root",
+      "aiFixPrompt": "/better-harness fix this issue\n\nCreate an AGENTS.md at the project root documenting: overall architecture, main modules and their responsibilities, owner routes for common tasks, risks and context boundaries, and setup/build/validation commands.\n\n## Validation\n\n- Confirm AGENTS.md references main modules (server.ts, App.tsx, components/, agents/)\n- Verify setup and validation commands are executable\n- Confirm a new agent can identify the correct owner for a typical task",
+      "dimensionRefs": [
+        "task-understanding"
+      ]
+    },
+    {
+      "id": "core-diagnostic-route-blocked",
+      "title": "The core file (server.ts) has no structured diagnostic route for failure debugging",
+      "severity": "Medium",
+      "reason": "server.ts uses console.log/console.warn/console.error without structured format, no correlation IDs, no observability facade, and no module separation. When an API endpoint fails, a database query errors, or a Google GenAI integration fails, the agent has no discoverable, readable, and correlatable route to diagnose the failure. Log output is an unstructured sequence of messages that cannot be linked to a specific request.",
+      "expectedOutput": [
+        "Each request has a correlation ID traceable across all logs",
+        "Logs identify the source component (auth, db, api-route)",
+        "The agent can correlate a failure with the request that caused it"
+      ],
+      "expectedArtifact": "Structured logging middleware and request-id",
+      "aiFixPrompt": "/better-harness fix this issue\n\nAdd a structured logging facade to server.ts including: log level, source component, and per-request correlation ID. Create a request-id middleware that generates a unique identifier per request.\n\n## Validation\n\n- Run `npm run dev` and confirm logs have structured format\n- Verify each HTTP request has a traceable correlation ID\n- Confirm `npx tsc --noEmit` passes",
+      "dimensionRefs": [
+        "change-validation",
+        "controlled-execution"
+      ]
+    },
+    {
+      "id": "skills-configured-without-observed-use",
+      "title": "Three Skills are configured but none show observed use or effectiveness validation in project tasks",
+      "severity": "Low",
+      "reason": "Skills neon-vercel-deploy, supabase, and supabase-postgres-best-practices are present as project assets with defined triggers and procedures. However, session analysis shows no observed invocation, and the evidence window is limited (1 session of 3.5 minutes). Skills have partial coverage: neon-vercel-deploy lacks validation, supabase lacks defined output. Effectiveness cannot be confirmed nor that they cover real project needs. Evidence is insufficient to validate use or outcome.",
+      "expectedOutput": [
+        "Each Skill has a complete definition (trigger, procedure, output, validation)",
+        "At least one Skill is invoked and contributes to an observable task result",
+        "Skill effectiveness can be evaluated in a later window"
+      ],
+      "expectedArtifact": "Skills updated with complete triggers, outputs, and validation",
+      "aiFixPrompt": "/better-harness fix this issue\n\nReview the three configured Skills and complete missing fields: add validation to neon-vercel-deploy, define expected output in supabase, and verify triggers match real project tasks.\n\n## Validation\n\n- Confirm each Skill has trigger, procedure, output, and validation defined\n- Verify at least one Skill is invoked in a relevant task flow\n- Execute the associated task and confirm the Skill contributes to the result",
+      "dimensionRefs": [
+        "learning-capture"
+      ]
+    }
+  ]
+}

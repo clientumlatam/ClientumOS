@@ -1,1 +1,0 @@
-Holds Refact project configuration, agent definitions, and runtime artifacts for background agents, buddies, code lens, knowledge bases, modes, subagents, tasks, toolbox commands, and execution trajectories.

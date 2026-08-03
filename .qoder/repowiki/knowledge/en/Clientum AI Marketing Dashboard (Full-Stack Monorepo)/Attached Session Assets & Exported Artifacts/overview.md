@@ -1,1 +1,0 @@
-A flat directory of session-exported artifacts — Claude conversation exports, TypeScript build error logs, Vercel production CSV logs, and screenshots — attached to this project for reference and audit.
