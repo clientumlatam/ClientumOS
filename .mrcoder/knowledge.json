@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "facts": [
+    {
+      "category": "workflow",
+      "key": "pkg-manager",
+      "value": "bun",
+      "lastSeen": "2026-08-03T07:11:53.888Z",
+      "confidence": 32
+    }
+  ]
+}
