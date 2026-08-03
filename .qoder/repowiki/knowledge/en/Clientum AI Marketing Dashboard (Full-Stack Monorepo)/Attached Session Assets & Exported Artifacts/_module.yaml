@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: assets_and_public
+title: Attached Session Assets & Exported Artifacts
+scope:
+    - attached_assets/
+source_files: []
+depends_on: []
+related_to: []

@@ -1,0 +1,1 @@
+N/A — this directory contains only exported artifacts (Markdown, TXT, CSV, PNG); no executable code or framework is present.

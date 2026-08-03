@@ -1,0 +1,1 @@
+Node.js ESM modules (`.mjs`) with built-in `fetch`, `crypto`, and dynamic imports; Python 3 with stdlib `json`, `csv`, `re`, `pathlib`; GitHub Actions secrets encrypted via libsodium (`tweetsodium`) with `gh` CLI fallback; Vercel REST API v9; Neon PostgreSQL driver loaded lazily via dynamic `import('pg')`.

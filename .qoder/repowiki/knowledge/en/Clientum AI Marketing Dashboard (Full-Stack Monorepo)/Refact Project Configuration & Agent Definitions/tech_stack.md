@@ -1,0 +1,1 @@
+YAML and JSON for all configuration files; JSONL for the buddy runtime event queue. No code, scripts, or build manifests are present — this is pure declarative configuration.

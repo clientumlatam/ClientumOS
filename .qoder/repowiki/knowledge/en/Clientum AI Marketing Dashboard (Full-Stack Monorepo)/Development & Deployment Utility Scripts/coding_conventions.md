@@ -1,0 +1,6 @@
+- Scripts use ANSI color helpers (G/R/Y/B/D or GREEN/RED/YELLOW/BOLD/DIM) defined locally at the top of each file for terminal output formatting.
+- External API calls use native `fetch` with `AbortSignal.timeout(8000)` for consistent timeout handling across all integration checks.
+- Environment variable loading follows a priority chain: `.env.local` parsed first, then `process.env`, with placeholder detection (values starting with `eyJ` or matching patterns like `MY_*`) treated as unconfigured.
+- Secrets are declared in a central configuration object at the top of each script (e.g., `SECRETS` array in `setup-check.mjs`, `SYNC_MAP` in `sync-secrets.mjs`, `DEFAULT_VARS` in `generate-env.mjs`) rather than being scattered inline.
+- Error paths consistently log a red error message and call `process.exit(1)` for fatal failures, while non-fatal issues return `{status: 'warn' | 'fail', message}` objects.
+- Scripts that modify files write them with a header comment including an ISO timestamp and generation attribution, and guard against overwriting by prompting for confirmation when the target file already exists.

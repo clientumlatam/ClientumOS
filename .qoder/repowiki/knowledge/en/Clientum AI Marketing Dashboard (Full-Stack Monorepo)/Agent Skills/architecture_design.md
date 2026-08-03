@@ -1,0 +1,1 @@
+The module scope is limited to the .agents/skills directory which exists but contains no files or subdirectories. No internal layering, interfaces, or dependencies can be identified from this empty scope.

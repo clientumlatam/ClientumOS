@@ -1,0 +1,1 @@
+Node.js and Python utility scripts for environment bootstrapping, secret synchronization between Replit/Vercel/GitHub, health checks against external integrations, and catalog enrichment for the Clientum CRM.

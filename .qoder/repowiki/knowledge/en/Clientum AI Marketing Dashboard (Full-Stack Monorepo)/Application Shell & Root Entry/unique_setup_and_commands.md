@@ -1,0 +1,1 @@
+No build or setup script is defined within this scope; the app is mounted into an HTML element with id `root` by `main.tsx`, so a surrounding bundler must provide that DOM node before execution.
