@@ -2,12 +2,6 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "crons": [
-    {
-      "path": "/api/google/sync",
-      "schedule": "0 3 * * *"
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
