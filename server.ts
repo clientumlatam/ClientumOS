@@ -13,6 +13,7 @@ import { Pool } from "pg";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { loadSmtpCredentials } from "./src/lib/smtp";
+import { sendPasswordResetEmail, createMailTransport } from "./server/mailer";
 
 dotenv.config();
 
@@ -337,90 +338,9 @@ app.use(
 const USERNAME_RE = /^[a-zA-Z0-9_.@+\-]{3,64}$/;
 
 // ---------------------------------------------------------------------------
-// Email — Gmail SMTP via nodemailer
+// Email — Gmail SMTP via Nodemailer (loaded from ./server/mailer)
 // ---------------------------------------------------------------------------
-function createMailTransport() {
-  const creds = loadSmtpCredentials();
-  if (!creds.user || !creds.pass) return null;
-  return nodemailer.createTransport({
-    host: creds.host,
-    port: creds.port,
-    secure: creds.secure,
-    auth: { user: creds.user, pass: creds.pass },
-  });
-}
 
-async function sendPasswordResetEmail(toEmail: string, token: string): Promise<void> {
-  const baseUrl = process.env.APP_URL?.replace(/\/$/, "") || "https://clientum.com.ar";
-  const resetUrl = `${baseUrl}?reset_token=${token}`;
-
-  const transport = createMailTransport();
-  if (!transport) {
-    console.warn(`[Auth] SMTP_USER/SMTP_PASS no configurados. Enlace de restablecimiento generado para ${toEmail}: ${resetUrl}`);
-    return;
-  }
-
-  try {
-    await transport.sendMail({
-      from: `"ClientumOS" <${process.env.SMTP_USER}>`,
-      to: toEmail,
-      subject: "Restablecer contraseña — ClientumOS",
-      html: `
-<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0B131D;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B131D;padding:48px 16px;">
-    <tr><td align="center">
-      <table width="480" cellpadding="0" cellspacing="0" style="background:#111C28;border:1px solid #1A2733;border-radius:16px;overflow:hidden;">
-        <tr>
-          <td style="background:#10B981;height:4px;"></td>
-        </tr>
-        <tr>
-          <td style="padding:40px 40px 32px;">
-            <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">ClientumOS</p>
-            <p style="margin:0 0 28px;font-size:12px;color:#4B5563;font-family:monospace;letter-spacing:2px;text-transform:uppercase;">Restablecer contraseña</p>
-            <p style="margin:0 0 20px;font-size:15px;color:#9CA3AF;line-height:1.6;">
-              Recibimos una solicitud para restablecer la contraseña de tu cuenta.<br>
-              Hacé clic en el botón para crear una nueva contraseña. El enlace es válido por <strong style="color:#e5e7eb;">1 hora</strong>.
-            </p>
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
-              <tr>
-                <td style="background:#10B981;border-radius:10px;">
-                  <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">
-                    Restablecer contraseña →
-                  </a>
-                </td>
-              </tr>
-            </table>
-            <p style="margin:0 0 8px;font-size:12px;color:#4B5563;">Si no podés hacer clic, copiá este enlace:</p>
-            <p style="margin:0 0 28px;font-size:12px;color:#6B7280;word-break:break-all;">${resetUrl}</p>
-            <hr style="border:none;border-top:1px solid #1A2733;margin:0 0 20px;">
-            <p style="margin:0;font-size:12px;color:#374151;line-height:1.6;">
-              Si no solicitaste restablecer tu contraseña, podés ignorar este correo. Tu contraseña actual sigue siendo válida.<br>
-              <strong style="color:#4B5563;">Este enlace expira en 1 hora.</strong>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:16px 40px;background:#0B131D;">
-            <p style="margin:0;font-size:11px;color:#374151;text-align:center;">
-              ClientumOS · Patagonia, Argentina · <a href="https://clientum.com.ar" style="color:#4B5563;">clientum.com.ar</a>
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`,
-      text: `Restablecer contraseña — ClientumOS\n\nHacé clic en el siguiente enlace para crear una nueva contraseña (válido por 1 hora):\n\n${resetUrl}\n\nSi no solicitaste este cambio, podés ignorar este correo.`,
-    });
-    console.log(`[Auth] Correo de restablecimiento enviado exitosamente a ${toEmail}`);
-  } catch (mailError: any) {
-    console.warn(`[Auth] Error enviando correo SMTP a ${toEmail} (${mailError?.message || mailError}). Enlace generado: ${resetUrl}`);
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Better Auth / Multi-Tenant & Single-Tenant Email Allowlist (ALLOWED_SIGN_IN)
