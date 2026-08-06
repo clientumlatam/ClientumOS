@@ -6062,6 +6062,18 @@ async function setupServer() {
     } catch (dbErr: any) {
       console.warn("[DB Init] Error inicializando tablas (continuando sin DB):", dbErr.message || dbErr);
     }
+
+    // Automatic internal background sync every 15 minutes (100% free Node interval)
+    setInterval(() => {
+      console.log("[Background Cron] Ejecutando sincronización automática periódica...");
+      try {
+        handleGoogleSync({} as any, { json: () => {}, status: () => ({ json: () => {} }) } as any).catch((err: any) => {
+          console.warn("[Background Cron] Error en sync automático:", err?.message || err);
+        });
+      } catch (err: any) {
+        console.warn("[Background Cron] Error al disparar sync automático:", err?.message || err);
+      }
+    }, 15 * 60 * 1000);
   })();
 }
 
