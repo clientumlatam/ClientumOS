@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { LogIn, LogOut, Shield, X, Loader2, KeyRound, Mail, UserPlus, CheckCircle2 } from 'lucide-react';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 interface SessionUser {
   id: number;
@@ -227,13 +228,28 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
     setSuccessMsg(null);
   };
 
-  const renderModal = () => (
-    <div 
-      className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md p-4 flex items-center justify-center overflow-y-auto animate-in fade-in duration-200"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) setShowModal(false);
-      }}
-    >
+  const renderModal = () => {
+    if (mode === 'forgot') {
+      return (
+        <ForgotPasswordModal
+          isOpen={true}
+          onClose={() => {
+            setShowModal(false);
+            setMode('login');
+          }}
+          onSwitchToLogin={() => setMode('login')}
+          initialEmail={usernameOrEmail.includes('@') ? usernameOrEmail : ''}
+        />
+      );
+    }
+
+    return (
+      <div 
+        className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md p-4 flex items-center justify-center overflow-y-auto animate-in fade-in duration-200"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setShowModal(false);
+        }}
+      >
       <div className="relative w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-2xl my-auto text-left text-white animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         <button
           onClick={() => setShowModal(false)}
@@ -409,7 +425,8 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
         </form>
       </div>
     </div>
-  );
+    );
+  };
 
   /* ── COMPACT MODE ── */
   if (compact) {

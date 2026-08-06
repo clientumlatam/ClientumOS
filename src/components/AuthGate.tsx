@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Loader2, Lock, User, ArrowRight, Mail, Eye, EyeOff, ArrowLeft, CheckCircle } from "lucide-react";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
 
 interface AuthGateProps {
   onAuthenticated: (username: string, role?: string) => void;
@@ -281,58 +282,12 @@ export default function AuthGate({ onAuthenticated }: AuthGateProps) {
 
         {/* ── FORGOT PASSWORD ── */}
         {mode === "forgot" && (
-          <form onSubmit={handleForgotSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-2xl">
-            {success ? (
-              <div className="text-center py-4">
-                <CheckCircle className="w-10 h-10 text-green-400 mx-auto mb-3" />
-                <p className="text-sm text-slate-300 leading-relaxed">{success}</p>
-                <button
-                  type="button"
-                  onClick={() => switchMode("login")}
-                  className="mt-5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  Volver al inicio de sesión
-                </button>
-              </div>
-            ) : (
-              <>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Ingresá el email con el que te registraste y te enviaremos un enlace para restablecer tu contraseña.
-                </p>
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Email</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      autoComplete="email"
-                      placeholder="vos@email.com"
-                      className={inputIconCls}
-                    />
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="text-sm text-red-400 bg-red-950/50 border border-red-900 rounded-lg px-3 py-2">
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                    <>Enviar enlace de reseteo<ArrowRight className="w-4 h-4" /></>
-                  )}
-                </button>
-              </>
-            )}
-          </form>
+          <ForgotPasswordModal
+            isOpen={true}
+            onClose={() => switchMode("login")}
+            onSwitchToLogin={() => switchMode("login")}
+            initialEmail={email || (username.includes('@') ? username : '')}
+          />
         )}
 
         {/* ── RESET PASSWORD ── */}
