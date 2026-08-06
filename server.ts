@@ -12,12 +12,18 @@ import bcrypt from "bcryptjs";
 import { Pool } from "pg";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import { loadSmtpCredentials } from "./src/lib/smtp";
 
 dotenv.config();
 
+function normalizeDatabaseUrl(url?: string): string {
+  if (!url) return "";
+  return url.trim().replace(/sslmode=(require|prefer|verify-ca)/gi, "sslmode=verify-full");
+}
+
 const app = express();
 const PORT = 3000;
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL);
 let pgPool: any;
 let sessionStore: any;
 
@@ -334,14 +340,13 @@ const USERNAME_RE = /^[a-zA-Z0-9_.@+\-]{3,64}$/;
 // Email — Gmail SMTP via nodemailer
 // ---------------------------------------------------------------------------
 function createMailTransport() {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!user || !pass) return null;
+  const creds = loadSmtpCredentials();
+  if (!creds.user || !creds.pass) return null;
   return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // STARTTLS
-    auth: { user, pass },
+    host: creds.host,
+    port: creds.port,
+    secure: creds.secure,
+    auth: { user: creds.user, pass: creds.pass },
   });
 }
 
@@ -755,7 +760,10 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
 
     if (errorParam || !code) {
       console.warn("[Google OAuth Callback] Error o código ausente:", errorParam);
-      return res.redirect("/?error=google_auth_failed");
+      if (!res.headersSent) {
+        return res.redirect("/?error=google_auth_failed");
+      }
+      return;
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID || "";
@@ -766,7 +774,6 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
       ? `${protocol}://${host}/api/auth/callback/google`
       : `${protocol}://${host}/api/auth/google/callback`;
 
-    // Exchange code for tokens
     const tokenRes = await apiFetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -782,19 +789,24 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
       console.error("[Google OAuth Token Exchange Error]:", errText);
-      return res.redirect("/?error=token_exchange_failed");
+      if (!res.headersSent) {
+        return res.redirect("/?error=token_exchange_failed");
+      }
+      return;
     }
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
 
-    // Fetch Google Profile
     const profileRes = await apiFetch("https://www.googleapis.com/oauth2/v3/userinfo", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!profileRes.ok) {
-      return res.redirect("/?error=profile_fetch_failed");
+      if (!res.headersSent) {
+        return res.redirect("/?error=profile_fetch_failed");
+      }
+      return;
     }
 
     const profile = await profileRes.json();
@@ -804,8 +816,9 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
 
     if (!userEmail || !isEmailAllowed(userEmail)) {
       console.warn(`[Google OAuth] Email no permitido en la whitelist ALLOWED_SIGN_IN: ${userEmail}`);
-      return res.send(`
-        <!質html>
+      if (!res.headersSent) {
+        return res.send(`
+        <!DOCTYPE html>
         <html>
           <head><title>Acceso Denegado</title><style>body{font-family:sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#1e293b;padding:2rem;border-radius:1rem;border:1px solid #334155;max-width:400px;text-align:center;}a{color:#10b981;text-decoration:none;font-weight:bold;}</style></head>
           <body>
@@ -818,6 +831,8 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
           </body>
         </html>
       `);
+      }
+      return;
     }
 
     const user = await upsertNeonAuthUser({
