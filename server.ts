@@ -334,6 +334,35 @@ app.use(
   })
 );
 
+// ── Response Diagnostic & Headers Guard Middleware ────────────────────────────
+app.use((req: AuthRequest, res: AuthResponse, next: AuthNext) => {
+  const originalRedirect = res.redirect.bind(res);
+  const originalStatus = res.status.bind(res);
+
+  res.redirect = function (url: any, targetUrl?: any) {
+    const dest = typeof url === "string" ? url : targetUrl || "";
+    const reqUrl = req.originalUrl || req.url;
+    console.log(`[Diagnostic Trace] Redirect requested for ${req.method} ${reqUrl} -> ${dest} (headersSent: ${res.headersSent})`);
+    if (res.headersSent) {
+      console.warn(`[Diagnostic Trace] WARNING: Attempted res.redirect when headers were already sent for ${reqUrl}`);
+      return res;
+    }
+    return originalRedirect(url, targetUrl);
+  } as any;
+
+  res.status = function (code: number) {
+    const reqUrl = req.originalUrl || req.url;
+    console.log(`[Diagnostic Trace] Status ${code} set for ${req.method} ${reqUrl} (headersSent: ${res.headersSent})`);
+    if (res.headersSent) {
+      console.warn(`[Diagnostic Trace] WARNING: Attempted res.status(${code}) when headers were already sent for ${reqUrl}`);
+      return res;
+    }
+    return originalStatus(code);
+  } as any;
+
+  next();
+});
+
 // Accepts classic usernames (letters/numbers/._-) OR email addresses.
 const USERNAME_RE = /^[a-zA-Z0-9_.@+\-]{3,64}$/;
 
