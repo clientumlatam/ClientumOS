@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/clientumlatam/ClientumOS/compare/v1.0.0...v1.1.0) (2026-08-06)
+
+
+### Features
+
+* implement public chatbot widget and lead capture CRM integration ([bf09119](https://github.com/clientumlatam/ClientumOS/commit/bf091190e5f626a1dae2d8407ed09b874bf32f03))
+
 ## 1.0.0 (2026-08-03)
 
 
