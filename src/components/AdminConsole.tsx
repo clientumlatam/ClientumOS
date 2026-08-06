@@ -17,15 +17,18 @@ export const AdminConsole: React.FC = () => {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/admin/users').then(res => res.json()),
-      fetch('/api/admin/metrics').then(res => res.json()),
-      fetch('/api/admin/audit-logs').then(res => res.json()),
-      fetch('/api/admin/health-alerts').then(res => res.json())
+      fetch('/api/admin/users').then(res => res.ok ? res.json() : []).catch(() => []),
+      fetch('/api/admin/metrics').then(res => res.ok ? res.json() : {}).catch(() => ({})),
+      fetch('/api/admin/audit-logs').then(res => res.ok ? res.json() : []).catch(() => []),
+      fetch('/api/admin/health-alerts').then(res => res.ok ? res.json() : []).catch(() => [])
     ]).then(([userData, metricsData, logData, alertData]) => {
-      setUsers(userData);
-      setMetrics(metricsData);
-      setLogs(logData);
-      setAlerts(alertData);
+      setUsers(Array.isArray(userData) ? userData : []);
+      setMetrics(metricsData || {});
+      setLogs(Array.isArray(logData) ? logData : []);
+      setAlerts(Array.isArray(alertData) ? alertData : []);
+      setLoading(false);
+    }).catch(err => {
+      console.error('[AdminConsole] Error in Promise.all:', err);
       setLoading(false);
     });
   }, []);

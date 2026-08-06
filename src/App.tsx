@@ -163,9 +163,13 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchSession(window.location.search.includes('login=success'));
+    fetchSession(window.location.search.includes('login=success')).catch(err => {
+      console.warn('[Diagnostic Trace] fetchSession promise rejected in useEffect:', err);
+    });
     const handleAuthChange = () => {
-      fetchSession(true);
+      fetchSession(true).catch(err => {
+        console.warn('[Diagnostic Trace] fetchSession promise rejected in handleAuthChange:', err);
+      });
     };
     window.addEventListener('auth-changed', handleAuthChange);
     return () => {
