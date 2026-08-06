@@ -12,8 +12,8 @@ import bcrypt from "bcryptjs";
 import { Pool } from "pg";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
-import { loadSmtpCredentials } from "./src/lib/smtp";
-import { sendPasswordResetEmail, createMailTransport } from "./server/mailer";
+import { loadSmtpCredentials } from "./src/lib/smtp.js";
+import { sendPasswordResetEmail, createMailTransport } from "./server/mailer.js";
 
 dotenv.config();
 

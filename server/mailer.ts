@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { loadSmtpCredentials } from "../src/lib/smtp";
+import { loadSmtpCredentials } from "../src/lib/smtp.js";
 
 export function createMailTransport() {
   const creds = loadSmtpCredentials();
