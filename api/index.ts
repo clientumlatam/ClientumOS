@@ -1,4 +1,4 @@
-import { app, initUsersTable, initChatbotLeadsTable, initSantiTables } from '../server';
+import { app, initUsersTable, initChatbotLeadsTable, initSantiTables } from '../server.js';
 
 let dbInitialized = false;
 
