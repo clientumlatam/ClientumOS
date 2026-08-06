@@ -12,12 +12,20 @@ import bcrypt from "bcryptjs";
 import { Pool } from "pg";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import { loadSmtpCredentials } from "./src/lib/smtp.js";
+import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, createMailTransport } from "./server/mailer.js";
 
 dotenv.config();
 
+function normalizeDatabaseUrl(url?: string): string {
+  if (!url) return "";
+  return url.trim().replace(/sslmode=(require|prefer|verify-ca)/gi, "sslmode=verify-full");
+}
+
 const app = express();
+app.set("trust proxy", 1);
 const PORT = 3000;
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL);
 let pgPool: any;
 let sessionStore: any;
 
@@ -318,6 +326,7 @@ app.use(
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -327,95 +336,42 @@ app.use(
   })
 );
 
+// ── Response Diagnostic & Headers Guard Middleware ────────────────────────────
+app.use((req: AuthRequest, res: AuthResponse, next: AuthNext) => {
+  const originalRedirect = res.redirect.bind(res);
+  const originalStatus = res.status.bind(res);
+
+  res.redirect = function (url: any, targetUrl?: any) {
+    const dest = typeof url === "string" ? url : targetUrl || "";
+    const reqUrl = req.originalUrl || req.url;
+    console.log(`[Diagnostic Trace] Redirect requested for ${req.method} ${reqUrl} -> ${dest} (headersSent: ${res.headersSent})`);
+    if (res.headersSent) {
+      console.warn(`[Diagnostic Trace] WARNING: Attempted res.redirect when headers were already sent for ${reqUrl}`);
+      return res;
+    }
+    return originalRedirect(url, targetUrl);
+  } as any;
+
+  res.status = function (code: number) {
+    const reqUrl = req.originalUrl || req.url;
+    console.log(`[Diagnostic Trace] Status ${code} set for ${req.method} ${reqUrl} (headersSent: ${res.headersSent})`);
+    if (res.headersSent) {
+      console.warn(`[Diagnostic Trace] WARNING: Attempted res.status(${code}) when headers were already sent for ${reqUrl}`);
+      return res;
+    }
+    return originalStatus(code);
+  } as any;
+
+  next();
+});
+
 // Accepts classic usernames (letters/numbers/._-) OR email addresses.
 const USERNAME_RE = /^[a-zA-Z0-9_.@+\-]{3,64}$/;
 
 // ---------------------------------------------------------------------------
-// Email — Gmail SMTP via nodemailer
+// Email — Gmail SMTP via Nodemailer (loaded from ./server/mailer)
 // ---------------------------------------------------------------------------
-function createMailTransport() {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // STARTTLS
-    auth: { user, pass },
-  });
-}
 
-async function sendPasswordResetEmail(toEmail: string, token: string): Promise<void> {
-  const baseUrl = process.env.APP_URL?.replace(/\/$/, "") || "https://clientum.com.ar";
-  const resetUrl = `${baseUrl}?reset_token=${token}`;
-
-  const transport = createMailTransport();
-  if (!transport) {
-    console.warn(`[Auth] SMTP_USER/SMTP_PASS no configurados. Enlace de restablecimiento generado para ${toEmail}: ${resetUrl}`);
-    return;
-  }
-
-  try {
-    await transport.sendMail({
-      from: `"Clientum CRM" <${process.env.SMTP_USER}>`,
-      to: toEmail,
-      subject: "Restablecer contraseña — Clientum CRM",
-      html: `
-<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0B131D;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B131D;padding:48px 16px;">
-    <tr><td align="center">
-      <table width="480" cellpadding="0" cellspacing="0" style="background:#111C28;border:1px solid #1A2733;border-radius:16px;overflow:hidden;">
-        <tr>
-          <td style="background:#10B981;height:4px;"></td>
-        </tr>
-        <tr>
-          <td style="padding:40px 40px 32px;">
-            <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Clientum CRM</p>
-            <p style="margin:0 0 28px;font-size:12px;color:#4B5563;font-family:monospace;letter-spacing:2px;text-transform:uppercase;">Restablecer contraseña</p>
-            <p style="margin:0 0 20px;font-size:15px;color:#9CA3AF;line-height:1.6;">
-              Recibimos una solicitud para restablecer la contraseña de tu cuenta.<br>
-              Hacé clic en el botón para crear una nueva contraseña. El enlace es válido por <strong style="color:#e5e7eb;">1 hora</strong>.
-            </p>
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
-              <tr>
-                <td style="background:#10B981;border-radius:10px;">
-                  <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">
-                    Restablecer contraseña →
-                  </a>
-                </td>
-              </tr>
-            </table>
-            <p style="margin:0 0 8px;font-size:12px;color:#4B5563;">Si no podés hacer clic, copiá este enlace:</p>
-            <p style="margin:0 0 28px;font-size:12px;color:#6B7280;word-break:break-all;">${resetUrl}</p>
-            <hr style="border:none;border-top:1px solid #1A2733;margin:0 0 20px;">
-            <p style="margin:0;font-size:12px;color:#374151;line-height:1.6;">
-              Si no solicitaste restablecer tu contraseña, podés ignorar este correo. Tu contraseña actual sigue siendo válida.<br>
-              <strong style="color:#4B5563;">Este enlace expira en 1 hora.</strong>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:16px 40px;background:#0B131D;">
-            <p style="margin:0;font-size:11px;color:#374151;text-align:center;">
-              Clientum CRM · Patagonia, Argentina · <a href="https://clientum.com.ar" style="color:#4B5563;">clientum.com.ar</a>
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`,
-      text: `Restablecer contraseña — Clientum CRM\n\nHacé clic en el siguiente enlace para crear una nueva contraseña (válido por 1 hora):\n\n${resetUrl}\n\nSi no solicitaste este cambio, podés ignorar este correo.`,
-    });
-    console.log(`[Auth] Correo de restablecimiento enviado exitosamente a ${toEmail}`);
-  } catch (mailError: any) {
-    console.warn(`[Auth] Error enviando correo SMTP a ${toEmail} (${mailError?.message || mailError}). Enlace generado: ${resetUrl}`);
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Better Auth / Multi-Tenant & Single-Tenant Email Allowlist (ALLOWED_SIGN_IN)
@@ -755,7 +711,10 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
 
     if (errorParam || !code) {
       console.warn("[Google OAuth Callback] Error o código ausente:", errorParam);
-      return res.redirect("/?error=google_auth_failed");
+      if (!res.headersSent) {
+        return res.redirect("/?error=google_auth_failed");
+      }
+      return;
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID || "";
@@ -766,7 +725,6 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
       ? `${protocol}://${host}/api/auth/callback/google`
       : `${protocol}://${host}/api/auth/google/callback`;
 
-    // Exchange code for tokens
     const tokenRes = await apiFetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -782,19 +740,24 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
       console.error("[Google OAuth Token Exchange Error]:", errText);
-      return res.redirect("/?error=token_exchange_failed");
+      if (!res.headersSent) {
+        return res.redirect("/?error=token_exchange_failed");
+      }
+      return;
     }
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
 
-    // Fetch Google Profile
     const profileRes = await apiFetch("https://www.googleapis.com/oauth2/v3/userinfo", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!profileRes.ok) {
-      return res.redirect("/?error=profile_fetch_failed");
+      if (!res.headersSent) {
+        return res.redirect("/?error=profile_fetch_failed");
+      }
+      return;
     }
 
     const profile = await profileRes.json();
@@ -804,8 +767,9 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
 
     if (!userEmail || !isEmailAllowed(userEmail)) {
       console.warn(`[Google OAuth] Email no permitido en la whitelist ALLOWED_SIGN_IN: ${userEmail}`);
-      return res.send(`
-        <!質html>
+      if (!res.headersSent) {
+        return res.send(`
+        <!DOCTYPE html>
         <html>
           <head><title>Acceso Denegado</title><style>body{font-family:sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#1e293b;padding:2rem;border-radius:1rem;border:1px solid #334155;max-width:400px;text-align:center;}a{color:#10b981;text-decoration:none;font-weight:bold;}</style></head>
           <body>
@@ -818,6 +782,8 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
           </body>
         </html>
       `);
+      }
+      return;
     }
 
     const user = await upsertNeonAuthUser({
@@ -826,11 +792,15 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
       name: userName,
     });
 
-    await createSession(req, res, user, 200);
-    return res.redirect("/?login=success");
+    await createSession(req, res, user, 200, false);
+    if (!res.headersSent) {
+      return res.redirect("/?login=success");
+    }
   } catch (err: any) {
     console.error("[Google OAuth Callback Error]:", err);
-    return res.redirect("/?error=server_error");
+    if (!res.headersSent) {
+      return res.redirect("/?error=server_error");
+    }
   }
 };
 
@@ -1274,11 +1244,12 @@ function createSession(
   req: AuthRequest,
   res: AuthResponse,
   user: { id: number; username: string; role: string },
-  statusCode = 200
+  statusCode = 200,
+  sendResponse = true
 ): Promise<void> {
   return new Promise((resolve) => {
     const timeout = setTimeout(() => {
-      if (!res.headersSent) {
+      if (sendResponse && !res.headersSent) {
         console.error("[Session] Timeout guardando sesión — respondiendo sin cookie");
         res.status(200).json({ user: { id: user.id, username: user.username, role: user.role } });
       }
@@ -1288,7 +1259,7 @@ function createSession(
     req.session.regenerate((err: Error | null) => {
       if (err) {
         clearTimeout(timeout);
-        if (!res.headersSent)
+        if (sendResponse && !res.headersSent)
           res.status(500).json({ error: "Error al crear la sesión." });
         return resolve();
       }
@@ -1297,7 +1268,7 @@ function createSession(
       req.session.role = user.role;
       req.session.save((saveErr: Error | null) => {
         clearTimeout(timeout);
-        if (!res.headersSent) {
+        if (sendResponse && !res.headersSent) {
           if (saveErr) {
             console.error("[Session] Error guardando sesión:", saveErr);
             // Still return the user — auth succeeded, session persistence failed
@@ -1391,11 +1362,13 @@ app.post("/api/auth/neon-register", async (req: AuthRequest, res: AuthResponse) 
         name: neonUser.name ?? name,
         passwordHash: localHash,
       });
+      sendWelcomeEmail(email.toLowerCase(), name).catch((e) => console.warn("[Auth Mailer] Welcome email error:", e));
       return createSession(req, res, localUser, 201);
     } else {
       // ── Path B: Local-only fallback ─────────────────────────────────────────
       console.log("[NeonAuth] NEON_AUTH_BASE no configurado — usando auth local");
       const localUser = await localNeonRegister(email.toLowerCase(), password, name);
+      sendWelcomeEmail(email.toLowerCase(), name).catch((e) => console.warn("[Auth Mailer] Welcome email error:", e));
       return createSession(req, res, localUser, 201);
     }
   } catch (error: any) {
@@ -1432,6 +1405,7 @@ app.post("/api/auth/neon-login", async (req, res) => {
         return res.status(401).json({ error: "Email o contraseña incorrectos." });
       }
       console.log("[Auth] Login local exitoso para", emailLower);
+      sendLoginNotificationEmail(emailLower, req.ip).catch((e) => console.warn("[Auth Mailer] Login email error:", e));
       return createSession(req, res, { id: localDbUser.id, username: localDbUser.username, role: localDbUser.role }, 200);
     }
 
@@ -1550,6 +1524,10 @@ app.post("/api/auth/reset-password", async (req, res) => {
     await pgPool.query("DELETE FROM session WHERE sess::text LIKE $1", [`%"userId":${userId}%`]);
 
     console.log(`[Auth] Contraseña restablecida para user_id=${userId}`);
+    const uRow = await pgPool.query("SELECT email FROM users WHERE id = $1", [userId]);
+    if (uRow.rows[0]?.email) {
+      sendPasswordResetSuccessEmail(uRow.rows[0].email).catch((e) => console.warn("[Auth Mailer] Reset success email error:", e));
+    }
     return res.json({ ok: true, message: "Contraseña actualizada. Ya podés iniciar sesión." });
   } catch (err: any) {
     console.error("[Auth] Error en reset-password:", err.message);
@@ -4186,6 +4164,12 @@ async function initUsersTable() {
     console.warn("[Auth] No se pudo asegurar el admin info@clientum.com.ar:", err);
   }
 
+  try {
+    await initPasswordResetTokensTable();
+  } catch (err) {
+    console.warn("[Auth] No se pudo inicializar la tabla password_reset_tokens:", err);
+  }
+
   console.log("[Auth] Tabla users lista.");
 }
 
@@ -4265,6 +4249,65 @@ app.get("/api/chatbot-leads", requireAuth, async (req, res) => {
   } catch (error: any) {
     console.error("[Chatbot Leads GET Error]:", error);
     res.status(500).json({ error: "Error al obtener los leads." });
+  }
+});
+
+app.post("/api/public/chatbot/chat", async (req, res) => {
+  try {
+    const { messages } = req.body ?? {};
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: "messages array requerido" });
+    }
+    const contents = messages.map((m: any) => ({
+      role: m.role === "model" ? "model" : "user",
+      parts: [{ text: m.content || "" }]
+    }));
+    const ai = getAI();
+    if (!ai) {
+      return res.json({
+        success: true,
+        reply: "¡Hola! Entiendo tu consulta sobre nuestros servicios de transformación digital y automatización. Para poder darte un asesoramiento personalizado y detallado según las necesidades de tu negocio, ¿te gustaría dejarme tu nombre, email o WhatsApp? Un asesor del equipo de Clientum se comunicará con vos de inmediato."
+      });
+    }
+    const systemInstruction = "Eres el Asesor Virtual de Clientum, la consultora de tecnología, CRM, WhatsApp Chatbots y desarrollo web líder para PyMEs en Latinoamérica. Estás configurado directamente por los directores y fundadores de Clientum: admin@clientum.com.ar, info@clientum.com.ar y clientumlatam@gmail.com. Tu objetivo es interactuar de manera profesional, empática e inteligente con los visitantes. Responde dudas sobre desarrollo web, CRM inteligente, chatbots de WhatsApp, facturación AFIP, suscripciones recurrentes con MercadoPago y consultoría de procesos. Busca de forma sutil calificar al prospecto y capturar sus datos de contacto (Nombre, Email, Teléfono, Empresa) para registrarlo en el CRM y que un asesor se comunique con él. Responde de forma amigable y concisa en español de Argentina.";
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents,
+      config: {
+        systemInstruction
+      }
+    });
+    const reply = response.text ?? "";
+    res.json({ success: true, reply });
+  } catch (error: any) {
+    console.error("Error public chatbot:", error);
+    res.status(500).json({ error: error.message || "Error interno del servidor" });
+  }
+});
+
+app.post("/api/public/chatbot/lead", async (req, res) => {
+  try {
+    const { name, phone, email, company, notes, conversation } = req.body ?? {};
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "name es requerido" });
+    }
+    const result = await pgPool.query(
+      `INSERT INTO chatbot_leads (name, phone, email, company, notes, conversation, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'nuevo')
+       RETURNING id, name, phone, email, company, notes, status, created_at`,
+      [
+        name.trim(),
+        phone?.trim() || null,
+        email?.trim() || null,
+        company?.trim() || null,
+        notes?.trim() || null,
+        conversation?.trim() || null
+      ]
+    );
+    res.status(201).json({ ok: true, lead: result.rows[0] });
+  } catch (error: any) {
+    console.error("Error public lead:", error);
+    res.status(500).json({ error: "Error al guardar el lead." });
   }
 });
 
@@ -6062,6 +6105,18 @@ async function setupServer() {
     } catch (dbErr: any) {
       console.warn("[DB Init] Error inicializando tablas (continuando sin DB):", dbErr.message || dbErr);
     }
+
+    // Automatic internal background sync every 15 minutes (100% free Node interval)
+    setInterval(() => {
+      console.log("[Background Cron] Ejecutando sincronización automática periódica...");
+      try {
+        handleGoogleSync({} as any, { json: () => {}, status: () => ({ json: () => {} }) } as any).catch((err: any) => {
+          console.warn("[Background Cron] Error en sync automático:", err?.message || err);
+        });
+      } catch (err: any) {
+        console.warn("[Background Cron] Error al disparar sync automático:", err?.message || err);
+      }
+    }, 15 * 60 * 1000);
   })();
 }
 

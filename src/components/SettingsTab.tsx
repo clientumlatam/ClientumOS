@@ -143,7 +143,7 @@ const ALL_INTEGRATIONS: Integration[] = [
     envVar: 'DATABASE_URL', category: 'db', icon: Database,
     color: 'text-green-600 bg-green-50', required: true,
     docsUrl: 'https://console.neon.tech',
-    placeholder: 'postgresql://user:pass@host/db?sslmode=require',
+    placeholder: 'postgresql://user:pass@host/db?sslmode=verify-full',
   },
   {
     id: 'neon_auth', name: 'Neon Auth Base URL', nameEs: 'Neon Auth Base URL',

@@ -34,8 +34,9 @@ function pad(s, n) { return String(s).padEnd(n); }
 
 async function checkDb() {
   const { Pool } = await import("pg");
-  const url = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || "";
+  let url = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || "";
   if (!url || url.startsWith("eyJ")) return { status: "fail", message: "No configurado" };
+  url = url.replace(/sslmode=(require|prefer|verify-ca)/gi, "sslmode=verify-full");
   const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
   const t0 = Date.now();
   try {

@@ -3,6 +3,7 @@ import { ActiveTab } from './types';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { OverviewTab } from './components/OverviewTab';
+import { AiMarketingExpert } from './components/AiMarketingExpert';
 import { StrategyTab } from './components/StrategyTab';
 import { CopywriterTab } from './components/CopywriterTab';
 import { SeoTab } from './components/SeoTab';
@@ -53,32 +54,84 @@ import { Breadcrumbs } from './components/Breadcrumbs';
 import PublicWebsite from './components/PublicWebsite';
 import { AuthButton } from './components/AuthButton';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ResetPasswordModal } from './components/ResetPasswordModal';
+import ChatbotWidget from './components/ChatbotWidget';
 
 export default function App() {
+  const isWidgetPath = window.location.pathname === '/chatbot-widget' || window.location.pathname === '/chatbot-widget/';
+  if (isWidgetPath) {
+    return <ChatbotWidget standalone={true} />;
+  }
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('public_website');
   const [currency, setCurrency] = useState('USD');
   const [region, setRegion] = useState('LATAM (All)');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [resetToken, setResetToken] = useState<string | null>(null);
 
-  // Diagnostic logs handler setup
+  // Check for password reset token in URL params on load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('reset_token') || params.get('token');
+    if (token) {
+      console.log('[Auth] Token de restablecimiento detectado en la URL.');
+      setResetToken(token);
+    }
+  }, []);
+
+  // Diagnostic logs & global error capture setup
   useEffect(() => {
     console.log('[Diagnostic Log] Auth diagnostic handler initialized.');
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('[Diagnostic Trace] Unhandled Promise Rejection caught:', event.reason);
+    };
+
+    const handleGlobalError = (event: ErrorEvent) => {
+      console.error('[Diagnostic Trace] Global uncaught runtime error:', event.error || event.message);
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleGlobalError);
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleGlobalError);
+    };
   }, []);
 
   const fetchSession = async (autoRedirect = false) => {
+    const endpoint = '/api/auth/me';
+    const reqHeaders = { 'Cache-Control': 'no-cache', 'Accept': 'application/json' };
+    
     try {
-      console.log(`[Diagnostic Log] Checking session (/api/auth/me) with autoRedirect=${autoRedirect}`);
-      const res = await fetch('/api/auth/me', {
-        headers: { 'Cache-Control': 'no-cache' }
+      console.log(`[Diagnostic Trace] Fetching session from ${endpoint}`, {
+        url: endpoint,
+        headers: reqHeaders,
+        autoRedirect,
+        timestamp: new Date().toISOString()
       });
+
+      const res = await fetch(endpoint, {
+        headers: reqHeaders,
+        credentials: 'same-origin'
+      });
+
+      console.log(`[Diagnostic Trace] Session response received:`, {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        contentType: res.headers.get('content-type')
+      });
+
       if (res.ok) {
         const data = await res.json();
         if (data?.user) {
-          console.log(`[Diagnostic Log] Active session user found:`, data.user);
+          console.log(`[Diagnostic Trace] Active authenticated session found for user:`, data.user);
           setCurrentUser(data.user.username);
           if (autoRedirect || window.location.search.includes('login=success')) {
-            console.log(`[Diagnostic Log] Redirecting active tab from '${activeTab}' to 'overview'`);
+            console.log(`[Diagnostic Trace] Redirecting active tab from '${activeTab}' to 'overview'`);
             setActiveTab('overview');
             if (window.location.search.includes('login=success')) {
               window.history.replaceState({}, '', '/');
@@ -87,10 +140,20 @@ export default function App() {
           return;
         }
       }
-      console.log(`[Diagnostic Log] No active user session detected (status: ${res.status}).`);
+
+      // Differentiate between 401 (cleanly unauthenticated) and unexpected status codes
+      if (res.status === 401) {
+        console.log(`[Diagnostic Trace] Session status 401: Cleanly unauthenticated user state.`);
+      } else {
+        console.warn(`[Diagnostic Trace] Session check returned non-200/non-401 status: ${res.status}`);
+      }
       setCurrentUser(null);
-    } catch (err) {
-      console.warn('[Diagnostic Log] Session check failed with exception:', err);
+    } catch (err: any) {
+      console.error('[Diagnostic Trace] Network or execution exception during fetchSession:', {
+        message: err?.message || err,
+        stack: err?.stack
+      });
+      // Network errors do not alter existing session state to prevent disruptive UI flips
       setCurrentUser(null);
     }
   };
@@ -107,9 +170,13 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchSession(window.location.search.includes('login=success'));
+    fetchSession(window.location.search.includes('login=success')).catch(err => {
+      console.warn('[Diagnostic Trace] fetchSession promise rejected in useEffect:', err);
+    });
     const handleAuthChange = () => {
-      fetchSession(true);
+      fetchSession(true).catch(err => {
+        console.warn('[Diagnostic Trace] fetchSession promise rejected in handleAuthChange:', err);
+      });
     };
     window.addEventListener('auth-changed', handleAuthChange);
     return () => {
@@ -119,20 +186,39 @@ export default function App() {
 
   if (activeTab === 'public_website') {
     return (
-      <div className="w-screen min-h-screen bg-slate-900 overflow-y-auto">
-        <PublicWebsite 
-          onBackToEditor={() => setActiveTab('overview')}
-          authUser={currentUser}
-          onOpenLogin={() => {
-            window.dispatchEvent(new CustomEvent('open-login-modal'));
-          }}
-          onLogout={handleLogout}
-        />
-        {/* Helper AuthButton wrapper so its event listener handles open-login-modal triggers */}
-        <div className="hidden">
-          <AuthButton />
+      <ErrorBoundary fallbackTitle="Error al cargar el portal de inicio">
+        <div className="w-screen min-h-screen bg-slate-900 overflow-y-auto">
+          <PublicWebsite 
+            onBackToEditor={() => setActiveTab('overview')}
+            authUser={currentUser}
+            onOpenLogin={() => {
+              window.dispatchEvent(new CustomEvent('open-login-modal'));
+            }}
+            onLogout={handleLogout}
+          />
+          {/* Helper AuthButton wrapper so its event listener handles open-login-modal triggers */}
+          <div className="hidden">
+            <AuthButton />
+          </div>
+          <ResetPasswordModal
+            isOpen={!!resetToken}
+            token={resetToken || ''}
+            onClose={() => {
+              setResetToken(null);
+              if (window.location.search.includes('reset_token') || window.location.search.includes('token')) {
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            onSuccess={() => {
+              setResetToken(null);
+              if (window.location.search.includes('reset_token') || window.location.search.includes('token')) {
+                window.history.replaceState({}, '', '/');
+              }
+              window.dispatchEvent(new CustomEvent('open-login-modal'));
+            }}
+          />
         </div>
-      </div>
+      </ErrorBoundary>
     );
   }
 
@@ -160,6 +246,7 @@ export default function App() {
             />
             <ErrorBoundary resetKey={activeTab}>
               {activeTab === 'overview' && <OverviewTab currency={currency} region={region} />}
+              {activeTab === 'ai_marketing_expert' && <AiMarketingExpert />}
               {activeTab === 'ai_hub' && <AiHubTab />}
               {activeTab === 'meddic' && <MeddicTab />}
               {activeTab === 'icp_builder' && <IcpBuilderTab />}
@@ -225,6 +312,24 @@ export default function App() {
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         setActiveTab={setActiveTab}
+      />
+
+      <ResetPasswordModal
+        isOpen={!!resetToken}
+        token={resetToken || ''}
+        onClose={() => {
+          setResetToken(null);
+          if (window.location.search.includes('reset_token') || window.location.search.includes('token')) {
+            window.history.replaceState({}, '', '/');
+          }
+        }}
+        onSuccess={() => {
+          setResetToken(null);
+          if (window.location.search.includes('reset_token') || window.location.search.includes('token')) {
+            window.history.replaceState({}, '', '/');
+          }
+          window.dispatchEvent(new CustomEvent('open-login-modal'));
+        }}
       />
     </div>
   );
