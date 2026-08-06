@@ -827,10 +827,14 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
     });
 
     await createSession(req, res, user, 200, false);
-    return res.redirect("/?login=success");
+    if (!res.headersSent) {
+      return res.redirect("/?login=success");
+    }
   } catch (err: any) {
     console.error("[Google OAuth Callback Error]:", err);
-    return res.redirect("/?error=server_error");
+    if (!res.headersSent) {
+      return res.redirect("/?error=server_error");
+    }
   }
 };
 
