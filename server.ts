@@ -357,9 +357,9 @@ async function sendPasswordResetEmail(toEmail: string, token: string): Promise<v
 
   try {
     await transport.sendMail({
-      from: `"Clientum CRM" <${process.env.SMTP_USER}>`,
+      from: `"ClientumOS" <${process.env.SMTP_USER}>`,
       to: toEmail,
-      subject: "Restablecer contraseña — Clientum CRM",
+      subject: "Restablecer contraseña — ClientumOS",
       html: `
 <!DOCTYPE html>
 <html lang="es">
@@ -373,7 +373,7 @@ async function sendPasswordResetEmail(toEmail: string, token: string): Promise<v
         </tr>
         <tr>
           <td style="padding:40px 40px 32px;">
-            <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Clientum CRM</p>
+            <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">ClientumOS</p>
             <p style="margin:0 0 28px;font-size:12px;color:#4B5563;font-family:monospace;letter-spacing:2px;text-transform:uppercase;">Restablecer contraseña</p>
             <p style="margin:0 0 20px;font-size:15px;color:#9CA3AF;line-height:1.6;">
               Recibimos una solicitud para restablecer la contraseña de tu cuenta.<br>
@@ -400,7 +400,7 @@ async function sendPasswordResetEmail(toEmail: string, token: string): Promise<v
         <tr>
           <td style="padding:16px 40px;background:#0B131D;">
             <p style="margin:0;font-size:11px;color:#374151;text-align:center;">
-              Clientum CRM · Patagonia, Argentina · <a href="https://clientum.com.ar" style="color:#4B5563;">clientum.com.ar</a>
+              ClientumOS · Patagonia, Argentina · <a href="https://clientum.com.ar" style="color:#4B5563;">clientum.com.ar</a>
             </p>
           </td>
         </tr>
@@ -409,7 +409,7 @@ async function sendPasswordResetEmail(toEmail: string, token: string): Promise<v
   </table>
 </body>
 </html>`,
-      text: `Restablecer contraseña — Clientum CRM\n\nHacé clic en el siguiente enlace para crear una nueva contraseña (válido por 1 hora):\n\n${resetUrl}\n\nSi no solicitaste este cambio, podés ignorar este correo.`,
+      text: `Restablecer contraseña — ClientumOS\n\nHacé clic en el siguiente enlace para crear una nueva contraseña (válido por 1 hora):\n\n${resetUrl}\n\nSi no solicitaste este cambio, podés ignorar este correo.`,
     });
     console.log(`[Auth] Correo de restablecimiento enviado exitosamente a ${toEmail}`);
   } catch (mailError: any) {
