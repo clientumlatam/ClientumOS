@@ -23,6 +23,7 @@ function normalizeDatabaseUrl(url?: string): string {
 }
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = 3000;
 const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL);
 let pgPool: any;
@@ -325,6 +326,7 @@ app.use(
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -4153,6 +4155,12 @@ async function initUsersTable() {
     }
   } catch (err) {
     console.warn("[Auth] No se pudo asegurar el admin info@clientum.com.ar:", err);
+  }
+
+  try {
+    await initPasswordResetTokensTable();
+  } catch (err) {
+    console.warn("[Auth] No se pudo inicializar la tabla password_reset_tokens:", err);
   }
 
   console.log("[Auth] Tabla users lista.");
