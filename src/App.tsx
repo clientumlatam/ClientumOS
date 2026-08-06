@@ -53,6 +53,7 @@ import { Breadcrumbs } from './components/Breadcrumbs';
 import PublicWebsite from './components/PublicWebsite';
 import { AuthButton } from './components/AuthButton';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ResetPasswordModal } from './components/ResetPasswordModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('public_website');
@@ -60,6 +61,17 @@ export default function App() {
   const [region, setRegion] = useState('LATAM (All)');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [resetToken, setResetToken] = useState<string | null>(null);
+
+  // Check for password reset token in URL params on load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('reset_token') || params.get('token');
+    if (token) {
+      console.log('[Auth] Token de restablecimiento detectado en la URL.');
+      setResetToken(token);
+    }
+  }, []);
 
   // Diagnostic logs & global error capture setup
   useEffect(() => {
@@ -177,6 +189,23 @@ export default function App() {
           <div className="hidden">
             <AuthButton />
           </div>
+          <ResetPasswordModal
+            isOpen={!!resetToken}
+            token={resetToken || ''}
+            onClose={() => {
+              setResetToken(null);
+              if (window.location.search.includes('reset_token') || window.location.search.includes('token')) {
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            onSuccess={() => {
+              setResetToken(null);
+              if (window.location.search.includes('reset_token') || window.location.search.includes('token')) {
+                window.history.replaceState({}, '', '/');
+              }
+              window.dispatchEvent(new CustomEvent('open-login-modal'));
+            }}
+          />
         </div>
       </ErrorBoundary>
     );
@@ -271,6 +300,24 @@ export default function App() {
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         setActiveTab={setActiveTab}
+      />
+
+      <ResetPasswordModal
+        isOpen={!!resetToken}
+        token={resetToken || ''}
+        onClose={() => {
+          setResetToken(null);
+          if (window.location.search.includes('reset_token') || window.location.search.includes('token')) {
+            window.history.replaceState({}, '', '/');
+          }
+        }}
+        onSuccess={() => {
+          setResetToken(null);
+          if (window.location.search.includes('reset_token') || window.location.search.includes('token')) {
+            window.history.replaceState({}, '', '/');
+          }
+          window.dispatchEvent(new CustomEvent('open-login-modal'));
+        }}
       />
     </div>
   );

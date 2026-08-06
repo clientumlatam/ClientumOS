@@ -13,7 +13,7 @@ import { Pool } from "pg";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { loadSmtpCredentials } from "./src/lib/smtp.js";
-import { sendPasswordResetEmail, createMailTransport } from "./server/mailer.js";
+import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, createMailTransport } from "./server/mailer.js";
 
 dotenv.config();
 
@@ -1362,11 +1362,13 @@ app.post("/api/auth/neon-register", async (req: AuthRequest, res: AuthResponse) 
         name: neonUser.name ?? name,
         passwordHash: localHash,
       });
+      sendWelcomeEmail(email.toLowerCase(), name).catch((e) => console.warn("[Auth Mailer] Welcome email error:", e));
       return createSession(req, res, localUser, 201);
     } else {
       // ── Path B: Local-only fallback ─────────────────────────────────────────
       console.log("[NeonAuth] NEON_AUTH_BASE no configurado — usando auth local");
       const localUser = await localNeonRegister(email.toLowerCase(), password, name);
+      sendWelcomeEmail(email.toLowerCase(), name).catch((e) => console.warn("[Auth Mailer] Welcome email error:", e));
       return createSession(req, res, localUser, 201);
     }
   } catch (error: any) {
@@ -1403,6 +1405,7 @@ app.post("/api/auth/neon-login", async (req, res) => {
         return res.status(401).json({ error: "Email o contraseña incorrectos." });
       }
       console.log("[Auth] Login local exitoso para", emailLower);
+      sendLoginNotificationEmail(emailLower, req.ip).catch((e) => console.warn("[Auth Mailer] Login email error:", e));
       return createSession(req, res, { id: localDbUser.id, username: localDbUser.username, role: localDbUser.role }, 200);
     }
 
@@ -1521,6 +1524,10 @@ app.post("/api/auth/reset-password", async (req, res) => {
     await pgPool.query("DELETE FROM session WHERE sess::text LIKE $1", [`%"userId":${userId}%`]);
 
     console.log(`[Auth] Contraseña restablecida para user_id=${userId}`);
+    const uRow = await pgPool.query("SELECT email FROM users WHERE id = $1", [userId]);
+    if (uRow.rows[0]?.email) {
+      sendPasswordResetSuccessEmail(uRow.rows[0].email).catch((e) => console.warn("[Auth Mailer] Reset success email error:", e));
+    }
     return res.json({ ok: true, message: "Contraseña actualizada. Ya podés iniciar sesión." });
   } catch (err: any) {
     console.error("[Auth] Error en reset-password:", err.message);

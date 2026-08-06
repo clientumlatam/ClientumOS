@@ -347,14 +347,7 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
           )}
 
           {mode === 'login' && (
-            <div className="flex items-center justify-between text-xs pt-0.5">
-              <button
-                type="button"
-                onClick={fillAdminCredentials}
-                className="text-[11px] text-slate-400 hover:text-emerald-400 transition-colors underline cursor-pointer"
-              >
-                Autocompletar acceso Admin
-              </button>
+            <div className="flex items-center justify-end text-xs pt-0.5">
               <button
                 type="button"
                 onClick={() => { setMode('forgot'); setError(null); setSuccessMsg(null); }}
