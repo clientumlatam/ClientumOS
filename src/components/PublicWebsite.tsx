@@ -75,6 +75,7 @@ import AcademiaLMS from "./Academia/AcademiaLMS";
 import serviciosCatalogo from "../data/servicios-catalogo.json";
 import categoriasServicios from "../data/categorias-servicios.json";
 import cursosLms from "../data/cursos-lms.json";
+import ChatbotWidget from "./ChatbotWidget";
 
 function LogoImage({
   src,
@@ -5552,6 +5553,7 @@ export default function PublicWebsite({
         </div>
 
       </footer>
+      <ChatbotWidget />
     </div>
   );
 }

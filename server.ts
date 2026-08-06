@@ -4252,6 +4252,65 @@ app.get("/api/chatbot-leads", requireAuth, async (req, res) => {
   }
 });
 
+app.post("/api/public/chatbot/chat", async (req, res) => {
+  try {
+    const { messages } = req.body ?? {};
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: "messages array requerido" });
+    }
+    const contents = messages.map((m: any) => ({
+      role: m.role === "model" ? "model" : "user",
+      parts: [{ text: m.content || "" }]
+    }));
+    const ai = getAI();
+    if (!ai) {
+      return res.json({
+        success: true,
+        reply: "¡Hola! Entiendo tu consulta sobre nuestros servicios de transformación digital y automatización. Para poder darte un asesoramiento personalizado y detallado según las necesidades de tu negocio, ¿te gustaría dejarme tu nombre, email o WhatsApp? Un asesor del equipo de Clientum se comunicará con vos de inmediato."
+      });
+    }
+    const systemInstruction = "Eres el Asesor Virtual de Clientum, la consultora de tecnología, CRM, WhatsApp Chatbots y desarrollo web líder para PyMEs en Latinoamérica. Estás configurado directamente por los directores y fundadores de Clientum: admin@clientum.com.ar, info@clientum.com.ar y clientumlatam@gmail.com. Tu objetivo es interactuar de manera profesional, empática e inteligente con los visitantes. Responde dudas sobre desarrollo web, CRM inteligente, chatbots de WhatsApp, facturación AFIP, suscripciones recurrentes con MercadoPago y consultoría de procesos. Busca de forma sutil calificar al prospecto y capturar sus datos de contacto (Nombre, Email, Teléfono, Empresa) para registrarlo en el CRM y que un asesor se comunique con él. Responde de forma amigable y concisa en español de Argentina.";
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents,
+      config: {
+        systemInstruction
+      }
+    });
+    const reply = response.text ?? "";
+    res.json({ success: true, reply });
+  } catch (error: any) {
+    console.error("Error public chatbot:", error);
+    res.status(500).json({ error: error.message || "Error interno del servidor" });
+  }
+});
+
+app.post("/api/public/chatbot/lead", async (req, res) => {
+  try {
+    const { name, phone, email, company, notes, conversation } = req.body ?? {};
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "name es requerido" });
+    }
+    const result = await pgPool.query(
+      `INSERT INTO chatbot_leads (name, phone, email, company, notes, conversation, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'nuevo')
+       RETURNING id, name, phone, email, company, notes, status, created_at`,
+      [
+        name.trim(),
+        phone?.trim() || null,
+        email?.trim() || null,
+        company?.trim() || null,
+        notes?.trim() || null,
+        conversation?.trim() || null
+      ]
+    );
+    res.status(201).json({ ok: true, lead: result.rows[0] });
+  } catch (error: any) {
+    console.error("Error public lead:", error);
+    res.status(500).json({ error: "Error al guardar el lead." });
+  }
+});
+
 // POST /api/webhooks/chatbot-lead
 // ---------------------------------------------------------------------------
 // Inbound webhook — called by the WordPress AI Marketing Expert plugin when a

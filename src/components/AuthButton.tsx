@@ -313,7 +313,7 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
         <form onSubmit={handleSignIn} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1">
-              {mode === 'forgot' ? 'Correo Electrónico Registrado' : 'Usuario o Email'}
+              Usuario o Email
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -322,29 +322,27 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
                 required
                 value={usernameOrEmail}
                 onChange={(e) => setUsernameOrEmail(e.target.value)}
-                placeholder={mode === 'forgot' ? 'tu@email.com' : 'usuario o usuario@email.com'}
+                placeholder="usuario o usuario@email.com"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
           </div>
 
-          {mode !== 'forgot' && (
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Contraseña</label>
-              <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-              </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">Contraseña</label>
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              />
             </div>
-          )}
+          </div>
 
           {mode === 'login' && (
             <div className="flex items-center justify-end text-xs pt-0.5">
@@ -354,18 +352,6 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
                 className="text-[11px] text-emerald-400 hover:underline cursor-pointer font-medium"
               >
                 ¿Olvidaste tu contraseña?
-              </button>
-            </div>
-          )}
-
-          {mode === 'forgot' && (
-            <div className="text-right">
-              <button
-                type="button"
-                onClick={() => { setMode('login'); setError(null); setSuccessMsg(null); }}
-                className="text-[11px] text-emerald-400 hover:underline cursor-pointer"
-              >
-                Volver a Iniciar sesión
               </button>
             </div>
           )}
@@ -410,8 +396,8 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
               <><Loader2 className="w-4 h-4 animate-spin" /><span>Procesando...</span></>
             ) : (
               <>
-                {mode === 'forgot' ? <Mail className="w-4 h-4" /> : (mode === 'login' ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />)}
-                <span>{mode === 'forgot' ? 'Enviar enlace de restablecimiento' : (mode === 'login' ? 'Ingresar al sistema' : 'Crear mi cuenta')}</span>
+                {mode === 'login' ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                <span>{mode === 'login' ? 'Ingresar al sistema' : 'Crear mi cuenta'}</span>
               </>
             )}
           </button>

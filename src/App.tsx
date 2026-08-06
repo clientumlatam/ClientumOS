@@ -3,6 +3,7 @@ import { ActiveTab } from './types';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { OverviewTab } from './components/OverviewTab';
+import { AiMarketingExpert } from './components/AiMarketingExpert';
 import { StrategyTab } from './components/StrategyTab';
 import { CopywriterTab } from './components/CopywriterTab';
 import { SeoTab } from './components/SeoTab';
@@ -54,8 +55,14 @@ import PublicWebsite from './components/PublicWebsite';
 import { AuthButton } from './components/AuthButton';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
+import ChatbotWidget from './components/ChatbotWidget';
 
 export default function App() {
+  const isWidgetPath = window.location.pathname === '/chatbot-widget' || window.location.pathname === '/chatbot-widget/';
+  if (isWidgetPath) {
+    return <ChatbotWidget standalone={true} />;
+  }
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('public_website');
   const [currency, setCurrency] = useState('USD');
   const [region, setRegion] = useState('LATAM (All)');
@@ -239,6 +246,7 @@ export default function App() {
             />
             <ErrorBoundary resetKey={activeTab}>
               {activeTab === 'overview' && <OverviewTab currency={currency} region={region} />}
+              {activeTab === 'ai_marketing_expert' && <AiMarketingExpert />}
               {activeTab === 'ai_hub' && <AiHubTab />}
               {activeTab === 'meddic' && <MeddicTab />}
               {activeTab === 'icp_builder' && <IcpBuilderTab />}

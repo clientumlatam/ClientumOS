@@ -121,8 +121,9 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       key: 'ai_content',
       title: '4. IA & Generación de Contenido',
       color: 'purple',
-      badge: '4 mod',
+      badge: '5 mod',
       items: [
+        { id: 'ai_marketing_expert', label: '★ AI Marketing Expert', icon: Sparkles, badge: 'Full' },
         { id: 'strategy', label: '1. Generador Estrategias', icon: Zap, badge: 'Gemini' },
         { id: 'copywriter', label: '2. AI Ad Copy Studio', icon: FileText },
         { id: 'brochure_generator', label: '3. Generador Brochure PDF', icon: FileSpreadsheet },
