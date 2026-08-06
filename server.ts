@@ -826,7 +826,7 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
       name: userName,
     });
 
-    await createSession(req, res, user, 200);
+    await createSession(req, res, user, 200, false);
     return res.redirect("/?login=success");
   } catch (err: any) {
     console.error("[Google OAuth Callback Error]:", err);
@@ -1274,11 +1274,12 @@ function createSession(
   req: AuthRequest,
   res: AuthResponse,
   user: { id: number; username: string; role: string },
-  statusCode = 200
+  statusCode = 200,
+  sendResponse = true
 ): Promise<void> {
   return new Promise((resolve) => {
     const timeout = setTimeout(() => {
-      if (!res.headersSent) {
+      if (sendResponse && !res.headersSent) {
         console.error("[Session] Timeout guardando sesión — respondiendo sin cookie");
         res.status(200).json({ user: { id: user.id, username: user.username, role: user.role } });
       }
@@ -1288,7 +1289,7 @@ function createSession(
     req.session.regenerate((err: Error | null) => {
       if (err) {
         clearTimeout(timeout);
-        if (!res.headersSent)
+        if (sendResponse && !res.headersSent)
           res.status(500).json({ error: "Error al crear la sesión." });
         return resolve();
       }
@@ -1297,7 +1298,7 @@ function createSession(
       req.session.role = user.role;
       req.session.save((saveErr: Error | null) => {
         clearTimeout(timeout);
-        if (!res.headersSent) {
+        if (sendResponse && !res.headersSent) {
           if (saveErr) {
             console.error("[Session] Error guardando sesión:", saveErr);
             // Still return the user — auth succeeded, session persistence failed
