@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Globe, Coins, User, LogOut, Menu, Bell, Shield, Sparkles } from 'lucide-react';
+import { Search, Globe, Coins, User, LogOut, Menu, Bell, Shield, Sparkles, FileDown } from 'lucide-react';
 import { ActiveTab } from '../types';
 import { AuthButton } from './AuthButton';
+import { PdfExportButton } from './PdfExportButton';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -47,7 +48,15 @@ export function Header({
 
   return (
     <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 z-10 shrink-0">
-      <div className="flex items-center gap-4 flex-1">
+      <div className="flex items-center gap-3 flex-1">
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('open-mobile-sidebar'))}
+          className="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
+          title="Abrir Menú de Navegación"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         <button
           onClick={onOpenCommandPalette}
           className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-lg text-sm transition-colors w-72 justify-between"
@@ -95,6 +104,22 @@ export function Header({
               <option key={r} value={r}>{r}</option>
             ))}
           </select>
+        </div>
+
+        {/* Global PDF Export Button */}
+        <div className="hidden sm:block">
+          <PdfExportButton
+            targetId="main-content-area"
+            title={`Reporte Clientum - ${activeTab.toUpperCase()}`}
+            filename={`Reporte_Clientum_${activeTab}_${new Date().toISOString().slice(0, 10)}.pdf`}
+            label="Exportar PDF"
+            variant="header"
+            size="xs"
+            branding={{
+              companyName: 'Clientum B2B Suite',
+              primaryColor: '#4f46e5'
+            }}
+          />
         </div>
 
         <div className="h-6 w-[1px] bg-slate-200 hidden sm:block"></div>

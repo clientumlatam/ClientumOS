@@ -5,6 +5,7 @@ import { StatCard } from '../../packages/ui/src/components/stat-card';
 import { SimpleTable, SimpleTableRow } from '../../packages/ui/src/components/simple-table';
 import { TableCell } from '../../packages/ui/src/components/table';
 import { Spinner } from '../../packages/ui/src/components/spinner';
+import { AdminStatsDashboard } from './AdminStatsDashboard';
 
 export const AdminConsole: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -13,7 +14,7 @@ export const AdminConsole: React.FC = () => {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'members' | 'audit-logs'>('members');
+  const [activeTab, setActiveTab] = useState<'stats' | 'members' | 'audit-logs'>('stats');
 
   useEffect(() => {
     Promise.all([
@@ -93,9 +94,14 @@ export const AdminConsole: React.FC = () => {
       </DashboardGrid>
       
       <div className="flex gap-4 border-b">
+        <button onClick={() => setActiveTab('stats')} className={`pb-2 ${activeTab === 'stats' ? 'border-b-2 border-primary font-bold' : ''}`}>Statistics & Trends</button>
         <button onClick={() => setActiveTab('members')} className={`pb-2 ${activeTab === 'members' ? 'border-b-2 border-primary font-bold' : ''}`}>Members</button>
         <button onClick={() => setActiveTab('audit-logs')} className={`pb-2 ${activeTab === 'audit-logs' ? 'border-b-2 border-primary font-bold' : ''}`}>Audit Logs</button>
       </div>
+
+      {activeTab === 'stats' && (
+        <AdminStatsDashboard users={users} logs={logs} metrics={metrics} />
+      )}
 
       {activeTab === 'members' && (
         <div className="space-y-4">

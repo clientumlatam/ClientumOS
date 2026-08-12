@@ -46,13 +46,38 @@ a fork somewhere else by editing that file. Nothing is sent while `NODE_ENV` is
 
 ### `install_daily`
 
-Once per install per day, from `POST /internal/telemetry/rollup` on the API's cron. Counts and
-distributions from grouped queries. Never a value from a row.
+Once per install per day, from the API itself. Counts and distributions from grouped queries.
+Never a value from a row.
+
+**It runs in-process and needs no cron.** `TelemetryService` rolls up on boot and then hourly,
+and the day claim below makes all but the first of those a no-op. That covers both shapes an
+install comes in: a serverless deployment rolls up on a cold start, a long-running container on
+the timer. `POST /internal/telemetry/rollup` still exists for a platform cron that would rather
+drive it, and still refuses without `CRON_SECRET` — it is an anonymous route, so an unauthenticated
+one would let a stranger drive any install's aggregation. Nothing depends on it: an install that
+never sets `CRON_SECRET` reports exactly the same.
 
 The day is claimed under a row lock on `install` before anything is gathered, so two crons that
 fire at once produce one event rather than two — and the second does not find the counters
 already drained. A rollup that fails to send hands the day and the counters back, so tomorrow's
 run is not suppressed by a send that never happened.
+
+**The event carries a deterministic `uuid`**, `stableUuid(install.uuid, "install_daily", day)` — a
+SHA-256 digest in a v8 UUID — and PostHog ingests a repeat of one it has already seen only once.
+RFC 4122 defines v5 as SHA-1, and CodeQL rightly refuses to see a hash of the install identity
+and a weak algorithm in the same expression. Nothing here needs v5, so it is v8, the slot RFC 9562
+leaves for a derivation of one's own. The lock
+stops two processes racing; the id stops the *same* process sending twice, which the release path
+can otherwise cause. Counting installs survives a duplicate either way, because PostHog's unique
+math is per install per day, but `tool_calls_total` and the other summed properties would be
+counted twice, and now are not.
+
+**A send reports failure conservatively.** `posthog-node` does not reject on a failed send — its
+`sendImmediate` catches the error and emits it on the client instead — so `client.ts` enqueues and
+awaits `flush()`, which does throw, and additionally checks the client's error counter, which any
+capture in flight can move. Either signal is treated as a failure. That errs toward re-sending a
+rollup that actually landed, which the deterministic id makes free, rather than consuming a day
+whose event never arrived, which cannot be recovered.
 
 #### The install
 
@@ -158,11 +183,20 @@ the cron, so an install that arrives configured is stamped on its first boot.
 applied and later superseded still count — being replaced later does not make the first
 application not have happened.
 
-A step is only recorded as reached once the event has actually left, so a failed send is tried
-again on the next sweep rather than being consumed and lost forever. The cost of that ordering
-is that a crash between the send and the write — or two processes sweeping at the same instant
-— can repeat a step. A one-shot event that arrives twice is a rounding error in a funnel; one
-that never arrives cannot be recovered. Nothing is recorded at all while telemetry is off.
+**The step is claimed before it is sent, and handed back if the send fails.** The claim is the
+insert itself — `telemetryMilestone.step` is the primary key, so of two processes sweeping at the
+same instant exactly one is told it landed the row, and only that one sends. A failed send deletes
+the row, so the next sweep tries again rather than losing the step forever.
+
+This is the opposite of the ordering the funnel shipped with, which sent first and recorded after.
+That was chosen on the grounds that a duplicate is a rounding error while a lost step cannot be
+recovered — but it made a duplicate the *likely* outcome rather than a rare one, because both the
+boot sweep and the rollup call `sweep()`. One install sent `first_fact_applied` six times.
+Claiming first costs the case the old ordering was protecting against: a crash between the claim
+and the send drops the step. Each event also carries a deterministic `uuid`,
+`stableUuid(install.uuid, step)`, so a step that is genuinely sent twice is still ingested once.
+
+Nothing is recorded at all while telemetry is off.
 
 ### Errors
 
@@ -258,7 +292,7 @@ actually drops it. See `adrs/telemetry.md`.
 | `telemetryMilestone` table | Which funnel steps have fired |
 | `telemetryCounter` table | The one runtime number no other row records — `budget_exhausted` — drained by each rollup and put back if the send fails |
 | `packages/telemetry/src/project.ts` | The key, the ingest host and the UI host. Three constants, no imports, so the browser can read them too |
-| `apps/api/src/telemetry` | The daily rollup, the funnel sweep, the cron route |
+| `apps/api/src/telemetry` | The daily rollup, the funnel sweep, the boot-and-hourly timer, the optional cron route |
 | `apps/agent/agent/hooks/telemetry.ts` | Tool, turn and session failures |
 | `apps/app/lib/analytics.ts` | The two hostnames the landing page may report from |
 | `apps/app/components/landing/analytics.tsx` | The only `posthog-js` import in the repo, behind that gate and a dynamic `import()`. `init` on mount, `captureLanding` for the two CTA events |

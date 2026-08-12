@@ -11,6 +11,7 @@ import {
 interface BrochurePreviewProps {
   data: BrochureData;
   colorTheme: string;
+  customPrimaryColor?: string;
   contactInfo: {
     website: string;
     email: string;
@@ -29,6 +30,7 @@ interface BrochurePreviewProps {
 export default function BrochurePreview({
   data,
   colorTheme,
+  customPrimaryColor,
   contactInfo,
   selectedPage,
   showAllPages,
@@ -70,6 +72,28 @@ export default function BrochurePreview({
   // Theme maps
   const getThemeClasses = () => {
     switch (colorTheme) {
+      case "indigo":
+        return {
+          primaryBg: "bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900",
+          accentColor: "text-indigo-400",
+          accentBg: "bg-indigo-500/10",
+          accentBorder: "border-indigo-500/30",
+          pillBg: "bg-indigo-50 text-indigo-800",
+          featuredCardBg: "bg-gradient-to-br from-indigo-950 to-slate-900 border-indigo-500",
+          brandColor: "text-indigo-600",
+          btnBg: "bg-indigo-600 hover:bg-indigo-700",
+        };
+      case "crimson":
+        return {
+          primaryBg: "bg-gradient-to-br from-stone-950 via-rose-950 to-slate-900",
+          accentColor: "text-rose-400",
+          accentBg: "bg-rose-500/10",
+          accentBorder: "border-rose-500/30",
+          pillBg: "bg-rose-50 text-rose-800",
+          featuredCardBg: "bg-gradient-to-br from-rose-950 to-slate-900 border-rose-500",
+          brandColor: "text-rose-600",
+          btnBg: "bg-rose-600 hover:bg-rose-700",
+        };
       case "forest":
         return {
           primaryBg: "bg-gradient-to-br from-teal-950 via-emerald-900 to-emerald-800",

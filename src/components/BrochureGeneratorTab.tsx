@@ -1,168 +1,558 @@
 import React, { useState } from 'react';
-import { FileText, Download, Sparkles, Building2, CheckCircle2, Printer, Layout, ShieldCheck } from 'lucide-react';
-import { loadDeals } from '../store/sharedStore';
+import {
+  FileText,
+  Printer,
+  Sparkles,
+  CheckCircle2,
+  MapPin,
+  Calendar,
+  Clock,
+  Mail,
+  Send,
+  Building2,
+  Users,
+  Award,
+  ExternalLink,
+  Copy,
+  Check,
+  Share2,
+  FileDown,
+  Layers,
+  Palette,
+  Phone,
+  Globe,
+  Eye,
+  Settings2,
+  RotateCcw,
+  Bot,
+  Upload,
+  Image as ImageIcon
+} from 'lucide-react';
+import BrochurePreview from './BrochurePreview';
+import { BrochureData } from '../types';
+import { PdfExportButton } from './common/PdfExportButton';
+
+const INITIAL_CLIENTUM_BROCHURE_DATA: BrochureData = {
+  cover: {
+    company: 'Clientum B2B Intelligence',
+    slogan: 'El Ecosistema Comercial e IA para Escalar tu PyME',
+    sub: 'CRM, Chatbot WhatsApp con IA, E-Commerce, ERP, Business Intelligence, Marketing Digital, Ciberseguridad, Cloud, Apps Móviles y Capacitación — el ecosistema completo de Clientum.',
+    industry: 'Tecnología & Software B2B'
+  },
+  logoUrl: '/favicon.svg',
+  chatbot: {
+    title: 'Chatbot WhatsApp Inteligente con IA (Gemini 3.6)',
+    features: [
+      {
+        title: 'Atención Automatizada 24/7',
+        desc: 'Responde consultas en segundos con inteligencia artificial conversacional.'
+      },
+      {
+        title: 'Calificación Inmediata de Leads',
+        desc: 'Evalúa la intención de compra y registra los datos directamente en el CRM.'
+      },
+      {
+        title: 'Agendamiento & Seguimiento',
+        desc: 'Coordina reuniones comerciales y reengancha prospectos inactivos automáticamente.'
+      }
+    ],
+    flowSteps: [
+      'Prospecto envía un mensaje por WhatsApp o sitio web',
+      'El agente IA saluda, califica y responde preguntas frecuentes con IA',
+      'Registra el lead en el pipeline CRM y notifica al vendedor asignado',
+      'Emite recordatorios automáticos de reunión o propuesta de venta'
+    ]
+  },
+  crm: {
+    title: 'CRM Inteligente, Analítica & Facturación AFIP',
+    features: [
+      {
+        title: 'Pipeline Kanban Visual',
+        desc: 'Gestión drag & drop de oportunidades por etapas comerciales.'
+      },
+      {
+        title: 'Facturación Electrónica AFIP',
+        desc: 'Emisión automática de comprobantes A, B y C con CAE en tiempo real.'
+      },
+      {
+        title: 'Asistente IA de Negocios',
+        desc: 'Reportes instantáneos y proyecciones de ventas en lenguaje natural.'
+      }
+    ]
+  },
+  services: [
+    {
+      title: 'Módulo 1: CRM & Omnicanalidad',
+      desc: 'Gestión integral de clientes, contactos y oportunidades comerciales.',
+      price: 150000,
+      monthly: 45000,
+      time: 5,
+      bullets: ['Pipeline Drag & Drop', 'Historial unificado de chats', 'Múltiples embudos por sector']
+    },
+    {
+      title: 'Módulo 2: Chatbot WhatsApp IA',
+      desc: 'Agente virtual conversacional alimentado por Gemini 3.6 Flash.',
+      price: 180000,
+      monthly: 55000,
+      time: 7,
+      bullets: ['Entrenamiento con catálogo propio', 'Agendamiento automático', 'Notificaciones de voz']
+    },
+    {
+      title: 'Módulo 3: Facturación AFIP & ERP',
+      desc: 'Conexión directa con AFIP para emisión de facturas A, B y C.',
+      price: 120000,
+      monthly: 35000,
+      time: 3,
+      bullets: ['CAE automático en tiempo real', 'Envío por email/WhatsApp', 'Cálculo de impuestos']
+    },
+    {
+      title: 'Módulo 4: Business Intelligence',
+      desc: 'Dashboards analíticos con KPIs en tiempo real y reportes exportables.',
+      price: 140000,
+      monthly: 40000,
+      time: 4,
+      bullets: ['Conversión por canal', 'Atribución de ingresos', 'Exportación PDF/Excel']
+    },
+    {
+      title: 'Módulo 5: E-Commerce & Portal Cliente',
+      desc: 'Tienda digital conectada con inventario, cuentas corrientes y cobros.',
+      price: 220000,
+      monthly: 65000,
+      time: 10,
+      bullets: ['Pasarela MercadoPago', 'Portal de autogestión B2B', 'Sincronización de stock']
+    },
+    {
+      title: 'Módulo 6: Ciberseguridad & Cloud',
+      desc: 'Infraestructura protegida con respaldos automáticos y SSL.',
+      price: 160000,
+      monthly: 50000,
+      time: 5,
+      bullets: ['Encriptación de grado bancario', 'Copias de seguridad diarias', 'SLA 99.9% garantizado']
+    }
+  ],
+  testimonial: {
+    text: 'Implementamos el ecosistema completo de Clientum en menos de una semana. El chatbot de WhatsApp califica 150+ leads semanales y la integración con AFIP nos ahorra 20 horas de administración al mes.',
+    author: 'Ing. Roberto Albarracín',
+    company: 'CEO, Grupo Agro-Industrial Patagonia'
+  }
+};
 
 export function BrochureGeneratorTab() {
-  const [selectedIndustry, setSelectedIndustry] = useState('Oil & Gas y Minería B2B');
-  const [companyName, setCompanyName] = useState('Neuquén Energy Solutions S.A.');
-  const [contactPerson, setContactPerson] = useState('Ing. Roberto Mendez');
-  const [accentColor, setAccentColor] = useState('#4f46e5');
-  const [generating, setGenerating] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [brochurePreset, setBrochurePreset] = useState<'clientum_full' | 'rio_negro_project'>('clientum_full');
+  const [data, setData] = useState<BrochureData>(INITIAL_CLIENTUM_BROCHURE_DATA);
+  const [colorTheme, setColorTheme] = useState<string>('navy');
+  const [primaryColorHex, setPrimaryColorHex] = useState<string>('#4f46e5');
+  const [selectedPage, setSelectedPage] = useState<number>(1);
+  const [showAllPages, setShowAllPages] = useState<boolean>(true);
+  const [hidePrices, setHidePrices] = useState<boolean>(false);
+  const [showCustomizePanel, setShowCustomizePanel] = useState<boolean>(false);
 
-  const handleGenerateBrochure = () => {
-    setGenerating(true);
-    setTimeout(() => {
-      setGenerating(false);
-      setSuccessMsg('¡Brochure comercial personalizado generado con éxito! Listo para exportar o imprimir.');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    }, 1000);
+  const [contactInfo, setContactInfo] = useState({
+    website: 'clientum.com.ar',
+    email: 'contacto@clientum.com.ar',
+    phone: '+54 9 298 412-3456',
+    address: 'General Roca, Río Negro — Argentina',
+    github: 'https://github.com/clientum-latam'
+  });
+
+  const pageNames = [
+    { num: 1, name: 'Portada & Inicio' },
+    { num: 2, name: 'Quiénes Somos' },
+    { num: 3, name: 'La Plataforma' },
+    { num: 4, name: 'WhatsApp & CRM' },
+    { num: 5, name: 'Asistente IA & AFIP' },
+    { num: 6, name: 'Servicios' },
+    { num: 7, name: 'Planes & Precios' },
+    { num: 8, name: 'Casos & Contacto' }
+  ];
+
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setData(prev => ({ ...prev, logoUrl: reader.result as string }));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handlePrint = () => {
-    window.print();
+    // Force show all pages for comprehensive printing
+    setShowAllPages(true);
+    setTimeout(() => {
+      window.print();
+    }, 300);
+  };
+
+  const handleReset = () => {
+    setData(INITIAL_CLIENTUM_BROCHURE_DATA);
+    setContactInfo({
+      website: 'clientum.com.ar',
+      email: 'contacto@clientum.com.ar',
+      phone: '+54 9 298 412-3456',
+      address: 'General Roca, Río Negro — Argentina',
+      github: 'https://github.com/clientum-latam'
+    });
+    setColorTheme('navy');
+    setPrimaryColorHex('#4f46e5');
+    setHidePrices(false);
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-            <FileText className="w-5 h-5" />
+      {/* Top Header Controls Bar */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 no-print">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full font-mono">
+              Sitio Público & Brochure PDF
+            </span>
+            <span className="text-slate-400 text-xs">· 8 Páginas Completa</span>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">Generador de Brochures Comerciales PDF / HTML</h2>
-            <p className="text-xs text-slate-500">Crea materiales corporativos sectoriales personalizados sincronizados con datos del CRM y Gemini AI</p>
-          </div>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            Brochure Oficial de Clientum
+          </h2>
+          <p className="text-slate-500 text-xs mt-1">
+            Folleto institucional interactivo con todas las páginas y soluciones del sitio público. Exportable a PDF de alta resolución.
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowCustomizePanel(!showCustomizePanel)}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+              showCustomizePanel
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+            }`}
+          >
+            <Settings2 className="w-4 h-4" />
+            <span>{showCustomizePanel ? 'Ocultar Personalización' : 'Personalizar Marca & Textos'}</span>
+          </button>
+
+          <PdfExportButton
+            targetId="brochure-preview-container"
+            title={`Brochure Corporativo 2026 - ${data.cover.company}`}
+            filename={`Brochure_${data.cover.company.replace(/\s+/g, '_')}_2026.pdf`}
+            label="Descargar PDF con Branding"
+            variant="primary"
+            branding={{
+              logoUrl: data.logoUrl,
+              primaryColor: primaryColorHex,
+              companyName: data.cover.company
+            }}
+          />
+
           <button
             onClick={handlePrint}
-            className="inline-flex items-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200"
+            title="Vista de impresión directa"
           >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Exportar / Imprimir PDF</span>
+            <Printer className="w-4 h-4 text-slate-500" />
+            <span>Imprimir</span>
           </button>
         </div>
       </div>
 
-      {successMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          <span>{successMsg}</span>
+      {/* Customization Drawer / Panel */}
+      {showCustomizePanel && (
+        <div className="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6 no-print">
+          <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-indigo-400" />
+              <h3 className="font-bold text-sm text-white">
+                Personalización Dinámica de Marca (Logo & Colores)
+              </h3>
+            </div>
+            <button
+              onClick={handleReset}
+              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Restablecer Marca Predeterminada</span>
+            </button>
+          </div>
+
+          {/* BRANDING LOGO & COLOR SECTION */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 bg-slate-800/80 rounded-xl border border-slate-700/80">
+            {/* Logo Upload & URL */}
+            <div className="space-y-2 col-span-1 md:col-span-2">
+              <label className="block text-slate-300 font-bold text-xs flex items-center gap-1.5">
+                <ImageIcon className="w-4 h-4 text-indigo-400" />
+                <span>Logo de la Empresa (Subir Archivo o URL):</span>
+              </label>
+              
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <label className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0">
+                  <Upload className="w-4 h-4" />
+                  <span>Subir Imagen</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoFileUpload}
+                    className="hidden"
+                  />
+                </label>
+
+                <input
+                  type="text"
+                  value={data.logoUrl || ''}
+                  placeholder="URL pública del logo (https://...)"
+                  onChange={(e) => setData(prev => ({ ...prev, logoUrl: e.target.value }))}
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-indigo-500"
+                />
+
+                {data.logoUrl && (
+                  <div className="w-9 h-9 rounded-lg bg-white/10 p-1 flex items-center justify-center border border-white/20 shrink-0">
+                    <img src={data.logoUrl} alt="Logo Preview" className="max-w-full max-h-full object-contain" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Primary Color Theme & Hex Picker */}
+            <div className="space-y-2">
+              <label className="block text-slate-300 font-bold text-xs flex items-center gap-1.5">
+                <Palette className="w-4 h-4 text-indigo-400" />
+                <span>Color Primario de Marca:</span>
+              </label>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={primaryColorHex}
+                  onChange={(e) => {
+                    setPrimaryColorHex(e.target.value);
+                  }}
+                  className="w-9 h-9 rounded-xl border border-slate-700 bg-transparent cursor-pointer p-0.5 shrink-0"
+                />
+
+                <input
+                  type="text"
+                  value={primaryColorHex}
+                  onChange={(e) => setPrimaryColorHex(e.target.value)}
+                  className="w-24 bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono uppercase focus:outline-hidden focus:border-indigo-500"
+                />
+
+                <div className="flex items-center gap-1">
+                  {[
+                    { hex: '#4f46e5', theme: 'indigo', title: 'Índigo' },
+                    { hex: '#1a3461', theme: 'navy', title: 'Navy' },
+                    { hex: '#059669', theme: 'forest', title: 'Verde' },
+                    { hex: '#dc2626', theme: 'crimson', title: 'Rojo' },
+                    { hex: '#d97706', theme: 'amber', title: 'Ámbar' }
+                  ].map((p) => (
+                    <button
+                      key={p.hex}
+                      type="button"
+                      onClick={() => {
+                        setPrimaryColorHex(p.hex);
+                        setColorTheme(p.theme);
+                      }}
+                      title={p.title}
+                      className={`w-6 h-6 rounded-lg transition-all cursor-pointer ${
+                        primaryColorHex.toLowerCase() === p.hex.toLowerCase()
+                          ? 'ring-2 ring-white scale-110'
+                          : 'opacity-70 hover:opacity-100'
+                      }`}
+                      style={{ backgroundColor: p.hex }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            {/* Company Name */}
+            <div className="space-y-1.5">
+              <label className="block text-slate-400 font-medium">Nombre de la Empresa / Marca:</label>
+              <input
+                type="text"
+                value={data.cover?.company || ''}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    cover: { ...prev.cover, company: e.target.value }
+                  }))
+                }
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+            {/* Slogan */}
+            <div className="space-y-1.5 col-span-1 md:col-span-2">
+              <label className="block text-slate-400 font-medium">Slogan Principal (Portada):</label>
+              <input
+                type="text"
+                value={data.cover?.slogan || ''}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    cover: { ...prev.cover, slogan: e.target.value }
+                  }))
+                }
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+
+            {/* Sub-slogan */}
+            <div className="space-y-1.5 col-span-1 md:col-span-3">
+              <label className="block text-slate-400 font-medium">Subtítulo de Propuesta de Valor:</label>
+              <textarea
+                rows={2}
+                value={data.cover?.sub || ''}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    cover: { ...prev.cover, sub: e.target.value }
+                  }))
+                }
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+
+            {/* Contact Information */}
+            <div className="space-y-1.5">
+              <label className="block text-slate-400 font-medium">Sitio Web:</label>
+              <input
+                type="text"
+                value={contactInfo.website}
+                onChange={(e) => setContactInfo((prev) => ({ ...prev, website: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-slate-400 font-medium">Email de Contacto:</label>
+              <input
+                type="text"
+                value={contactInfo.email}
+                onChange={(e) => setContactInfo((prev) => ({ ...prev, email: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-slate-400 font-medium">Teléfono / WhatsApp:</label>
+              <input
+                type="text"
+                value={contactInfo.phone}
+                onChange={(e) => setContactInfo((prev) => ({ ...prev, phone: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+
+            <div className="space-y-1.5 col-span-1 md:col-span-2">
+              <label className="block text-slate-400 font-medium">Dirección Sede Principal:</label>
+              <input
+                type="text"
+                value={contactInfo.address}
+                onChange={(e) => setContactInfo((prev) => ({ ...prev, address: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-slate-400 font-medium">GitHub / Código Abierto:</label>
+              <input
+                type="text"
+                value={contactInfo.github || ''}
+                onChange={(e) => setContactInfo((prev) => ({ ...prev, github: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Controls Sidebar */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Configuración del Brochure</h3>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Sector / Industria</label>
-            <select
-              value={selectedIndustry}
-              onChange={(e) => setSelectedIndustry(e.target.value)}
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-            >
-              <option value="Oil & Gas y Minería B2B">Oil & Gas y Minería B2B</option>
-              <option value="Turismo y Hotelería Patagónica">Turismo y Hotelería Patagónica</option>
-              <option value="Logística y Supply Chain">Logística y Supply Chain</option>
-              <option value="Tecnología y Software Corporativo">Tecnología y Software Corporativo</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Empresa Destinataria</label>
-            <input
-              type="text"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Contacto Principal</label>
-            <input
-              type="text"
-              value={contactPerson}
-              onChange={(e) => setContactPerson(e.target.value)}
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Color de Acento</label>
-            <div className="flex gap-2">
-              {['#4f46e5', '#0284c7', '#059669', '#d97706', '#7c3aed'].map(c => (
-                <button
-                  key={c}
-                  onClick={() => setAccentColor(c)}
-                  className={`w-8 h-8 rounded-full border-2 transition-transform cursor-pointer ${
-                    accentColor === c ? 'scale-110 border-slate-900 shadow-sm' : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-            </div>
-          </div>
-
+      {/* Navigation & Display Modes Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-4 no-print">
+        {/* Page Selector Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
-            onClick={handleGenerateBrochure}
-            disabled={generating}
-            className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-sm shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            onClick={() => setShowAllPages(true)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              showAllPages
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+            }`}
           >
-            {generating ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Sparkles className="w-4 h-4" />}
-            <span>{generating ? 'Optimizando con Gemini...' : 'Generar Brochure AI'}</span>
+            <Layers className="w-3.5 h-3.5" />
+            <span>Ver Folleto Completo (8 Págs)</span>
+          </button>
+
+          <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
+
+          {pageNames.map((p) => (
+            <button
+              key={p.num}
+              onClick={() => {
+                setShowAllPages(false);
+                setSelectedPage(p.num);
+              }}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                !showAllPages && selectedPage === p.num
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Pág {p.num}: {p.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Options & Theme Selectors */}
+        <div className="flex items-center gap-3">
+          {/* Color Theme Selector */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+            {[
+              { id: 'navy', label: 'Navy', color: 'bg-[#1A3461]' },
+              { id: 'forest', label: 'Verde', color: 'bg-emerald-600' },
+              { id: 'amber', label: 'Ámbar', color: 'bg-amber-600' },
+              { id: 'charcoal', label: 'Oscuro', color: 'bg-zinc-800' }
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setColorTheme(t.id)}
+                title={`Tema ${t.label}`}
+                className={`w-6 h-6 rounded-lg transition-all flex items-center justify-center cursor-pointer ${
+                  colorTheme === t.id ? 'ring-2 ring-indigo-600 ring-offset-1 scale-110' : 'opacity-70 hover:opacity-100'
+                }`}
+              >
+                <span className={`w-4 h-4 rounded-full ${t.color}`} />
+              </button>
+            ))}
+          </div>
+
+          {/* Hide Prices Toggle */}
+          <button
+            onClick={() => setHidePrices(!hidePrices)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              hidePrices
+                ? 'bg-amber-50 text-amber-800 border-amber-300'
+                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            {hidePrices ? 'Cotizaciones sin Precios' : 'Mostrar Precios'}
           </button>
         </div>
+      </div>
 
-        {/* Brochure Preview Canvas */}
-        <div className="lg:col-span-2 bg-slate-100 p-8 rounded-2xl border border-slate-200 flex justify-center">
-          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 p-8 space-y-8">
-            {/* Header */}
-            <div className="flex justify-between items-start border-b border-slate-100 pb-6">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded bg-slate-100 text-slate-600">
-                  Propuesta Comercial Exclusiva
-                </span>
-                <h1 className="text-2xl font-black text-slate-900 mt-2">Soluciones de Automatización & IA</h1>
-                <p className="text-xs text-slate-500 mt-1">Preparado especialmente para: <strong className="text-slate-800">{companyName}</strong> ({contactPerson})</p>
-              </div>
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-md" style={{ backgroundColor: accentColor }}>
-                AI
-              </div>
-            </div>
-
-            {/* Executive Summary */}
-            <div className="space-y-3">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">1. Resumen Ejecutivo y Oportunidad</h2>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Para el sector de <strong className="text-slate-800">{selectedIndustry}</strong>, la velocidad de respuesta y el seguimiento de prospectos comerciales determinan la tasa de conversión en contratos corporativos de alto valor. Nuestra plataforma integra calificación MEDDIC, automatización de WhatsApp y prospección geolocalizada.
-              </p>
-            </div>
-
-            {/* Key Benefits Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-                <div className="font-bold text-xs text-slate-900">⚡ Cierres 3x Más Rápidos</div>
-                <p className="text-[11px] text-slate-500">Pipeline Kanban sincronizado con recordatorios automáticos de seguimiento.</p>
-              </div>
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-                <div className="font-bold text-xs text-slate-900">🤖 Calificación Gemini AI</div>
-                <p className="text-[11px] text-slate-500">Análisis automático de encuestas de clientes y encaje con ICP.</p>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="pt-6 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400">
-              <div>Generado por AI Studio • Neuquén, Argentina</div>
-              <div className="font-semibold text-slate-600">www.aistudio.build</div>
-            </div>
-          </div>
-        </div>
+      {/* Main Multi-Page Brochure Render Box */}
+      <div id="brochure-preview-container" className="bg-slate-100 p-2 sm:p-6 rounded-2xl border border-slate-200 overflow-x-auto min-h-[600px] flex justify-center">
+        <BrochurePreview
+          data={data}
+          colorTheme={colorTheme}
+          customPrimaryColor={primaryColorHex}
+          contactInfo={contactInfo}
+          selectedPage={selectedPage}
+          showAllPages={showAllPages}
+          hidePrices={hidePrices}
+          onChange={(newData) => setData(newData)}
+        />
       </div>
     </div>
   );

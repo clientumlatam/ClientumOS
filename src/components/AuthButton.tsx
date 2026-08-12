@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { LogIn, LogOut, Shield, X, Loader2, KeyRound, Mail, UserPlus, CheckCircle2 } from 'lucide-react';
-import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 interface SessionUser {
   id: number;
@@ -228,28 +227,13 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
     setSuccessMsg(null);
   };
 
-  const renderModal = () => {
-    if (mode === 'forgot') {
-      return (
-        <ForgotPasswordModal
-          isOpen={true}
-          onClose={() => {
-            setShowModal(false);
-            setMode('login');
-          }}
-          onSwitchToLogin={() => setMode('login')}
-          initialEmail={usernameOrEmail.includes('@') ? usernameOrEmail : ''}
-        />
-      );
-    }
-
-    return (
-      <div 
-        className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md p-4 flex items-center justify-center overflow-y-auto animate-in fade-in duration-200"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) setShowModal(false);
-        }}
-      >
+  const renderModal = () => (
+    <div 
+      className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md p-4 flex items-center justify-center overflow-y-auto animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setShowModal(false);
+      }}
+    >
       <div className="relative w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-2xl my-auto text-left text-white animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         <button
           onClick={() => setShowModal(false)}
@@ -313,7 +297,7 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
         <form onSubmit={handleSignIn} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1">
-              Usuario o Email
+              {mode === 'forgot' ? 'Correo Electrónico Registrado' : 'Usuario o Email'}
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -322,36 +306,66 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
                 required
                 value={usernameOrEmail}
                 onChange={(e) => setUsernameOrEmail(e.target.value)}
-                placeholder="usuario o usuario@email.com"
+                placeholder={mode === 'forgot' ? 'tu@email.com' : 'usuario o usuario@email.com'}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Contraseña</label>
-            <div className="relative">
-              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
+          {mode !== 'forgot' && (
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">Contraseña</label>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
+          {/* Quick Admin Access Banner */}
           {mode === 'login' && (
-            <div className="flex items-center justify-end text-xs pt-0.5">
+            <div className="space-y-2">
+              <div className="p-2.5 bg-emerald-950/40 border border-emerald-800/60 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-xs text-emerald-300 font-medium">¿Querés probar como Administrador?</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={fillAdminCredentials}
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold rounded-lg transition-all cursor-pointer shadow-sm"
+                >
+                  ⚡ Llenar Admin
+                </button>
+              </div>
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot'); setError(null); setSuccessMsg(null); }}
+                  className="text-[11px] text-emerald-400 hover:underline cursor-pointer font-medium"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            </div>
+          )}
+
+          {mode === 'forgot' && (
+            <div className="text-right">
               <button
                 type="button"
-                onClick={() => { setMode('forgot'); setError(null); setSuccessMsg(null); }}
-                className="text-[11px] text-emerald-400 hover:underline cursor-pointer font-medium"
+                onClick={() => { setMode('login'); setError(null); setSuccessMsg(null); }}
+                className="text-[11px] text-emerald-400 hover:underline cursor-pointer"
               >
-                ¿Olvidaste tu contraseña?
+                Volver a Iniciar sesión
               </button>
             </div>
           )}
@@ -396,16 +410,15 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
               <><Loader2 className="w-4 h-4 animate-spin" /><span>Procesando...</span></>
             ) : (
               <>
-                {mode === 'login' ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-                <span>{mode === 'login' ? 'Ingresar al sistema' : 'Crear mi cuenta'}</span>
+                {mode === 'forgot' ? <Mail className="w-4 h-4" /> : (mode === 'login' ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />)}
+                <span>{mode === 'forgot' ? 'Enviar enlace de restablecimiento' : (mode === 'login' ? 'Ingresar al sistema' : 'Crear mi cuenta')}</span>
               </>
             )}
           </button>
         </form>
       </div>
     </div>
-    );
-  };
+  );
 
   /* ── COMPACT MODE ── */
   if (compact) {
