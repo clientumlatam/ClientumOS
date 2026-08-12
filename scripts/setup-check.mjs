@@ -43,7 +43,7 @@ const SECRETS = [
   {
     key: "NEON_DATABASE_URL",
     required: true,
-    desc: "Connection string Neon pooled (postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=verify-full). Encontralo en tu proyecto Neon → Connection Details → Pooled.",
+    desc: "Connection string Neon pooled (postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require). Encontralo en tu proyecto Neon → Connection Details → Pooled.",
     group: "Base de datos",
   },
   {

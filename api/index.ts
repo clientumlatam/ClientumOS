@@ -1,4 +1,4 @@
-import { app, initUsersTable, initChatbotLeadsTable, initSantiTables } from '../server.js';
+import { app, initUsersTable, initChatbotLeadsTable, initSantiTables } from '../server';
 
 let dbInitialized = false;
 
@@ -15,12 +15,5 @@ export default async function handler(req: any, res: any) {
       console.warn('[Vercel Serverless] DB init warning:', e);
     }
   }
-  try {
-    return await app(req, res);
-  } catch (err: any) {
-    console.error('[Vercel Serverless Error]:', err);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Internal Server Error', message: err?.message || 'Server error' });
-    }
-  }
+  return app(req, res);
 }

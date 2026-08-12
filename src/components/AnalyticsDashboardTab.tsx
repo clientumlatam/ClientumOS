@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { BarChart3, TrendingUp, DollarSign, Users, Mail, Globe, Share2, ArrowUpRight, Sparkles } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Users, Mail, Globe, Share2, ArrowUpRight, Sparkles, FileDown, Loader2 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend } from 'recharts';
+import { generateClientPdfReport } from '../utils/generatePdfReport';
+import { PdfExportButton } from './common/PdfExportButton';
 
 const roiTrendData = [
   { month: 'Ene', emailRoi: 320, socialRoi: 210, seoRoi: 450, totalRevenue: 45000 },
@@ -20,9 +22,38 @@ const channelComparison = [
 
 export function AnalyticsDashboardTab() {
   const [timeframe, setTimeframe] = useState('6M');
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setExportingPdf(true);
+    try {
+      await generateClientPdfReport({
+        title: `Reporte de Analítica & ROI Multicanal (${timeframe})`,
+        clientName: 'Cliente Corporativo Clientum',
+        timeframe: `Período: ${timeframe}`,
+        metrics: [
+          { label: 'ROI Global Promedio', value: '716%', change: '+28.4% vs anterior' },
+          { label: 'Ingresos Atribuibles', value: '$438,000 USD', change: '+34.2% cierres CRM' },
+          { label: 'Leads Capturados', value: '1,842', change: 'Total Multicanal' },
+          { label: 'Costo Promedio por Lead', value: '$14.50 USD', change: '-14% optimizado IA' }
+        ],
+        channelData: channelComparison.map(c => ({
+          channel: c.channel,
+          conversion: `${c.conversion}%`,
+          roi: `${c.roi}%`,
+          costPerLead: `$${c.costPerLead}.00 USD`
+        })),
+        elementIdToCapture: 'analytics-charts-container'
+      });
+    } catch (err) {
+      console.error('Error al descargar PDF:', err);
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   return (
-    <div className="space-y-6">
+    <div id="analytics-report-container" className="space-y-6">
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
@@ -34,18 +65,32 @@ export function AnalyticsDashboardTab() {
           </div>
         </div>
 
-        <div className="flex bg-slate-100 p-1 rounded-xl">
-          {['1M', '3M', '6M', '1Y'].map(t => (
-            <button
-              key={t}
-              onClick={() => setTimeframe(t)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                timeframe === t ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
+        <div className="flex items-center gap-3">
+          <div className="flex bg-slate-100 p-1 rounded-xl">
+            {['1M', '3M', '6M', '1Y'].map(t => (
+              <button
+                key={t}
+                onClick={() => setTimeframe(t)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  timeframe === t ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <PdfExportButton
+            targetId="analytics-report-container"
+            title={`Reporte de Analítica & ROI Multicanal (${timeframe})`}
+            filename={`Reporte_Analitica_ROI_${timeframe}.pdf`}
+            label="Descargar PDF"
+            variant="primary"
+            branding={{
+              companyName: 'Clientum B2B Analytics',
+              primaryColor: '#4f46e5'
+            }}
+          />
         </div>
       </div>
 
@@ -93,7 +138,7 @@ export function AnalyticsDashboardTab() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div id="analytics-charts-container" className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white p-2 rounded-2xl">
         {/* ROI Trend Over Time */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
           <div className="flex justify-between items-center">

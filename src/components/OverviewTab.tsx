@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   TrendingUp, Users, DollarSign, Target, ArrowUpRight, BarChart3, Globe, Zap,
   Activity, ShieldCheck, RefreshCw, CheckCircle2, Server, Cpu, Sparkles,
-  Database, Search, Bot, Clock, Wifi, AlertTriangle
+  Database, Search, Bot, Clock, Wifi, AlertTriangle, FileDown, Loader2
 } from 'lucide-react';
+import { generateClientPdfReport } from '../utils/generatePdfReport';
+import { PdfExportButton } from './common/PdfExportButton';
 
 interface ServiceStatusItem {
   id: string;
@@ -34,6 +36,37 @@ export function OverviewTab({ currency, region }: OverviewTabProps) {
   const [servicesData, setServicesData] = useState<ServicesStatusData | null>(null);
   const [loadingServices, setLoadingServices] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [exportingPdf, setExportingPdf] = useState<boolean>(false);
+
+  const handleDownloadPdf = async () => {
+    setExportingPdf(true);
+    try {
+      await generateClientPdfReport({
+        title: `Reporte Ejecutivo de Desempeño (${region})`,
+        clientName: 'Cliente Corporativo Clientum',
+        region,
+        currencySymbol,
+        metrics: [
+          { label: 'Ingresos Totales', value: `${currencySymbol}142,850 USD`, change: '+18.4% vs mes anterior' },
+          { label: 'Prospectos Activos', value: '1,248', change: '+12.2% nuevos leads' },
+          { label: 'ROI Promedio', value: '342%', change: '+5.1% eficiencia' },
+          { label: 'Campañas Activas', value: '24', change: 'Optimizadas con IA' },
+          { label: 'Ingresos Atribuibles', value: `${currencySymbol}438,000 USD`, change: '+34.2% cierres' },
+          { label: 'Costo por Lead', value: `${currencySymbol}14.50 USD`, change: '-14% reducción' }
+        ],
+        services: servicesData?.services.map(s => ({
+          name: s.name,
+          category: s.category,
+          status: s.status === 'operational' ? 'Operativo' : s.status,
+          latencyMs: s.latencyMs
+        }))
+      });
+    } catch (err) {
+      console.error('Error al generar PDF:', err);
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   const fetchServicesStatus = async () => {
     setRefreshing(true);
@@ -65,7 +98,7 @@ export function OverviewTab({ currency, region }: OverviewTabProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div id="overview-report-content" className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Panel Principal ({region})</h1>
@@ -76,6 +109,18 @@ export function OverviewTab({ currency, region }: OverviewTabProps) {
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             Sistema & APIs Operativos
           </span>
+
+          <PdfExportButton
+            targetId="overview-report-content"
+            title={`Reporte Ejecutivo de Desempeño (${region})`}
+            filename={`Reporte_Ejecutivo_Clientum_${region}.pdf`}
+            label="Descargar Reporte PDF"
+            variant="primary"
+            branding={{
+              companyName: 'Clientum B2B Intelligence',
+              primaryColor: '#4f46e5'
+            }}
+          />
         </div>
       </div>
 

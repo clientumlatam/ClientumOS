@@ -3,8 +3,10 @@ import {
   Settings, CheckCircle2, Key, Globe, Users, Plus, Trash2, Mail, Lock, Zap,
   Sparkles, Bot, Shield, MapPin, Search, Send, Database, KeyRound,
   ExternalLink, Eye, EyeOff, ChevronDown, ChevronRight, AlertCircle,
-  Layers, Server, Webhook, CreditCard, Building, BarChart2
+  Layers, Server, Webhook, CreditCard, Building, BarChart2, ArrowLeftRight
 } from 'lucide-react';
+import { SmtpTab } from './SmtpTab';
+import { ImportExportTab } from './ImportExportTab';
 
 /* ─────────────────────────────────────────────────────────────────
    Integration catalog — all env-vars / services the platform uses
@@ -143,7 +145,7 @@ const ALL_INTEGRATIONS: Integration[] = [
     envVar: 'DATABASE_URL', category: 'db', icon: Database,
     color: 'text-green-600 bg-green-50', required: true,
     docsUrl: 'https://console.neon.tech',
-    placeholder: 'postgresql://user:pass@host/db?sslmode=verify-full',
+    placeholder: 'postgresql://user:pass@host/db?sslmode=require',
   },
   {
     id: 'neon_auth', name: 'Neon Auth Base URL', nameEs: 'Neon Auth Base URL',
@@ -167,8 +169,14 @@ const ALL_INTEGRATIONS: Integration[] = [
 /* ─────────────────────────────────────────────────────────────────
    Component
 ───────────────────────────────────────────────────────────────── */
-export function SettingsTab() {
-  const [activeSubTab, setActiveSubTab] = useState<'general' | 'apikeys' | 'domains' | 'team'>('apikeys');
+interface SettingsTabProps {
+  defaultSubTab?: 'general' | 'apikeys' | 'domains' | 'team' | 'smtp' | 'import_export';
+}
+
+export function SettingsTab({ defaultSubTab }: SettingsTabProps) {
+  const [activeSubTab, setActiveSubTab] = useState<'general' | 'apikeys' | 'domains' | 'team' | 'smtp' | 'import_export'>(
+    defaultSubTab || 'apikeys'
+  );
   const [appName, setAppName] = useState('ClientumLatam - AI Marketing Expert');
   const [saved, setSaved] = useState(false);
 
@@ -300,10 +308,12 @@ export function SettingsTab() {
         <div className="w-full lg:w-64 flex-shrink-0">
           <nav className="flex flex-col space-y-1">
             {[
-              { id: 'general',  icon: Settings, label: 'Ajustes Generales' },
-              { id: 'apikeys',  icon: Shield,   label: 'Servicios & Integraciones', badge: '100% Activas' },
-              { id: 'domains',  icon: Globe,    label: 'Dominios de Remitente' },
-              { id: 'team',     icon: Users,    label: 'Acceso de Equipo' },
+              { id: 'general',       icon: Settings,       label: 'Ajustes Generales' },
+              { id: 'apikeys',       icon: Shield,         label: 'Servicios & Integraciones', badge: '100% Activas' },
+              { id: 'smtp',          icon: Server,         label: 'Servidor SMTP / API' },
+              { id: 'import_export', icon: ArrowLeftRight, label: 'Importar / Exportar' },
+              { id: 'domains',       icon: Globe,          label: 'Dominios de Remitente' },
+              { id: 'team',          icon: Users,          label: 'Acceso de Equipo' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -590,6 +600,20 @@ export function SettingsTab() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* ── SMTP & API ── */}
+          {activeSubTab === 'smtp' && (
+            <div className="p-6">
+              <SmtpTab />
+            </div>
+          )}
+
+          {/* ── Import / Export ── */}
+          {activeSubTab === 'import_export' && (
+            <div className="p-6">
+              <ImportExportTab />
             </div>
           )}
         </div>

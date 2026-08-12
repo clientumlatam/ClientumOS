@@ -131,12 +131,12 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             <div className="pt-2 flex flex-col gap-2">
               <button
                 type="button"
-                disabled={resendCooldown > 0 || status === 'loading'}
+                disabled={resendCooldown > 0 || (status as string) === 'loading'}
                 onClick={handleSubmit}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-50 transition-colors"
                 id="resend-password-reset-btn"
               >
-                <RefreshCw className={`w-4 h-4 ${status === 'loading' ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 ${(status as string) === 'loading' ? 'animate-spin' : ''}`} />
                 {resendCooldown > 0
                   ? `Reenviar en ${resendCooldown}s`
                   : 'Reenviar correo de recuperación'}

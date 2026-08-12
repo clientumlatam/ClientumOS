@@ -72,6 +72,7 @@ import { BrochureData } from "../types";
 import { AuthButton } from "./AuthButton";
 import OrganigramaClientum from "./OrganigramaClientum";
 import AcademiaLMS from "./Academia/AcademiaLMS";
+import BrochurePreview from "./BrochurePreview";
 import serviciosCatalogo from "../data/servicios-catalogo.json";
 import categoriasServicios from "../data/categorias-servicios.json";
 import cursosLms from "../data/cursos-lms.json";
@@ -137,6 +138,51 @@ interface PublicWebsiteProps {
   onLogout?: () => void;
 }
 
+const DEFAULT_BROCHURE_DATA: BrochureData = {
+  cover: {
+    company: 'Clientum B2B Intelligence',
+    slogan: 'El Ecosistema Comercial e IA para Escalar tu PyME',
+    sub: 'CRM, Chatbot WhatsApp con IA, E-Commerce, ERP, Business Intelligence, Marketing Digital, Ciberseguridad, Cloud, Apps Móviles y Capacitación — el ecosistema completo de Clientum.',
+    industry: 'Tecnología & Software B2B'
+  },
+  logoUrl: '/favicon.svg',
+  chatbot: {
+    title: 'Chatbot WhatsApp Inteligente con IA (Gemini 3.6)',
+    features: [
+      { title: 'Atención Automatizada 24/7', desc: 'Responde consultas en segundos con inteligencia artificial conversacional.' },
+      { title: 'Calificación Inmediata de Leads', desc: 'Evalúa la intención de compra y registra los datos directamente en el CRM.' },
+      { title: 'Agendamiento & Seguimiento', desc: 'Coordina reuniones comerciales y reengancha prospectos inactivos automáticamente.' }
+    ],
+    flowSteps: [
+      'Prospecto envía un mensaje por WhatsApp o sitio web',
+      'El agente IA saluda, califica y responde preguntas frecuentes con IA',
+      'Registra el lead en el pipeline CRM y notifica al vendedor asignado',
+      'Emite recordatorios automáticos de reunión o propuesta de venta'
+    ]
+  },
+  crm: {
+    title: 'CRM Inteligente, Analítica & Facturación AFIP',
+    features: [
+      { title: 'Pipeline Kanban Visual', desc: 'Gestión drag & drop de oportunidades por etapas comerciales.' },
+      { title: 'Facturación Electrónica AFIP', desc: 'Emisión automática de comprobantes A, B y C con CAE en tiempo real.' },
+      { title: 'Asistente IA de Negocios', desc: 'Reportes instantáneos y proyecciones de ventas en lenguaje natural.' }
+    ]
+  },
+  services: [
+    { title: 'Módulo 1: CRM & Omnicanalidad', desc: 'Gestión integral de clientes, contactos y oportunidades comerciales.', price: 150000, monthly: 45000, time: 5, bullets: ['Pipeline Drag & Drop', 'Historial unificado de chats', 'Múltiples embudos'] },
+    { title: 'Módulo 2: Chatbot WhatsApp IA', desc: 'Agente virtual conversacional alimentado por Gemini 3.6 Flash.', price: 180000, monthly: 55000, time: 7, bullets: ['Entrenamiento con catálogo propio', 'Agendamiento automático', 'Notificaciones de voz'] },
+    { title: 'Módulo 3: Facturación AFIP & ERP', desc: 'Conexión directa con AFIP para emisión de facturas A, B y C.', price: 120000, monthly: 35000, time: 3, bullets: ['CAE automático en tiempo real', 'Envío por email/WhatsApp', 'Cálculo de impuestos'] },
+    { title: 'Módulo 4: Business Intelligence', desc: 'Dashboards analíticos con KPIs en tiempo real y reportes exportables.', price: 140000, monthly: 40000, time: 4, bullets: ['Conversión por canal', 'Atribución de ingresos', 'Exportación PDF/Excel'] },
+    { title: 'Módulo 5: E-Commerce & Portal Cliente', desc: 'Tienda digital conectada con inventario, cuentas corrientes y cobros.', price: 220000, monthly: 65000, time: 10, bullets: ['Pasarela MercadoPago', 'Portal de autogestión B2B', 'Sincronización de stock'] },
+    { title: 'Módulo 6: Ciberseguridad & Cloud', desc: 'Infraestructura protegida con respaldos automáticos y SSL.', price: 160000, monthly: 50000, time: 5, bullets: ['Encriptación de grado bancario', 'Copias de seguridad diarias', 'SLA 99.9% garantizado'] }
+  ],
+  testimonial: {
+    text: 'Implementamos el ecosistema completo de Clientum en menos de una semana. El chatbot de WhatsApp califica 150+ leads semanales y la integración con AFIP nos ahorra 20 horas de administración al mes.',
+    author: 'Ing. Roberto Albarracín',
+    company: 'CEO, Grupo Agro-Industrial Patagonia'
+  }
+};
+
 export default function PublicWebsite({
   onBackToEditor,
   brochureData,
@@ -166,6 +212,13 @@ export default function PublicWebsite({
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileOpenSection, setMobileOpenSection] = useState<string | null>(null);
+  const [isBrochureModalOpen, setIsBrochureModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleOpenBrochure = () => setIsBrochureModalOpen(true);
+    window.addEventListener("open-brochure-modal", handleOpenBrochure);
+    return () => window.removeEventListener("open-brochure-modal", handleOpenBrochure);
+  }, []);
 
   // Resolved contact info
   const contact = useMemo(() => {
@@ -1154,8 +1207,17 @@ export default function PublicWebsite({
           })}
         </nav>
  
-        {/* Right CTA — Standalone Iniciar sesión + Demo CTA */}
-        <div className="hidden lg:flex items-center gap-2.5">
+        {/* Right CTA — Standalone Iniciar sesión + Demo CTA + Brochure PDF */}
+        <div className="hidden lg:flex items-center gap-2">
+          <button
+            onClick={() => setIsBrochureModalOpen(true)}
+            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 font-extrabold text-xs uppercase px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-emerald-500/30"
+            title="Ver y Descargar Brochure Oficial PDF"
+          >
+            <FileText className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Brochure PDF</span>
+          </button>
+
           {authUser && (
             <button
               onClick={onBackToEditor}
@@ -1274,6 +1336,17 @@ export default function PublicWebsite({
                 );
               }
             })}
+            <button
+              onClick={() => {
+                setIsBrochureModalOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              className="mt-2 w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-extrabold text-xs uppercase py-2.5 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 border border-emerald-200"
+            >
+              <FileText className="w-4 h-4 text-emerald-600" />
+              <span>Brochure Corporativo PDF</span>
+            </button>
+
             <div className="flex justify-center w-full mt-2">
               <AuthButton />
             </div>
@@ -1340,13 +1413,19 @@ export default function PublicWebsite({
                       <div className="flex flex-wrap gap-3 w-full sm:w-auto">
                         <button
                           onClick={() => setActiveTab("servicios")}
-                          className={`bg-gradient-to-r ${theme.btnGradient} text-white font-bold text-xs uppercase tracking-wider px-7 py-3.5 rounded-xl cursor-pointer transition-all shadow-md shadow-blue-900/30 flex items-center gap-2`}
+                          className={`bg-gradient-to-r ${theme.btnGradient} text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl cursor-pointer transition-all shadow-md shadow-blue-900/30 flex items-center gap-2`}
                         >
                           Ver Servicios <ArrowRight className="w-4 h-4 text-emerald-400" />
                         </button>
                         <button
+                          onClick={() => setIsBrochureModalOpen(true)}
+                          className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl border border-emerald-500/40 transition-all cursor-pointer flex items-center gap-2 shadow-lg"
+                        >
+                          <Download className="w-4 h-4 text-emerald-400" /> Brochure PDF
+                        </button>
+                        <button
                           onClick={() => setActiveTab("contacto")}
-                          className="bg-white/10 hover:bg-white/15 text-white font-bold text-xs uppercase tracking-wider px-7 py-3.5 rounded-xl border border-white/15 transition-all cursor-pointer flex items-center gap-2"
+                          className="bg-white/10 hover:bg-white/15 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl border border-white/15 transition-all cursor-pointer flex items-center gap-2"
                         >
                           <Play className="w-3.5 h-3.5 text-emerald-400" /> Solicitar Demo
                         </button>
@@ -1936,6 +2015,24 @@ export default function PublicWebsite({
                   <p className="text-slate-500 text-xs md:text-sm mt-3 leading-relaxed">
                     Diseñamos sistemas que integran todas las facetas de tu negocio en una única plataforma, facilitando la gestión y el análisis de datos en tiempo real.
                   </p>
+                </div>
+
+                {/* Banner Callout for Brochure PDF */}
+                <div className="bg-gradient-to-r from-[#0A2558] to-[#1A3461] text-white p-6 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <span className="text-emerald-400 font-mono text-[10px] uppercase font-bold tracking-widest flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Documentación Corporativa
+                    </span>
+                    <h4 className="text-lg font-bold">Brochure Oficial de Servicios Clientum (PDF 8 Páginas)</h4>
+                    <p className="text-slate-300 text-xs">Descargá la presentación institucional completa con especificaciones de cada módulo, WhatsApp IA, AFIP y cuadro de ROI.</p>
+                  </div>
+                  <button
+                    onClick={() => setIsBrochureModalOpen(true)}
+                    className="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider px-5 py-3 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg border-0"
+                  >
+                    <Download className="w-4 h-4" />
+                    Ver & Descargar PDF
+                  </button>
                 </div>
 
                 {/* Sub-Tabs: Web Development, ERP implementation, Ciberseguridad, AI & BI */}
@@ -2651,14 +2748,24 @@ export default function PublicWebsite({
                   <p className="text-slate-500 text-xs md:text-sm mt-3 leading-relaxed">
                     Ofrecemos soluciones adaptadas a las necesidades de cada cliente. Nuestros planes están diseñados para brindar servicios de alta calidad, asegurando que cada empresa encuentre el soporte adecuado para su crecimiento.
                   </p>
-                  <button
-                    onClick={handleExportWooCommerceCSV}
-                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-900 text-white hover:bg-black transition-all"
-                    title="Exportar catálogo completo (servicios, planes, cursos y soluciones) listo para importar en WooCommerce"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Exportar todo a WooCommerce · CSV
-                  </button>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      onClick={() => setIsBrochureModalOpen(true)}
+                      className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 transition-all shadow-md cursor-pointer border-0"
+                      title="Descargar Brochure Oficial con cuadro comparativo en PDF"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Descargar Brochure & Planes PDF
+                    </button>
+                    <button
+                      onClick={handleExportWooCommerceCSV}
+                      className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold rounded-xl bg-slate-900 text-white hover:bg-black transition-all cursor-pointer border-0"
+                      title="Exportar catálogo completo (servicios, planes, cursos y soluciones) listo para importar en WooCommerce"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Exportar todo a WooCommerce · CSV
+                    </button>
+                  </div>
                 </div>
 
                 {/* INTERACTIVE COMPARATIVE WIDGET (Fulfills the comparative requirement) */}
@@ -2935,16 +3042,14 @@ export default function PublicWebsite({
                     <p className="text-slate-500 text-xs md:text-sm mt-3 leading-relaxed">
                       Anteriormente conocidos como <strong>Viaweb</strong>, consolidamos todo lo aprendido en una plataforma propia con facturación integrada a AFIP, cobros por MercadoPago y metodologías ágiles.
                     </p>
-                    <a
-                      href="/brochure-clientum.pdf"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-6 inline-flex items-center gap-2 bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg transition-all"
+                    <button
+                      onClick={() => setIsBrochureModalOpen(true)}
+                      className="mt-6 inline-flex items-center gap-2 bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-md cursor-pointer border-0"
                     >
-                      <Download className="w-3.5 h-3.5 text-emerald-400" />
-                      Descargar brochure
+                      <Download className="w-4 h-4 text-emerald-400" />
+                      Descargar Brochure Oficial (PDF 8 Páginas)
                       <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
-                    </a>
+                    </button>
                   </div>
                   <div className="bg-slate-200 rounded-2xl h-72 overflow-hidden relative border border-slate-300 shadow-md">
                     <img
@@ -5492,6 +5597,18 @@ export default function PublicWebsite({
                   </button>
                 </li>
               ))}
+              <li>
+                <button
+                  onClick={() => {
+                    setIsBrochureModalOpen(true);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors text-xs cursor-pointer flex items-center gap-1 mt-1"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Brochure PDF (8 Págs)</span>
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -5552,6 +5669,74 @@ export default function PublicWebsite({
         </div>
 
       </footer>
+
+      {/* Floating Quick Action Badge for Brochure PDF */}
+      <button
+        onClick={() => setIsBrochureModalOpen(true)}
+        className="fixed bottom-6 left-6 z-40 bg-slate-900/90 hover:bg-slate-900 text-white px-4 py-2.5 rounded-full shadow-2xl border border-slate-700/80 flex items-center gap-2 backdrop-blur-md transition-all hover:scale-105 cursor-pointer no-print"
+        title="Abrir y Descargar Brochure Oficial PDF (8 Páginas)"
+      >
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <FileText className="w-4 h-4 text-emerald-400" />
+        <span className="text-xs font-bold tracking-tight">Brochure PDF (8 Págs)</span>
+      </button>
+
+      {/* Fullscreen Interactive Brochure Modal */}
+      <AnimatePresence>
+        {isBrochureModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md overflow-y-auto p-3 sm:p-6 flex flex-col items-center"
+          >
+            {/* Modal Control Bar */}
+            <div className="w-full max-w-6xl bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl no-print">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 font-mono text-[10px] uppercase font-bold tracking-wider">Documento Oficial</span>
+                    <span className="text-slate-500 text-[10px]">· 8 Páginas Completo</span>
+                  </div>
+                  <h3 className="text-white font-bold text-sm tracking-tight">Brochure Corporativo & Comercial Clientum</h3>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <button
+                  onClick={() => window.print()}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase px-4 py-2.5 rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer border-0"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Imprimir / Descargar PDF</span>
+                </button>
+
+                <button
+                  onClick={() => setIsBrochureModalOpen(false)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white p-2.5 rounded-xl transition-all cursor-pointer border border-slate-700"
+                  title="Cerrar modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Brochure Container */}
+            <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden p-2 sm:p-6 mb-12">
+              <BrochurePreview
+                data={brochureData || DEFAULT_BROCHURE_DATA}
+                colorTheme={colorTheme}
+                contactInfo={contact}
+                showAllPages={true}
+                hidePrices={hidePrices}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
