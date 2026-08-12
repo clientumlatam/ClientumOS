@@ -234,7 +234,7 @@ export function BrochureGeneratorTab() {
           </button>
 
           <PdfExportButton
-            targetId="brochure-preview-container"
+            targetId="brochure-full-export-container"
             title={`Brochure Corporativo 2026 - ${data.cover.company}`}
             filename={`Brochure_${data.cover.company.replace(/\s+/g, '_')}_2026.pdf`}
             label="Descargar PDF con Branding"
@@ -552,6 +552,18 @@ export function BrochureGeneratorTab() {
           showAllPages={showAllPages}
           hidePrices={hidePrices}
           onChange={(newData) => setData(newData)}
+        />
+      </div>
+
+      <div className="absolute left-[-9999px] top-[-9999px] w-[1000px] pointer-events-none no-print" id="brochure-full-export-container">
+        <BrochurePreview
+          data={data}
+          colorTheme={colorTheme}
+          customPrimaryColor={primaryColorHex}
+          contactInfo={contactInfo}
+          selectedPage={1}
+          showAllPages={true}
+          hidePrices={hidePrices}
         />
       </div>
     </div>

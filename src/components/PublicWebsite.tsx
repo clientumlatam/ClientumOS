@@ -73,6 +73,7 @@ import { AuthButton } from "./AuthButton";
 import OrganigramaClientum from "./OrganigramaClientum";
 import AcademiaLMS from "./Academia/AcademiaLMS";
 import BrochurePreview from "./BrochurePreview";
+import { PdfExportButton } from "./PdfExportButton";
 import serviciosCatalogo from "../data/servicios-catalogo.json";
 import categoriasServicios from "../data/categorias-servicios.json";
 import cursosLms from "../data/cursos-lms.json";
@@ -5706,12 +5707,25 @@ export default function PublicWebsite({
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <PdfExportButton
+                  targetId="public-brochure-preview-container"
+                  title={`Brochure Corporativo - ${brochureData?.cover?.company || DEFAULT_BROCHURE_DATA.cover.company}`}
+                  filename={`Brochure_${(brochureData?.cover?.company || DEFAULT_BROCHURE_DATA.cover.company).replace(/\s+/g, '_')}_2026.pdf`}
+                  label="Descargar PDF Oficial"
+                  variant="primary"
+                  branding={{
+                    logoUrl: brochureData?.logoUrl || DEFAULT_BROCHURE_DATA.logoUrl,
+                    primaryColor: colorTheme === "forest" ? "#059669" : colorTheme === "amber" ? "#d97706" : colorTheme === "charcoal" ? "#27272a" : "#1a3461",
+                    companyName: brochureData?.cover?.company || DEFAULT_BROCHURE_DATA.cover.company
+                  }}
+                />
+
                 <button
                   onClick={() => window.print()}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase px-4 py-2.5 rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer border-0"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border border-slate-700"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Imprimir / Descargar PDF</span>
+                  <span>Imprimir</span>
                 </button>
 
                 <button
@@ -5725,7 +5739,7 @@ export default function PublicWebsite({
             </div>
 
             {/* Printable Brochure Container */}
-            <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden p-2 sm:p-6 mb-12">
+            <div id="public-brochure-preview-container" className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden p-2 sm:p-6 mb-12">
               <BrochurePreview
                 data={brochureData || DEFAULT_BROCHURE_DATA}
                 colorTheme={colorTheme}
