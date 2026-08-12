@@ -48,6 +48,7 @@ const tabCategoryMap: Partial<Record<ActiveTab, { category: string; label: strin
   settings: { category: 'Sistema & Configuración', label: 'Ajustes Globales', groupKey: 'config' },
   smtp: { category: 'Sistema & Configuración', label: 'Servidor SMTP / API', groupKey: 'config' },
   import_export: { category: 'Sistema & Configuración', label: 'Importar / Exportar', groupKey: 'config' },
+  google_drive: { category: 'Sistema & Configuración', label: 'Google Drive Integración', groupKey: 'config' },
 
   agent_os: { category: 'OS & Infraestructura IA', label: 'Centro de Control Agent OS', groupKey: 'os_infra' },
   crm_agents: { category: 'OS & Infraestructura IA', label: 'Red de Agentes & Organigrama', groupKey: 'os_infra' },
@@ -55,59 +56,58 @@ const tabCategoryMap: Partial<Record<ActiveTab, { category: string; label: strin
   crm_config: { category: 'OS & Infraestructura IA', label: 'Salud & Diagnóstico OS', groupKey: 'os_infra' },
   account: { category: 'OS & Infraestructura IA', label: 'Mi Cuenta & Seguridad', groupKey: 'os_infra' },
 
+  vscrm_dashboard: { category: 'VS-CRM (Abdulkader Safi)', label: 'Dashboard VS-CRM', groupKey: 'vscrm' },
+  vscrm_clients: { category: 'VS-CRM (Abdulkader Safi)', label: 'Clientes VS-CRM', groupKey: 'vscrm' },
+  vscrm_projects: { category: 'VS-CRM (Abdulkader Safi)', label: 'Proyectos & Tareas', groupKey: 'vscrm' },
+  vscrm_time: { category: 'VS-CRM (Abdulkader Safi)', label: 'Registro de Tiempo', groupKey: 'vscrm' },
+  vscrm_invoices: { category: 'VS-CRM (Abdulkader Safi)', label: 'Facturas & Invoices', groupKey: 'vscrm' },
+  vscrm_expenses: { category: 'VS-CRM (Abdulkader Safi)', label: 'Gastos Operativos', groupKey: 'vscrm' },
+  vscrm_afip: { category: 'VS-CRM (Abdulkader Safi)', label: 'Factura Electrónica AFIP', groupKey: 'vscrm' },
+
   public_website: { category: 'Portal', label: 'Sitio Web & Academia', groupKey: 'public' },
   workflow: { category: 'Workflow', label: 'Inicio a Fin', groupKey: 'workflow' },
 };
 
 const sectionTabsMap: Record<string, SubTab[]> = {
   os_infra: [
-    { id: 'agent_os', label: 'Control Agent OS' },
-    { id: 'crm_agents', label: 'Red de Agentes' },
-    { id: 'cmdb', label: 'Inventario CMDB' },
-    { id: 'crm_config', label: 'Salud & Diagnóstico' },
-    { id: 'account', label: 'Mi Cuenta' },
+    { id: 'agent_os', label: 'Agent OS & Red Agentes' },
+    { id: 'cmdb', label: 'CMDB & Salud OS' },
+    { id: 'account', label: 'Mi Cuenta & Seguridad' },
   ],
   audience: [
     { id: 'icp_builder', label: 'ICP & Buyer Personas' },
-    { id: 'clients', label: 'Fichero LATAM' },
-    { id: 'contacts', label: 'Contactos' },
-    { id: 'lists', label: 'Segmentos' },
+    { id: 'contacts', label: 'Base de Datos LATAM' },
   ],
   prospecting: [
-    { id: 'geolocated_prospecting', label: 'Mapa IA' },
-    { id: 'crm_kanban', label: 'Tablero Kanban' },
-    { id: 'meddic', label: 'Lead Scoring MEDDIC' },
+    { id: 'geolocated_prospecting', label: 'Prospección Maps IA' },
+    { id: 'crm_kanban', label: 'Pipeline CRM & MEDDIC' },
   ],
   ai_content: [
-    { id: 'strategy', label: 'Estrategias' },
-    { id: 'copywriter', label: 'Ad Copy Studio' },
-    { id: 'brochure_generator', label: 'Brochures PDF' },
-    { id: 'ai_hub', label: 'Voice Hub' },
+    { id: 'strategy', label: 'Estrategia & Copywriter IA' },
+    { id: 'brochure_generator', label: 'Brochure PDF Studio' },
+    { id: 'ai_hub', label: 'Gemini AI & Voice Hub' },
   ],
   campaigns: [
-    { id: 'email_template_builder', label: 'Editor HTML' },
-    { id: 'templates', label: 'Plantillas' },
-    { id: 'email_campaigns', label: 'Campañas Activas' },
-    { id: 'automations', label: 'Flujos de Trabajo' },
-    { id: 'outreach_agent', label: 'Agente Outreach' },
+    { id: 'email_template_builder', label: 'Diseñador & Plantillas' },
+    { id: 'email_campaigns', label: 'Campañas & Outreach IA' },
   ],
   seo: [
-    { id: 'keyword_research', label: 'Keywords' },
-    { id: 'topic_map', label: 'Mapa Tópico' },
-    { id: 'on_page_audit', label: 'Auditoría On-Page' },
-    { id: 'content_calendar', label: 'Calendario' },
-    { id: 'rank_tracker', label: 'Rank Tracker' },
-    { id: 'seo_automation', label: 'SEO Automation' },
+    { id: 'keyword_research', label: 'Keywords & Mapa Tópico' },
+    { id: 'on_page_audit', label: 'Auditoría & Rank Tracker' },
+    { id: 'content_calendar', label: 'Calendario & SEO Auto' },
   ],
   analytics: [
-    { id: 'overview', label: 'General' },
-    { id: 'analytics_dashboard', label: 'Atribución & ROI' },
-    { id: 'chat', label: 'Asistente CMO' },
+    { id: 'overview', label: 'Dashboard & Analytics ROI' },
+    { id: 'chat', label: 'Asistente CMO IA' },
   ],
   config: [
-    { id: 'settings', label: 'Ajustes Globales' },
-    { id: 'smtp', label: 'SMTP & APIs' },
-    { id: 'import_export', label: 'Import / Export' },
+    { id: 'settings', label: 'Configuración & APIs' },
+    { id: 'google_drive', label: 'Google Drive Workspace' },
+  ],
+  vscrm: [
+    { id: 'vscrm_dashboard', label: 'Dashboard & Clientes VS' },
+    { id: 'vscrm_projects', label: 'Proyectos, Tareas & Horas' },
+    { id: 'vscrm_invoices', label: 'Centro Financiero & AFIP' },
   ],
 };
 

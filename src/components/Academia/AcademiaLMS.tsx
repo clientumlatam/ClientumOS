@@ -333,6 +333,7 @@ export default function AcademiaLMS({ authUser, onNeedLogin }: Props) {
   const [certModal, setCertModal] = useState<Certificate | null>(null);
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lmsTab, setLmsTab] = useState<'catalog' | 'dashboard'>('catalog');
 
   // Estado del curso seleccionado
   const [selectedCourse, setSelectedCourse] = useState(COURSES[0]);
@@ -560,6 +561,212 @@ export default function AcademiaLMS({ authUser, onNeedLogin }: Props) {
     }, 1500);
   };
 
+  function renderStudentDashboard() {
+    return (
+    <div className="flex flex-col gap-8 animate-fadeIn">
+      {/* Welcome Card & Stats */}
+      <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="flex flex-col gap-2">
+          <span className="text-indigo-300 font-mono text-[10px] uppercase tracking-widest font-black">
+            PANEL PERSONAL DEL ESTUDIANTE
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+            ¡Hola, {authUser ? authUser : 'Estudiante'}! 👋
+          </h2>
+          <p className="text-indigo-200 text-xs sm:text-sm max-w-xl">
+            Acá tenés el resumen de tu avance académico en Clientum Academia. Continuá tus masterclasses pendientes o revisá tus certificados oficiales emitidos.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 bg-white/15 backdrop-blur-md px-5 py-4 rounded-2xl border border-white/10 shrink-0">
+          <div className="p-3 bg-indigo-600 rounded-xl text-white">
+            <Award className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-[10px] text-indigo-200 uppercase font-mono block">Certificados</span>
+            <span className="text-lg font-black text-white">
+              {enrollments.filter(e => e.completed).length} Obtenidos
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col gap-1">
+          <span className="text-xs text-slate-400 font-medium">Cursos Inscriptos</span>
+          <span className="text-2xl font-black text-slate-900 font-mono">{enrollments.length}</span>
+        </div>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col gap-1">
+          <span className="text-xs text-slate-400 font-medium">Completados</span>
+          <span className="text-2xl font-black text-emerald-600 font-mono">{enrollments.filter(e => e.completed).length}</span>
+        </div>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col gap-1">
+          <span className="text-xs text-slate-400 font-medium">Horas Estimadas</span>
+          <span className="text-2xl font-black text-indigo-600 font-mono">{enrollments.length * 10}h</span>
+        </div>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col gap-1">
+          <span className="text-xs text-slate-400 font-medium">Estado General</span>
+          <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg w-fit mt-1">Activo ⚡</span>
+        </div>
+      </div>
+
+      {/* Currently Enrolled Courses Section */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-black text-slate-900 tracking-tight">Cursos Inscriptos y Progreso</h3>
+          <button
+            onClick={() => setLmsTab('catalog')}
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
+          >
+            Explorar más cursos <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {enrollments.length === 0 ? (
+          <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center gap-4 shadow-sm">
+            <div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl">
+              <BookOpen className="w-8 h-8" />
+            </div>
+            <div className="max-w-md">
+              <h4 className="text-base font-bold text-slate-800">No estás inscripto en ningún curso todavía</h4>
+              <p className="text-xs text-slate-500 mt-1">
+                Inscribite gratis en cualquiera de nuestras masterclasses interactivas para comenzar tu formación en CRM y automatización con IA.
+              </p>
+            </div>
+            <button
+              onClick={() => setLmsTab('catalog')}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-5 rounded-xl transition-all cursor-pointer shadow-sm border-0"
+            >
+              Ver Catálogo de Cursos
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {enrollments.map((enr) => {
+              const courseData = COURSES.find(c => c.slug === enr.course_slug) || COURSES[0];
+              return (
+                <div key={enr.course_slug} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[9px] font-mono font-black uppercase px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg">
+                        {courseData.level}
+                      </span>
+                      {enr.completed ? (
+                        <span className="text-[9px] font-mono font-black uppercase px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5" /> Completado
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-mono font-black uppercase px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg">
+                          En Curso ({enr.progress_pct ?? 0}%)
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-black text-slate-900 text-base leading-snug">{enr.course_name}</h4>
+                    <div className="space-y-1.5 pt-2">
+                      <div className="flex justify-between text-xs font-mono font-bold text-slate-600">
+                        <span>Progreso de Lecciones</span>
+                        <span>{enr.progress_pct ?? 0}%</span>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-600 rounded-full transition-all duration-500" style={{ width: `${enr.progress_pct ?? 0}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <span className="text-[11px] text-slate-400">
+                      Último acceso: {enr.last_accessed ? new Date(enr.last_accessed).toLocaleDateString() : 'Reciente'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setSelectedCourse(courseData);
+                        setLmsTab('catalog');
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border-0 shadow-xs"
+                    >
+                      <PlayCircle className="w-4 h-4" /> Continuar Masterclass
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Recent Activity & Upcoming Lessons */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+              <Clock className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm">Actividad Reciente</h4>
+              <p className="text-xs text-slate-400">Tus últimas acciones en la academia</p>
+            </div>
+          </div>
+          <div className="space-y-3 pt-2">
+            {enrollments.length > 0 ? (
+              enrollments.map((e, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2 h-2 rounded-full bg-indigo-600" />
+                    <div>
+                      <p className="font-bold text-slate-800">{e.course_name}</p>
+                      <p className="text-[10px] text-slate-400">Inscripto el {new Date(e.enrolled_at || Date.now()).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <span className="font-mono text-indigo-600 font-bold">{e.progress_pct}%</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-slate-400 py-4 text-center">Sin actividad reciente registrada.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Upcoming Lessons & Recommendations */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm">Próximas Lecciones & Recomendaciones</h4>
+              <p className="text-xs text-slate-400">Siguiente hito en tu formación</p>
+            </div>
+          </div>
+          <div className="space-y-3 pt-2">
+            {COURSES.slice(0, 2).map((c, idx) => (
+              <div key={idx} className="flex items-start justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs">
+                <div className="flex items-start gap-2.5">
+                  <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600 mt-0.5">
+                    <BookOpen className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800">{c.name}</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{c.tagline}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedCourse(c);
+                    setLmsTab('catalog');
+                  }}
+                  className="text-xs text-indigo-600 hover:underline font-bold shrink-0 pt-1"
+                >
+                  Ver →
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 flex flex-col gap-12 select-none" id="lms-root">
 
@@ -576,56 +783,89 @@ export default function AcademiaLMS({ authUser, onNeedLogin }: Props) {
         </p>
       </div>
 
-      {/* ── Selector de Cursos (Tabs) ────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        {COURSES.map((course) => {
-          const isSelected = selectedCourse.slug === course.slug;
-          const CourseIcon = course.icon;
-          const cEnroll = enrollments.find(e => e.course_slug === course.slug);
-          return (
-            <button
-              key={course.slug}
-              onClick={() => {
-                setSelectedCourse(course);
-                setPlayerSlide(0);
-                setQuizAnswers({});
-                setQuizSubmitted(false);
-                setQuizScoreError(false);
-              }}
-              className={`text-left p-4 rounded-2xl border transition-all cursor-pointer flex flex-col gap-3 group relative overflow-hidden ${
-                isSelected
-                  ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/15"
-                  : "bg-white border-slate-200 hover:border-slate-300 text-slate-800 hover:bg-slate-50"
-              }`}
-            >
-              <div className="flex justify-between items-start w-full">
-                <div className={`p-2.5 rounded-xl ${isSelected ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600"}`}>
-                  <CourseIcon className="w-5 h-5" />
-                </div>
-                {cEnroll?.completed ? (
-                  <span className={`text-[9px] font-bold font-mono uppercase px-2 py-0.5 rounded-full ${isSelected ? "bg-emerald-500 text-white" : "bg-emerald-100 text-emerald-800"}`}>
-                    Certificado
-                  </span>
-                ) : cEnroll ? (
-                  <span className={`text-[9px] font-bold font-mono uppercase px-2 py-0.5 rounded-full ${isSelected ? "bg-white/30 text-white" : "bg-amber-100 text-amber-800"}`}>
-                    {cEnroll.progress_pct}%
-                  </span>
-                ) : (
-                  <span className={`text-[9px] font-bold font-mono uppercase px-2 py-0.5 rounded-full ${isSelected ? "bg-white/10 text-white/80" : "bg-slate-100 text-slate-500"}`}>
-                    {course.badge}
-                  </span>
-                )}
-              </div>
-              <div>
-                <h3 className="font-bold text-xs sm:text-sm line-clamp-1 tracking-tight leading-snug">{course.name}</h3>
-                <p className={`text-[11px] mt-1 line-clamp-2 ${isSelected ? "text-indigo-100" : "text-slate-400"}`}>
-                  {course.tagline}
-                </p>
-              </div>
-            </button>
-          );
-        })}
+      {/* Primary Navigation Tabs */}
+      <div className="flex justify-center border-b border-slate-200 gap-8">
+        <button
+          onClick={() => setLmsTab('catalog')}
+          className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+            lmsTab === 'catalog'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" /> Catálogo de Cursos
+        </button>
+        <button
+          onClick={() => setLmsTab('dashboard')}
+          className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors cursor-pointer relative ${
+            lmsTab === 'dashboard'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <GraduationCap className="w-4 h-4" /> Mi Dashboard de Estudiante
+          {enrollments.length > 0 && (
+            <span className="bg-indigo-100 text-indigo-700 text-[10px] font-mono px-2 py-0.5 rounded-full font-black">
+              {enrollments.length}
+            </span>
+          )}
+        </button>
       </div>
+
+      {lmsTab === 'dashboard' ? (
+        renderStudentDashboard()
+      ) : (
+        <div className="flex flex-col gap-12">
+          {/* ── Selector de Cursos (Tabs) ────────────────────────────────────────── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            {COURSES.map((course) => {
+              const isSelected = selectedCourse.slug === course.slug;
+              const CourseIcon = course.icon;
+              const cEnroll = enrollments.find(e => e.course_slug === course.slug);
+              return (
+                <button
+                  key={course.slug}
+                  onClick={() => {
+                    setSelectedCourse(course);
+                    setPlayerSlide(0);
+                    setQuizAnswers({});
+                    setQuizSubmitted(false);
+                    setQuizScoreError(false);
+                  }}
+                  className={`text-left p-4 rounded-2xl border transition-all cursor-pointer flex flex-col gap-3 group relative overflow-hidden ${
+                    isSelected
+                      ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/15"
+                      : "bg-white border-slate-200 hover:border-slate-300 text-slate-800 hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <div className={`p-2.5 rounded-xl ${isSelected ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600"}`}>
+                      <CourseIcon className="w-5 h-5" />
+                    </div>
+                    {cEnroll?.completed ? (
+                      <span className={`text-[9px] font-bold font-mono uppercase px-2 py-0.5 rounded-full ${isSelected ? "bg-emerald-500 text-white" : "bg-emerald-100 text-emerald-800"}`}>
+                        Certificado
+                      </span>
+                    ) : cEnroll ? (
+                      <span className={`text-[9px] font-bold font-mono uppercase px-2 py-0.5 rounded-full ${isSelected ? "bg-white/30 text-white" : "bg-amber-100 text-amber-800"}`}>
+                        {cEnroll.progress_pct}%
+                      </span>
+                    ) : (
+                      <span className={`text-[9px] font-bold font-mono uppercase px-2 py-0.5 rounded-full ${isSelected ? "bg-white/10 text-white/80" : "bg-slate-100 text-slate-500"}`}>
+                        {course.badge}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-xs sm:text-sm line-clamp-1 tracking-tight leading-snug">{course.name}</h3>
+                    <p className={`text-[11px] mt-1 line-clamp-2 ${isSelected ? "text-indigo-100" : "text-slate-400"}`}>
+                      {course.tagline}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
 
       {/* ── Ficha del Curso Seleccionado ─────────────────────────────────────── */}
       <div className="rounded-3xl border border-slate-200 shadow-xl bg-white overflow-hidden grid grid-cols-1 lg:grid-cols-12">
@@ -874,6 +1114,8 @@ export default function AcademiaLMS({ authUser, onNeedLogin }: Props) {
           ))}
         </div>
       </div>
+        </div>
+      )}
 
       {/* ── PLAYER DE CLASE INTERACTIVO & SANDBOX (WORKSPACE MODAL) ─────────────── */}
       {playerOpen && (

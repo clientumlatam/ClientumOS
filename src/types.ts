@@ -1,6 +1,5 @@
 export type ActiveTab = 
   | 'overview' 
-  | 'ai_marketing_expert'
   | 'strategy' 
   | 'copywriter' 
   | 'seo' 
