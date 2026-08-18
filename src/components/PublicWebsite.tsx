@@ -68,6 +68,9 @@ import {
   Handshake
 } from "lucide-react";
 
+import { KeyProjectsSection } from "./KeyProjectsSection";
+import { BlogSectionManager, RecentBlogPostsSection } from "./BlogManager";
+
 import { BrochureData } from "../types";
 import { AuthButton } from "./AuthButton";
 import OrganigramaClientum from "./OrganigramaClientum";
@@ -137,6 +140,7 @@ interface PublicWebsiteProps {
   authUser?: string | null;
   onOpenLogin?: () => void;
   onLogout?: () => void;
+  onLoginSuccess?: () => void;
 }
 
 const DEFAULT_BROCHURE_DATA: BrochureData = {
@@ -193,6 +197,7 @@ export default function PublicWebsite({
   authUser = null,
   onOpenLogin,
   onLogout,
+  onLoginSuccess,
 }: PublicWebsiteProps) {
   const [activeTab, setActiveTab] = useState<string>("inicio");
   useEffect(() => {
@@ -1228,7 +1233,7 @@ export default function PublicWebsite({
               <ArrowUpRight className="w-3.5 h-3.5 text-white" />
             </button>
           )}
-          <AuthButton />
+          <AuthButton onLoginSuccess={onLoginSuccess} />
 
           {/* Standalone Demo CTA */}
           <button
@@ -1349,7 +1354,7 @@ export default function PublicWebsite({
             </button>
 
             <div className="flex justify-center w-full mt-2">
-              <AuthButton />
+              <AuthButton onLoginSuccess={onLoginSuccess} />
             </div>
 
             <button
@@ -2530,6 +2535,23 @@ export default function PublicWebsite({
                   </div>
                 </div>
 
+                {/* ── PROYECTOS DESTACADOS ── */}
+                <KeyProjectsSection
+                  onContactClick={(title) => {
+                    setDemoForm({ ...demoForm, mensaje: `Hola, me interesa consultar sobre el proyecto destacado "${title}".` });
+                    setActiveTab("contacto");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
+
+                {/* ── BÚSQUEDA & ÚLTIMOS ARTÍCULOS DEL BLOG ── */}
+                <RecentBlogPostsSection
+                  onGoToBlog={() => {
+                    setActiveTab("blog");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
+
               </div>
             )}
 
@@ -3700,115 +3722,13 @@ export default function PublicWebsite({
 
             {/* RECURSOS & BLOG TAB */}
             {activeTab === "blog" && (
-              <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-12">
-                <div className="text-center max-w-xl mx-auto">
-                  <span className="text-blue-600 font-mono text-xs uppercase tracking-widest font-bold">Base de Conocimientos</span>
-                  <h1 className="text-3xl font-display font-black text-slate-950 tracking-tight mt-1">
-                    Recursos &amp; Blog de Clientum
-                  </h1>
-                  <p className="text-slate-500 text-xs mt-2">
-                    Explora guías descargables en PDF, videos educativos y artículos populares para acelerar la transformación de tu PyME.
-                  </p>
-                </div>
-
-                {/* Filter and Search */}
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
-                  <div className="relative w-full md:w-80">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <Search className="w-4 h-4" />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="Buscar artículos (Ej. SEO, ERP)..."
-                      className="w-full pl-9 bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs focus:border-blue-600 focus:outline-none"
-                      value={blogSearchQuery}
-                      onChange={(e) => setBlogSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex gap-4 text-xs font-semibold text-slate-500">
-                    <span>Artículos encontrados: {filteredBlogPosts.length}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                  {/* Articles list */}
-                  <div className="lg:col-span-8 flex flex-col gap-6">
-                    {filteredBlogPosts.map((post, idx) => (
-                      <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="bg-blue-50 text-blue-700 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full font-mono">
-                            {post.category}
-                          </span>
-                          <span className="text-slate-400 text-[10px] font-mono">{post.readTime} de lectura</span>
-                        </div>
-                        <h3 className="font-display font-bold text-slate-950 text-base leading-snug hover:text-blue-600 transition-colors cursor-pointer">
-                          {post.title}
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                          {post.desc}
-                        </p>
-                        <button
-                          onClick={() => {
-                            setDemoForm({ ...demoForm, mensaje: `Hola, me interesa leer más sobre "${post.title}" y cómo aplicarlo a mi negocio.` });
-                            setActiveTab("contacto");
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                          className="text-xs font-bold text-slate-900 hover:text-blue-600 transition-colors inline-flex items-center gap-1 mt-4"
-                        >
-                          Leer artículo completo
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                    {filteredBlogPosts.length === 0 && (
-                      <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 text-slate-500 text-xs">
-                        No se encontraron artículos que coincidan con tu búsqueda.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Downloads / Resources Sidebar */}
-                  <div className="lg:col-span-4 flex flex-col gap-6">
-                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-                      <h3 className="font-bold text-slate-950 text-sm mb-4 flex items-center gap-2">
-                        <Download className="w-4 h-4 text-blue-600" />
-                        Ebooks y Guías PDF
-                      </h3>
-                      <div className="flex flex-col gap-4">
-                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 flex flex-col gap-1.5">
-                          <h4 className="font-bold text-xs text-slate-900">Ebook: Optimización E-commerce</h4>
-                          <p className="text-[10px] text-slate-500">Todo sobre conversiones y control de stock omnicanal.</p>
-                          <a href="https://web.viaweb.net.ar/wp-content/uploads/2024/10/Brochure_Servicio.pdf" target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline font-bold flex items-center gap-1 mt-1">
-                            Descargar PDF Gratis
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-
-                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 flex flex-col gap-1.5">
-                          <h4 className="font-bold text-xs text-slate-900">Guía de Automatización ERP</h4>
-                          <p className="text-[10px] text-slate-500">Cómo enlazar bots de WhatsApp con transacciones.</p>
-                          <button onClick={() => alert("Ebook enviado a tu email registrado.")} className="text-[10px] text-blue-600 hover:underline font-bold text-left flex items-center gap-1 mt-1">
-                            Solicitar por Email
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800">
-                      <h3 className="font-bold text-white text-sm mb-4 flex items-center gap-2">
-                        <Video className="w-4 h-4 text-emerald-400" />
-                        Videos Educativos
-                      </h3>
-                      <p className="text-[11px] text-slate-300 leading-relaxed mb-4">
-                        Accede a nuestra biblioteca de tutoriales en video para comprender mejor el uso de herramientas CRM integradas.
-                      </p>
-                      <button onClick={() => setActiveTab("servicios")} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs py-2 rounded-lg transition-all font-mono uppercase tracking-wider">
-                        Ver Video Tutorial
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <BlogSectionManager
+                onContactClick={(topic) => {
+                  setDemoForm({ ...demoForm, mensaje: `Hola, me interesa consultar sobre "${topic}".` });
+                  setActiveTab("contacto");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              />
             )}
 
             {/* CONTACTO TAB */}

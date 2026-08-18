@@ -45,6 +45,7 @@ export type ActiveTab =
   | 'vscrm_invoices'
   | 'vscrm_expenses'
   | 'vscrm_afip'
+  | 'ai_marketing_expert'
   | 'admin_console';
 
 export interface CampaignStrategy {

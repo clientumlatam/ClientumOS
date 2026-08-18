@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { ClientsTab } from './ClientsTab';
 import { ListsTab } from './ListsTab';
+import { PdfExportButton } from './common/PdfExportButton';
 
 export interface B2BContact {
   id: string;
@@ -278,7 +279,7 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
       {subTab === 'lists' && <ListsTab />}
 
       {subTab === 'contacts' && (
-        <>
+        <div id="contacts-list-container" className="space-y-6">
           {/* Top Banner */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -297,6 +298,18 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          <PdfExportButton
+            targetId="contacts-list-container"
+            title="Directorio de Contactos B2B"
+            filename="Directorio_Contactos_B2B.pdf"
+            label="Exportar a PDF"
+            variant="outline"
+            size="md"
+            branding={{
+              companyName: 'Clientum B2B Intelligence',
+              primaryColor: '#059669'
+            }}
+          />
           <button
             onClick={() => setShowAddModal(true)}
             className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer border-0"
@@ -761,7 +774,7 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
           </form>
         </div>
       )}
-        </>
+        </div>
       )}
     </div>
   );

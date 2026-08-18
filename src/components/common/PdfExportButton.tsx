@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 import { FileDown, Loader2, CheckCircle2, Printer, Sparkles } from 'lucide-react';
 import { generateClientPdfReport, ReportPdfData } from '../../utils/generatePdfReport';
 
@@ -95,6 +95,70 @@ export function PdfExportButton({
           logging: false,
           ignoreElements: (element) => {
             return element.classList.contains('no-pdf') || element.classList.contains('no-print');
+          },
+          onclone: (clonedDoc) => {
+            const elements = clonedDoc.getElementsByTagName('*');
+            for (let i = 0; i < elements.length; i++) {
+              const el = elements[i] as HTMLElement;
+              if (el.style) {
+                if (el.style.background && (el.style.background.includes('oklab') || el.style.background.includes('oklch'))) {
+                  el.style.background = '#ffffff';
+                }
+                if (el.style.backgroundColor && (el.style.backgroundColor.includes('oklab') || el.style.backgroundColor.includes('oklch'))) {
+                  el.style.backgroundColor = '#ffffff';
+                }
+                if (el.style.color && (el.style.color.includes('oklab') || el.style.color.includes('oklch'))) {
+                  el.style.color = '#0f172a';
+                }
+                if (el.style.borderColor && (el.style.borderColor.includes('oklab') || el.style.borderColor.includes('oklch'))) {
+                  el.style.borderColor = '#e2e8f0';
+                }
+              }
+            }
+            const clonedWindow = clonedDoc.defaultView || window;
+            if (clonedWindow) {
+              const originalGetComputedStyle = clonedWindow.getComputedStyle;
+              clonedWindow.getComputedStyle = function (elt, pseudoElt) {
+                const style = originalGetComputedStyle.call(clonedWindow, elt, pseudoElt);
+                if (!style) return style;
+                return new Proxy(style, {
+                  get(target, prop) {
+                    if (prop === 'getPropertyValue') {
+                      return function(propertyName: string) {
+                        const val = target.getPropertyValue(propertyName);
+                        if (typeof val === 'string' && (val.includes('oklab') || val.includes('oklch'))) {
+                          if (propertyName === 'background-color' || propertyName === 'background') {
+                            return 'rgb(255, 255, 255)';
+                          }
+                          if (propertyName === 'color') {
+                            return 'rgb(15, 23, 42)';
+                          }
+                          if (propertyName === 'border-color') {
+                            return 'rgb(226, 232, 240)';
+                          }
+                          return val.replace(/okl?ch?\([^)]+\)/g, 'rgb(120, 120, 120)').replace(/okl?ab?\([^)]+\)/g, 'rgb(120, 120, 120)');
+                        }
+                        return val;
+                      };
+                    }
+                    const val = target[prop as any];
+                    if (typeof val === 'string' && (val.includes('oklab') || val.includes('oklch'))) {
+                      if (prop === 'backgroundColor' || prop === 'background') {
+                        return 'rgb(255, 255, 255)';
+                      }
+                      if (prop === 'color') {
+                        return 'rgb(15, 23, 42)';
+                      }
+                      if (prop === 'borderColor') {
+                        return 'rgb(226, 232, 240)';
+                      }
+                      return val.replace(/okl?ch?\([^)]+\)/g, 'rgb(120, 120, 120)').replace(/okl?ab?\([^)]+\)/g, 'rgb(120, 120, 120)');
+                    }
+                    return typeof val === 'function' ? val.bind(target) : val;
+                  }
+                });
+              };
+            }
           }
         });
 

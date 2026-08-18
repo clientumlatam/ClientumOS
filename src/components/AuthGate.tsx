@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Loader2, Lock, User, ArrowRight, Mail, Eye, EyeOff, ArrowLeft, CheckCircle } from "lucide-react";
+import { Loader2, Lock, User, ArrowRight, Mail, Eye, EyeOff, ArrowLeft, CheckCircle, Sparkles } from "lucide-react";
 
 interface AuthGateProps {
   onAuthenticated: (username: string, role?: string) => void;
@@ -26,7 +26,6 @@ export default function AuthGate({ onAuthenticated }: AuthGateProps) {
   const [success, setSuccess]               = useState<string | null>(null);
   const [loading, setLoading]               = useState(false);
 
-  // Remove reset_token from URL once captured
   useEffect(() => {
     if (resetToken) {
       const url = new URL(window.location.href);
@@ -43,7 +42,24 @@ export default function AuthGate({ onAuthenticated }: AuthGateProps) {
     setConfirmPassword("");
   };
 
-  // ── Login / Register ────────────────────────────────────────────────────────
+  const handleDirectDemo = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const response = await fetch("/api/auth/demo-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "Error al ingresar como demo.");
+      onAuthenticated(data.user.username, data.user.role);
+    } catch (err: any) {
+      setError(err.message || "Error al ingresar como demo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -233,44 +249,55 @@ export default function AuthGate({ onAuthenticated }: AuthGateProps) {
               </div>
             </div>
 
-            {/* Quick Demo & Admin Access Banner */}
             {mode === "login" && (
-              <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span className="text-[11px] text-slate-300 font-semibold uppercase tracking-wider">
-                      Usuarios Demo Harcodeados
-                    </span>
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={handleDirectDemo}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-950/40 border border-blue-400/30 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                  <span>Ingresar directamente como Demo</span>
+                </button>
+
+                <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span className="text-[11px] text-slate-300 font-semibold uppercase tracking-wider">
+                        Usuarios Demo Harcodeados
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">Pass: password</span>
                   </div>
-                  <span className="text-[10px] text-slate-500 font-mono">Pass: password</span>
-                </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUsername("demo");
-                      setPassword("password");
-                      setError(null);
-                    }}
-                    className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-300 hover:text-white text-[11px] font-bold rounded-lg transition-all border border-slate-700/60 cursor-pointer shadow-sm"
-                  >
-                    <User className="w-3 h-3 text-blue-400" />
-                    👤 Demo (user)
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUsername("demo");
+                        setPassword("password");
+                        setError(null);
+                      }}
+                      className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-300 hover:text-white text-[11px] font-bold rounded-lg transition-all border border-slate-700/60 cursor-pointer shadow-sm"
+                    >
+                      <User className="w-3 h-3 text-blue-400" />
+                      👤 Demo (user)
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUsername("admin");
-                      setPassword("password");
-                      setError(null);
-                    }}
-                    className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 hover:text-emerald-200 text-[11px] font-bold rounded-lg transition-all border border-emerald-800/60 cursor-pointer shadow-sm"
-                  >
-                    ⚡ Admin (admin)
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUsername("admin");
+                        setPassword("password");
+                        setError(null);
+                      }}
+                      className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 hover:text-emerald-200 text-[11px] font-bold rounded-lg transition-all border border-emerald-800/60 cursor-pointer shadow-sm"
+                    >
+                      ⚡ Admin (admin)
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

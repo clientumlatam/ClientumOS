@@ -7,6 +7,8 @@ const auth = getAuth(app);
 
 const provider = new GoogleAuthProvider();
 provider.addScope('https://www.googleapis.com/auth/drive');
+provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
 
 let isSigningIn = false;
 let cachedAccessToken: string | null = null;

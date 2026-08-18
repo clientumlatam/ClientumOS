@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { LogIn, LogOut, Shield, X, Loader2, KeyRound, Mail, UserPlus, CheckCircle2 } from 'lucide-react';
+import { LogIn, LogOut, Shield, X, Loader2, KeyRound, Mail, UserPlus, CheckCircle2, Sparkles, User } from 'lucide-react';
 
 interface SessionUser {
   id: number;
@@ -10,15 +10,15 @@ interface SessionUser {
 
 interface AuthButtonProps {
   compact?: boolean;
+  onLoginSuccess?: (user: SessionUser) => void;
 }
 
-export function AuthButton({ compact = false }: AuthButtonProps) {
+export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
 
-  // Form states
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -70,6 +70,35 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
       window.removeEventListener('open-login-modal', handleOpenModal);
     };
   }, []);
+
+  const handleDemoLogin = async () => {
+    setError(null);
+    setSuccessMsg(null);
+    setLoading(true);
+    const mockUser: SessionUser = { id: 3, username: 'demo', role: 'admin' };
+    let finalUser = mockUser;
+    try {
+      const res = await fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.user) {
+        finalUser = data.user;
+        setUser(data.user);
+      } else {
+        setUser(mockUser);
+      }
+    } catch {
+      setUser(mockUser);
+    } finally {
+      setShowModal(false);
+      setPassword('');
+      setLoading(false);
+      onLoginSuccess?.(finalUser);
+      window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: finalUser } }));
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,7 +211,8 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
               setUser(fallbackData.user);
               setShowModal(false);
               setPassword('');
-              window.dispatchEvent(new Event('auth-changed'));
+              onLoginSuccess?.(fallbackData.user);
+              window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: fallbackData.user } }));
               return;
             }
           }
@@ -196,7 +226,8 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
           setUser(data.user);
           setShowModal(false);
           setPassword('');
-          window.dispatchEvent(new Event('auth-changed'));
+          onLoginSuccess?.(data.user);
+          window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: data.user } }));
           return;
         }
       }
@@ -227,6 +258,13 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
     setSuccessMsg(null);
   };
 
+  const fillDemoCredentials = () => {
+    setUsernameOrEmail('demo');
+    setPassword('password');
+    setError(null);
+    setSuccessMsg(null);
+  };
+
   const renderModal = () => (
     <div 
       className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md p-4 flex items-center justify-center overflow-y-auto animate-in fade-in duration-200"
@@ -242,7 +280,6 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Branding header with Clientum logo */}
         <div className="flex flex-col items-center justify-center text-center mb-6">
           <div className="w-12 h-12 rounded-xl bg-[#0A2558] border border-slate-700/80 p-2 shadow-lg mb-3 flex items-center justify-center">
             <img src="/favicon.svg" alt="Clientum Logo" className="w-8 h-8" referrerPolicy="no-referrer" />
@@ -255,7 +292,24 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
           </p>
         </div>
 
-        {/* Mode Selector Tabs */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white text-xs font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center space-x-2 cursor-pointer shadow-lg shadow-blue-950/50 border border-blue-400/40 hover:scale-[1.01] active:scale-[0.99]"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                <span>Acceder como Demo (Sin usuario / contraseña)</span>
+              </>
+            )}
+          </button>
+        </div>
+
         <div className="flex bg-slate-950 rounded-xl p-1 mb-4 border border-slate-800">
           <button
             type="button"
@@ -273,7 +327,6 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
           </button>
         </div>
 
-        {/* Google / Better Auth Quick Login */}
         <div className="mb-4">
           <a
             href="/api/auth/google/login"
@@ -330,21 +383,35 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
             </div>
           )}
 
-          {/* Quick Admin Access Banner */}
           {mode === 'login' && (
             <div className="space-y-2">
-              <div className="p-2.5 bg-emerald-950/40 border border-emerald-800/60 rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-xs text-emerald-300 font-medium">¿Querés probar como Administrador?</span>
+              <div className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-[11px] text-slate-300 font-semibold uppercase tracking-wider">
+                      Accesos Rápidos
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-mono">Pass: password</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={fillAdminCredentials}
-                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold rounded-lg transition-all cursor-pointer shadow-sm"
-                >
-                  ⚡ Llenar Admin
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={fillDemoCredentials}
+                    className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-blue-950/50 hover:bg-blue-900/70 text-blue-300 hover:text-white text-[11px] font-bold rounded-lg transition-all border border-blue-800/60 cursor-pointer shadow-sm"
+                  >
+                    <User className="w-3 h-3 text-blue-400" />
+                    <span>Llenar Demo</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={fillAdminCredentials}
+                    className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-emerald-950/50 hover:bg-emerald-900/70 text-emerald-300 hover:text-emerald-200 text-[11px] font-bold rounded-lg transition-all border border-emerald-800/60 cursor-pointer shadow-sm"
+                  >
+                    <span>⚡ Llenar Admin</span>
+                  </button>
+                </div>
               </div>
               <div className="text-right">
                 <button
@@ -455,7 +522,16 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
       );
     }
     return (
-      <>
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={handleDemoLogin}
+          disabled={loading}
+          className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer border border-blue-200"
+          title="Login as Demo"
+        >
+          <Sparkles className="w-3 h-3 text-blue-600" />
+          <span>Login as Demo</span>
+        </button>
         <button
           onClick={() => { setError(null); setSuccessMsg(null); setShowModal(true); }}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer border-0"
@@ -464,7 +540,7 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
           <span>Iniciar sesión</span>
         </button>
         {showModal && renderModal()}
-      </>
+      </div>
     );
   }
 
@@ -510,7 +586,21 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
   }
 
   return (
-    <>
+    <div className="inline-flex items-center gap-2">
+      <button
+        onClick={handleDemoLogin}
+        disabled={loading}
+        className="inline-flex items-center space-x-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-sm cursor-pointer border-0"
+        title="Login as Demo"
+      >
+        {loading ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+        )}
+        <span>Login as Demo</span>
+      </button>
+
       <button
         onClick={() => { setError(null); setSuccessMsg(null); setShowModal(true); }}
         className="inline-flex items-center space-x-2 bg-[#1A3461] hover:bg-[#0A2558] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer border-0"
@@ -519,6 +609,6 @@ export function AuthButton({ compact = false }: AuthButtonProps) {
         <span>Iniciar sesión</span>
       </button>
       {showModal && createPortal(renderModal(), document.body)}
-    </>
+    </div>
   );
 }

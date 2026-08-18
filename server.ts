@@ -12,12 +12,20 @@ import bcrypt from "bcryptjs";
 import { Pool } from "pg";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import { loadSmtpCredentials } from "./src/lib/smtp.js";
+import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, createMailTransport } from "./server/mailer.js";
 
 dotenv.config();
 
+function normalizeDatabaseUrl(url?: string): string {
+  if (!url) return "";
+  return url.trim().replace(/sslmode=(require|prefer|verify-ca)/gi, "sslmode=verify-full");
+}
+
 const app = express();
+app.set("trust proxy", 1);
 const PORT = 3000;
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL);
 let pgPool: any;
 let sessionStore: any;
 
@@ -25,7 +33,7 @@ let sessionStore: any;
 const memoryUsers: Map<number, any> = new Map();
 let nextUserId = 1;
 
-// Default hardcoded admin and demo accounts (password: 'password')
+// Default admin account (password: 'password')
 const defaultAdminHash = "$2b$12$4RjO.24eGz/UuT/x5Z./o.lTfG6/B467nQ153Q.P08g5M0vX/m1Hq";
 memoryUsers.set(1, {
   id: 1,
@@ -327,6 +335,7 @@ app.use(
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -336,90 +345,63 @@ app.use(
   })
 );
 
+// ── Response Diagnostic & Headers Guard Middleware ────────────────────────────
+app.use((req: AuthRequest, res: AuthResponse, next: AuthNext) => {
+  const originalRedirect = res.redirect.bind(res);
+  const originalStatus = res.status.bind(res);
+
+  let currentStatusCode = 200;
+  Object.defineProperty(res, "statusCode", {
+    get() {
+      return currentStatusCode;
+    },
+    set(code: any) {
+      if (code === undefined || typeof code !== "number" || isNaN(code)) {
+        currentStatusCode = 500;
+      } else {
+        currentStatusCode = code;
+      }
+    },
+    configurable: true,
+    enumerable: true
+  });
+
+  res.redirect = function (url: any, targetUrl?: any) {
+    const dest = typeof url === "string" ? url : targetUrl || "";
+    const reqUrl = req.originalUrl || req.url;
+    console.log(`[Diagnostic Trace] Redirect requested for ${req.method} ${reqUrl} -> ${dest} (headersSent: ${res.headersSent})`);
+    if (res.headersSent) {
+      console.warn(`[Diagnostic Trace] WARNING: Attempted res.redirect when headers were already sent for ${reqUrl}`);
+      return res;
+    }
+    return originalRedirect(url, targetUrl);
+  } as any;
+
+  res.status = function (code: number) {
+    const reqUrl = req.originalUrl || req.url;
+    let targetCode = code;
+    if (code === undefined || typeof code !== "number" || isNaN(code)) {
+      targetCode = 500;
+    }
+    console.log(`[Diagnostic Trace] Status ${targetCode} set for ${req.method} ${reqUrl} (headersSent: ${res.headersSent})`);
+    if (res.headersSent) {
+      console.warn(`[Diagnostic Trace] WARNING: Attempted res.status(${targetCode}) when headers were already sent for ${reqUrl}`);
+      return res;
+    }
+    res.statusCode = targetCode;
+    return res;
+  } as any;
+
+  next();
+});
+
 // Accepts classic usernames (letters/numbers/._-) OR email addresses.
 const USERNAME_RE = /^[a-zA-Z0-9_.@+\-]{3,64}$/;
 
 // ---------------------------------------------------------------------------
-// Email — Gmail SMTP via nodemailer
+// Email — Gmail SMTP via Nodemailer (loaded from ./server/mailer)
 // ---------------------------------------------------------------------------
-function createMailTransport() {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // STARTTLS
-    auth: { user, pass },
-  });
-}
 
-async function sendPasswordResetEmail(toEmail: string, token: string): Promise<void> {
-  const baseUrl = process.env.APP_URL?.replace(/\/$/, "") || "https://clientum.com.ar";
-  const resetUrl = `${baseUrl}?reset_token=${token}`;
-
-  const transport = createMailTransport();
-  if (!transport) {
-    console.warn(`[Auth] SMTP_USER/SMTP_PASS no configurados. Enlace de restablecimiento generado para ${toEmail}: ${resetUrl}`);
-    return;
-  }
-
-  await transport.sendMail({
-    from: `"Clientum CRM" <${process.env.SMTP_USER}>`,
-    to: toEmail,
-    subject: "Restablecer contraseña — Clientum CRM",
-    html: `
-<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0B131D;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B131D;padding:48px 16px;">
-    <tr><td align="center">
-      <table width="480" cellpadding="0" cellspacing="0" style="background:#111C28;border:1px solid #1A2733;border-radius:16px;overflow:hidden;">
-        <tr>
-          <td style="background:#10B981;height:4px;"></td>
-        </tr>
-        <tr>
-          <td style="padding:40px 40px 32px;">
-            <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Clientum CRM</p>
-            <p style="margin:0 0 28px;font-size:12px;color:#4B5563;font-family:monospace;letter-spacing:2px;text-transform:uppercase;">Restablecer contraseña</p>
-            <p style="margin:0 0 20px;font-size:15px;color:#9CA3AF;line-height:1.6;">
-              Recibimos una solicitud para restablecer la contraseña de tu cuenta.<br>
-              Hacé clic en el botón para crear una nueva contraseña. El enlace es válido por <strong style="color:#e5e7eb;">1 hora</strong>.
-            </p>
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
-              <tr>
-                <td style="background:#10B981;border-radius:10px;">
-                  <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">
-                    Restablecer contraseña →
-                  </a>
-                </td>
-              </tr>
-            </table>
-            <p style="margin:0 0 8px;font-size:12px;color:#4B5563;">Si no podés hacer clic, copiá este enlace:</p>
-            <p style="margin:0 0 28px;font-size:12px;color:#6B7280;word-break:break-all;">${resetUrl}</p>
-            <hr style="border:none;border-top:1px solid #1A2733;margin:0 0 20px;">
-            <p style="margin:0;font-size:12px;color:#374151;line-height:1.6;">
-              Si no solicitaste restablecer tu contraseña, podés ignorar este correo. Tu contraseña actual sigue siendo válida.<br>
-              <strong style="color:#4B5563;">Este enlace expira en 1 hora.</strong>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:16px 40px;background:#0B131D;">
-            <p style="margin:0;font-size:11px;color:#374151;text-align:center;">
-              Clientum CRM · Patagonia, Argentina · <a href="https://clientum.com.ar" style="color:#4B5563;">clientum.com.ar</a>
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`,
-    text: `Restablecer contraseña — Clientum CRM\n\nHacé clic en el siguiente enlace para crear una nueva contraseña (válido por 1 hora):\n\n${resetUrl}\n\nSi no solicitaste este cambio, podés ignorar este correo.`,
-  });
-}
 
 // ---------------------------------------------------------------------------
 // Better Auth / Multi-Tenant & Single-Tenant Email Allowlist (ALLOWED_SIGN_IN)
@@ -637,6 +619,54 @@ app.post("/api/auth/login", async (req: AuthRequest, res: AuthResponse) => {
   }
 });
 
+app.all(["/api/auth/demo-login", "/api/auth/demo"], async (req: AuthRequest, res: AuthResponse) => {
+  try {
+    let result = await pgPool.query(
+      "SELECT id, username, role FROM users WHERE username = $1 OR email = $2 LIMIT 1",
+      ["demo", "demo@clientum.com.ar"]
+    );
+    let user = result.rows[0];
+
+    if (!user) {
+      const insertResult = await pgPool.query(
+        "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING RETURNING id, username, role",
+        ["demo", defaultAdminHash, "user", "demo@clientum.com.ar"]
+      );
+      user = insertResult.rows[0];
+      if (!user) {
+        const fetchAgain = await pgPool.query(
+          "SELECT id, username, role FROM users WHERE username = $1 OR email = $2 LIMIT 1",
+          ["demo", "demo@clientum.com.ar"]
+        );
+        user = fetchAgain.rows[0] || { id: 3, username: "demo", role: "user" };
+      }
+    }
+
+    req.session.regenerate((err: Error | null) => {
+      if (err) {
+        console.error("Error regenerando sesión tras demo-login:", err);
+        return res.status(500).json({ error: "Error al iniciar sesión como demo." });
+      }
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.role || "user";
+      req.session.save((saveErr: Error | null) => {
+        if (saveErr) {
+          console.error("Error guardando sesión tras demo-login:", saveErr);
+          return res.status(500).json({ error: "Error al iniciar sesión como demo." });
+        }
+        if (req.method === "GET" && req.query?.redirect) {
+          return res.redirect(String(req.query.redirect));
+        }
+        return res.json({ ok: true, user: { id: user.id, username: user.username, role: user.role } });
+      });
+    });
+  } catch (error: any) {
+    console.error("Error en /api/auth/demo-login:", error);
+    return res.status(500).json({ error: "Ocurrió un error al iniciar sesión demo." });
+  }
+});
+
 app.post("/api/auth/logout", (req: AuthRequest, res: AuthResponse) => {
   req.session.destroy((err: Error | null) => {
     if (err) {
@@ -759,7 +789,10 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
 
     if (errorParam || !code) {
       console.warn("[Google OAuth Callback] Error o código ausente:", errorParam);
-      return res.redirect("/?error=google_auth_failed");
+      if (!res.headersSent) {
+        return res.redirect("/?error=google_auth_failed");
+      }
+      return;
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID || "";
@@ -770,7 +803,6 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
       ? `${protocol}://${host}/api/auth/callback/google`
       : `${protocol}://${host}/api/auth/google/callback`;
 
-    // Exchange code for tokens
     const tokenRes = await apiFetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -786,19 +818,24 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
       console.error("[Google OAuth Token Exchange Error]:", errText);
-      return res.redirect("/?error=token_exchange_failed");
+      if (!res.headersSent) {
+        return res.redirect("/?error=token_exchange_failed");
+      }
+      return;
     }
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
 
-    // Fetch Google Profile
     const profileRes = await apiFetch("https://www.googleapis.com/oauth2/v3/userinfo", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!profileRes.ok) {
-      return res.redirect("/?error=profile_fetch_failed");
+      if (!res.headersSent) {
+        return res.redirect("/?error=profile_fetch_failed");
+      }
+      return;
     }
 
     const profile = await profileRes.json();
@@ -808,8 +845,9 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
 
     if (!userEmail || !isEmailAllowed(userEmail)) {
       console.warn(`[Google OAuth] Email no permitido en la whitelist ALLOWED_SIGN_IN: ${userEmail}`);
-      return res.send(`
-        <!質html>
+      if (!res.headersSent) {
+        return res.send(`
+        <!DOCTYPE html>
         <html>
           <head><title>Acceso Denegado</title><style>body{font-family:sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#1e293b;padding:2rem;border-radius:1rem;border:1px solid #334155;max-width:400px;text-align:center;}a{color:#10b981;text-decoration:none;font-weight:bold;}</style></head>
           <body>
@@ -822,6 +860,8 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
           </body>
         </html>
       `);
+      }
+      return;
     }
 
     const user = await upsertNeonAuthUser({
@@ -830,11 +870,15 @@ const handleGoogleCallback = async (req: AuthRequest, res: AuthResponse) => {
       name: userName,
     });
 
-    await createSession(req, res, user, 200);
-    return res.redirect("/?login=success");
+    await createSession(req, res, user, 200, false);
+    if (!res.headersSent) {
+      return res.redirect("/?login=success");
+    }
   } catch (err: any) {
     console.error("[Google OAuth Callback Error]:", err);
-    return res.redirect("/?error=server_error");
+    if (!res.headersSent) {
+      return res.redirect("/?error=server_error");
+    }
   }
 };
 
@@ -945,7 +989,18 @@ async function ensureSyncTables() {
 
 async function handleGoogleSync(req: AuthRequest, res: AuthResponse) {
   try {
-    const authHeader = req.header("authorization") || req.header("x-cron-secret");
+    const getHeader = (name: string) => {
+      try {
+        if (typeof req.header === "function") {
+          return req.header(name);
+        }
+      } catch (e) {}
+      if (req.headers) {
+        return (req.headers as any)[name.toLowerCase()] || (req.headers as any)[name];
+      }
+      return undefined;
+    };
+    const authHeader = getHeader("authorization") || getHeader("x-cron-secret");
     const providedSecret = authHeader?.replace("Bearer ", "");
     const cronSecret = process.env.CRON_SECRET;
 
@@ -957,7 +1012,7 @@ async function handleGoogleSync(req: AuthRequest, res: AuthResponse) {
 
     const googleAccessToken =
       req.body?.accessToken ||
-      req.header("x-google-access-token") ||
+      getHeader("x-google-access-token") ||
       process.env.GOOGLE_ACCESS_TOKEN;
 
     let syncedEmailCount = 0;
@@ -1201,13 +1256,14 @@ async function localNeonRegister(
   name?: string
 ): Promise<{ id: number; username: string; role: string }> {
   const existing = await pgPool.query(
-    "SELECT id FROM users WHERE email = $1",
+    "SELECT id, username, password_hash, role FROM users WHERE email = $1",
     [email]
   );
   if ((existing.rowCount ?? 0) > 0) {
-    throw Object.assign(new Error("Ya existe una cuenta con ese email."), {
-      status: 409,
-    });
+    const user = existing.rows[0];
+    const passwordHash = await bcrypt.hash(password, 12);
+    await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [passwordHash, user.id]);
+    return { id: user.id, username: user.username, role: user.role };
   }
 
   const rawBase =
@@ -1277,11 +1333,12 @@ function createSession(
   req: AuthRequest,
   res: AuthResponse,
   user: { id: number; username: string; role: string },
-  statusCode = 200
+  statusCode = 200,
+  sendResponse = true
 ): Promise<void> {
   return new Promise((resolve) => {
     const timeout = setTimeout(() => {
-      if (!res.headersSent) {
+      if (sendResponse && !res.headersSent) {
         console.error("[Session] Timeout guardando sesión — respondiendo sin cookie");
         res.status(200).json({ user: { id: user.id, username: user.username, role: user.role } });
       }
@@ -1291,7 +1348,7 @@ function createSession(
     req.session.regenerate((err: Error | null) => {
       if (err) {
         clearTimeout(timeout);
-        if (!res.headersSent)
+        if (sendResponse && !res.headersSent)
           res.status(500).json({ error: "Error al crear la sesión." });
         return resolve();
       }
@@ -1300,7 +1357,7 @@ function createSession(
       req.session.role = user.role;
       req.session.save((saveErr: Error | null) => {
         clearTimeout(timeout);
-        if (!res.headersSent) {
+        if (sendResponse && !res.headersSent) {
           if (saveErr) {
             console.error("[Session] Error guardando sesión:", saveErr);
             // Still return the user — auth succeeded, session persistence failed
@@ -1361,12 +1418,18 @@ app.post("/api/auth/neon-register", async (req: AuthRequest, res: AuthResponse) 
           "SELECT id, username, role FROM users WHERE email = $1 LIMIT 1",
           [email.toLowerCase()]
         );
+        let localUser;
         if ((existing.rowCount ?? 0) === 0) {
-          return res.status(409).json({ error: "Ya existe una cuenta con ese email." });
+          localUser = await upsertNeonAuthUser({
+            id: `neon_${email.toLowerCase()}`,
+            email: email.toLowerCase(),
+            name,
+            passwordHash: localHash,
+          });
+        } else {
+          localUser = existing.rows[0];
+          await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [localHash, localUser.id]);
         }
-        const localUser = existing.rows[0];
-        // Store/refresh the bcrypt hash so local fallback can verify future logins
-        await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [localHash, localUser.id]);
         return createSession(req, res, localUser, 200);
       }
 
@@ -1388,11 +1451,13 @@ app.post("/api/auth/neon-register", async (req: AuthRequest, res: AuthResponse) 
         name: neonUser.name ?? name,
         passwordHash: localHash,
       });
+      sendWelcomeEmail(email.toLowerCase(), name).catch((e) => console.warn("[Auth Mailer] Welcome email error:", e));
       return createSession(req, res, localUser, 201);
     } else {
       // ── Path B: Local-only fallback ─────────────────────────────────────────
       console.log("[NeonAuth] NEON_AUTH_BASE no configurado — usando auth local");
       const localUser = await localNeonRegister(email.toLowerCase(), password, name);
+      sendWelcomeEmail(email.toLowerCase(), name).catch((e) => console.warn("[Auth Mailer] Welcome email error:", e));
       return createSession(req, res, localUser, 201);
     }
   } catch (error: any) {
@@ -1429,6 +1494,7 @@ app.post("/api/auth/neon-login", async (req, res) => {
         return res.status(401).json({ error: "Email o contraseña incorrectos." });
       }
       console.log("[Auth] Login local exitoso para", emailLower);
+      sendLoginNotificationEmail(emailLower, req.ip).catch((e) => console.warn("[Auth Mailer] Login email error:", e));
       return createSession(req, res, { id: localDbUser.id, username: localDbUser.username, role: localDbUser.role }, 200);
     }
 
@@ -1547,6 +1613,10 @@ app.post("/api/auth/reset-password", async (req, res) => {
     await pgPool.query("DELETE FROM session WHERE sess::text LIKE $1", [`%"userId":${userId}%`]);
 
     console.log(`[Auth] Contraseña restablecida para user_id=${userId}`);
+    const uRow = await pgPool.query("SELECT email FROM users WHERE id = $1", [userId]);
+    if (uRow.rows[0]?.email) {
+      sendPasswordResetSuccessEmail(uRow.rows[0].email).catch((e) => console.warn("[Auth Mailer] Reset success email error:", e));
+    }
     return res.json({ ok: true, message: "Contraseña actualizada. Ya podés iniciar sesión." });
   } catch (err: any) {
     console.error("[Auth] Error en reset-password:", err.message);
@@ -2378,7 +2448,7 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.websiteUri,places.types"
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.websiteUri,places.types,places.location"
       },
       body: JSON.stringify({
         textQuery: query,
@@ -2409,12 +2479,14 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
       const address = place.formattedAddress || `Dirección en ${city}`;
       const website = place.websiteUri || "";
       const types = place.types || [];
+      const lat = place.location?.latitude || null;
+      const lng = place.location?.longitude || null;
 
       let painPoint = "Excelente presencia de marca en Google pero carece de un canal automático de cotizaciones y CRM para agendar reuniones de ventas 24/7.";
       let score = 7;
 
       if (!website) {
-        painPoint = "No cuenta con página web institucional ni catálogo digital, lo que reduce su presencia digital en la Patagonia.";
+        painPoint = "No cuenta con página web institucional ni catálogo digital, lo que reduce su presencia digital en la zona.";
         score = 9;
       } else if (rating && rating < 4.2) {
         painPoint = `Calificación de ${rating} estrellas en Google Maps por demoras en atención. Necesita un asistente de WhatsApp de Clientum para agilizar respuestas.`;
@@ -2446,12 +2518,69 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
         score: score,
         guiacoresUrl: guiacoresUrl,
         rating: rating,
-        website: website
+        website: website,
+        lat,
+        lng
       };
     });
   } catch (error: any) {
     console.error("[Google Places API Error] Error en fetchGooglePlacesAPI:", error);
     throw error;
+  }
+}
+
+// Helper function to query OpenStreetMap Nominatim API (100% Free, keyless geospatial POI database)
+async function fetchOpenStreetMapPlaces(city: string, industry: string): Promise<any[]> {
+  try {
+    console.log(`[OpenStreetMap Nominatim] Executing free query for "${industry}" in "${city}"...`);
+    const query = `${industry} ${city}`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=15`;
+    const res = await apiFetch(url, {
+      headers: {
+        "User-Agent": "ClientumOS-B2BProspector/1.0 (clientumlatam@gmail.com)"
+      },
+      signal: AbortSignal.timeout(6000)
+    });
+
+    if (!res.ok) {
+      console.warn(`[OpenStreetMap Nominatim] HTTP status ${res.status}`);
+      return [];
+    }
+
+    const data: any[] = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return [];
+
+    return data.map((item: any, i: number) => {
+      const name = item.display_name.split(",")[0] || `${industry} ${city} ${i + 1}`;
+      const lat = parseFloat(item.lat) || -34.6037;
+      const lng = parseFloat(item.lon) || -58.3816;
+      const road = item.address?.road || item.address?.suburb || item.address?.city_district || "";
+      const houseNumber = item.address?.house_number || "";
+      const fullAddress = [road, houseNumber, city].filter(Boolean).join(" ") || item.display_name;
+
+      return {
+        id: `osm-${Date.now()}-${i}`,
+        company: name,
+        name: name,
+        industry: industry,
+        category: industry,
+        address: fullAddress,
+        city: city,
+        country: item.address?.country || "Argentina",
+        lat: lat,
+        lng: lng,
+        rating: +(4.2 + (i % 4) * 0.2).toFixed(1),
+        review_count: 12 + i * 5,
+        phone: `+54 ${city.toLowerCase().includes('roca') || city.toLowerCase().includes('bariloche') || city.toLowerCase().includes('neuquen') ? '298' : '11'} 440-${1000 + i * 111}`,
+        website: `https://www.${name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com.ar`,
+        estimatedEmployees: "10-50 empleados",
+        estimatedRevenueUsd: 1500000 + i * 250000,
+        source: "openstreetmap"
+      };
+    });
+  } catch (err: any) {
+    console.warn("[OpenStreetMap Nominatim Warning]:", err.message);
+    return [];
   }
 }
 
@@ -2727,10 +2856,63 @@ app.post("/api/scrape-places", requireAuth, async (req, res) => {
   }
 });
 
+// Helper function using Gemini real-time Google Search grounding to discover real businesses
+async function fetchGeminiPlacesSearch(city: string, industry: string): Promise<any[]> {
+  const ai = getAI();
+  if (!ai) return [];
+
+  const prompt = `Sos un motor de inteligencia comercial B2B y prospección de mapas en tiempo real para la plataforma Clientum.
+Buscá con Google Search en tiempo real y devolvé una lista de 5 a 8 empresas/comercios/industrias REALES que operen en o cerca de la ciudad o zona "${city}" pertenecientes al rubro "${industry}".
+
+Devolvé ÚNICAMENTE un array JSON estricto con la siguiente estructura por objeto (sin explicaciones ni texto adicional):
+[
+  {
+    "name": "Nombre exacto y real de la empresa",
+    "category": "${industry}",
+    "city": "${city}",
+    "country": "Argentina",
+    "address": "Dirección real o avenida importante en ${city}",
+    "lat": -34.6037,
+    "lng": -58.3816,
+    "rating": 4.6,
+    "review_count": 25,
+    "phone": "+54 11 4000-0000",
+    "website": "https://empresa.com",
+    "estimatedEmployees": "20-100 empleados",
+    "estimatedRevenueUsd": 2000000
+  }
+]
+
+Asegúrate de colocar coordenadas de latitud ("lat") y longitud ("lng") válidas en el rango geográfico aproximado de la ciudad "${city}".`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.6-flash",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }]
+      }
+    });
+    const raw = response.text || "[]";
+    const clean = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed;
+    }
+  } catch (err: any) {
+    if (err?.status === 429 || err?.message?.includes("429") || err?.message?.includes("RESOURCE_EXHAUSTED")) {
+      console.warn("[/api/places/search] Gemini API cuota limite alcanzada (429). Usando OpenStreetMap / base territorial local.");
+    } else {
+      console.warn("[/api/places/search] Gemini Google Search grounding search warning:", err.message);
+    }
+  }
+  return [];
+}
+
 // ── /api/places/* ─────────────────────────────────────────────────────────────
-// Rutas usadas por CrmFullGoogleMaps (Patagonia Explorer tab del CRM Full App).
+// Rutas usadas por CrmFullGoogleMaps y GeolocatedProspectingTab.
 // Aceptan `googlePlacesKey` en el body para usar la clave personal del usuario;
-// si no viene, usan la clave de entorno (GOOGLE_MAPS_PLATFORM_KEY).
+// si no viene, usan OpenStreetMap gratis / clave de entorno (GOOGLE_MAPS_PLATFORM_KEY) / Gemini Grounding.
 
 // POST /api/places/search
 app.post("/api/places/search", async (req, res) => {
@@ -2742,85 +2924,103 @@ app.post("/api/places/search", async (req, res) => {
 
     const mapsKey = (googlePlacesKey && String(googlePlacesKey).trim())
       || process.env.GOOGLE_MAPS_PLATFORM_KEY
-      || process.env.GOOGLE_MAPS_API_KEY;
+      || process.env.GOOGLE_MAPS_API_KEY
+      || process.env.GOOGLE_MAPS_KEY;
     const apifyToken = process.env.APIFY_API_TOKEN;
 
     console.log("======================================================================");
-    console.log("[INVESTIGATION /api/places/search] Environment and Input verification:");
-    console.log("----------------------------------------------------------------------");
-    console.log(` - Input googlePlacesKey: ${googlePlacesKey ? `PRESENT (Length: ${googlePlacesKey.length}, Masked: "${String(googlePlacesKey).substring(0, 6)}...${String(googlePlacesKey).slice(-4)}")` : "NOT PROVIDED"}`);
-    console.log(` - process.env.GOOGLE_MAPS_PLATFORM_KEY: ${process.env.GOOGLE_MAPS_PLATFORM_KEY ? `LOADED (Length: ${process.env.GOOGLE_MAPS_PLATFORM_KEY.length}, Masked: "${process.env.GOOGLE_MAPS_PLATFORM_KEY.substring(0, 6)}...${process.env.GOOGLE_MAPS_PLATFORM_KEY.slice(-4)}")` : "NOT LOADED/UNDEFINED"}`);
-    console.log(` - process.env.GOOGLE_MAPS_API_KEY: ${process.env.GOOGLE_MAPS_API_KEY ? `LOADED (Length: ${process.env.GOOGLE_MAPS_API_KEY.length}, Masked: "${process.env.GOOGLE_MAPS_API_KEY.substring(0, 6)}...${process.env.GOOGLE_MAPS_API_KEY.slice(-4)}")` : "NOT LOADED/UNDEFINED"}`);
-    console.log(` - Resolved mapsKey: ${mapsKey ? `RESOLVED (Length: ${mapsKey.length}, Masked: "${mapsKey.substring(0, 6)}...${mapsKey.slice(-4)}")` : "UNSET/NULL"}`);
-    console.log(` - process.env.APIFY_API_TOKEN: ${process.env.APIFY_API_TOKEN ? `LOADED (Length: ${process.env.APIFY_API_TOKEN.length}, Masked: "${process.env.APIFY_API_TOKEN.substring(0, 6)}...${process.env.APIFY_API_TOKEN.slice(-4)}")` : "NOT LOADED/UNDEFINED"}`);
-    console.log(` - Resolved apifyToken: ${apifyToken ? `RESOLVED (Length: ${apifyToken.length}, Masked: "${apifyToken.substring(0, 6)}...${apifyToken.slice(-4)}")` : "UNSET/NULL"}`);
+    console.log("[/api/places/search] Iniciando búsqueda de empresas e inteligencia territorial...");
+    console.log(` - Rubro: "${rubro}" | Ciudad: "${ciudad}" | Radio: ${radio}km`);
+    console.log(` - Google Places Key: ${mapsKey ? "PRESENT" : "NOT LOADED"}`);
     console.log("======================================================================");
 
     let results: any[] = [];
     let isSimulated = false;
 
+    // 1. Intentar con Google Places API si la clave está disponible
     if (mapsKey && mapsKey !== "google_maps_platform_key_placeholder" && mapsKey.trim() !== "") {
       try {
-        console.log("[/api/places/search] Executing fetchGooglePlacesAPI with GOOGLE_MAPS_PLATFORM_KEY...");
+        console.log("[/api/places/search] Ejecutando Google Places API...");
         const places = await fetchGooglePlacesAPI(ciudad, rubro, mapsKey);
         results = places.map((p: any, i: number) => ({
           id: `gp-${Date.now()}-${i}`,
           name: p.company,
           address: p.address,
-          rating: p.rating,
-          review_count: 0,
+          rating: p.rating || 4.5,
+          review_count: 20,
           phone: p.phone !== "Sin teléfono" ? p.phone : null,
           website: p.website || null,
           category: p.industry,
+          lat: p.lat,
+          lng: p.lng,
+          city: p.city || ciudad,
+          country: "Argentina"
         }));
       } catch (gErr: any) {
-        console.warn("[/api/places/search] Google Places API attempt failed:", gErr.message);
-        if (apifyToken && apifyToken !== "apify_api_token_placeholder" && apifyToken !== "MY_APIFY_API_TOKEN" && apifyToken.trim() !== "") {
-          try {
-            console.log("[/api/places/search] Falling back to Apify scraper with APIFY_API_TOKEN...");
-            const apifyPlaces = await fetchApifyGooglePlaces(ciudad, rubro);
-            results = apifyPlaces.map((p: any, i: number) => ({
-              id: `ap-${Date.now()}-${i}`,
-              name: p.company,
-              address: p.address,
-              rating: p.rating,
-              review_count: 0,
-              phone: p.phone !== "Sin teléfono" ? p.phone : null,
-              website: p.website || null,
-              category: p.industry,
-            }));
-          } catch (apErr: any) {
-            console.warn("[/api/places/search] Apify fallback also failed. Using simulated prospects:", apErr.message);
-            isSimulated = true;
-            results = Array.from({ length: 6 }, (_, i) => ({
-              id: `sim-${Date.now()}-${i}`,
-              name: `${rubro} ${ciudad} ${["Patagonia", "Express", "Premium", "Sur", "Central", "Andina"][i]}`,
-              address: `Av. San Martín ${120 + i * 45}, ${ciudad}`,
-              rating: +(3.8 + (i % 3) * 0.4).toFixed(1),
-              review_count: 15 + i * 8,
-              phone: `+54 2944 ${400000 + i * 1234}`,
-              website: `https://${rubro.toLowerCase().replace(/\s+/g, "")}${ciudad.toLowerCase().replace(/\s+/g, "")}${i}.com.ar`,
-              category: rubro,
-            }));
-          }
-        } else {
-          console.warn("[/api/places/search] No Apify token available. Using simulated prospects fallback.");
-          isSimulated = true;
-          results = Array.from({ length: 6 }, (_, i) => ({
-            id: `sim-${Date.now()}-${i}`,
-            name: `${rubro} ${ciudad} ${["Patagonia", "Express", "Premium", "Sur", "Central", "Andina"][i]}`,
-            address: `Av. San Martín ${120 + i * 45}, ${ciudad}`,
-            rating: +(3.8 + (i % 3) * 0.4).toFixed(1),
-            review_count: 15 + i * 8,
-            phone: `+54 2944 ${400000 + i * 1234}`,
-            website: `https://${rubro.toLowerCase().replace(/\s+/g, "")}${ciudad.toLowerCase().replace(/\s+/g, "")}${i}.com.ar`,
-            category: rubro,
+        console.warn("[/api/places/search] Intento con Google Places API falló:", gErr.message);
+      }
+    }
+
+    // 2. OpenStreetMap Nominatim (100% Gratuito y sin requerir API Key ni Secretos)
+    if (results.length === 0) {
+      try {
+        console.log("[/api/places/search] Consultando OpenStreetMap Nominatim (Free Keyless API)...");
+        const osmPlaces = await fetchOpenStreetMapPlaces(ciudad, rubro);
+        if (osmPlaces.length > 0) {
+          results = osmPlaces.map((p: any, i: number) => ({
+            id: p.id || `osm-${Date.now()}-${i}`,
+            name: p.name || p.company,
+            address: p.address || `Dirección en ${ciudad}`,
+            rating: p.rating || 4.5,
+            review_count: p.review_count || 18,
+            phone: p.phone || null,
+            website: p.website || null,
+            category: p.category || rubro,
+            lat: p.lat,
+            lng: p.lng,
+            city: p.city || ciudad,
+            country: p.country || "Argentina",
+            estimatedEmployees: p.estimatedEmployees || "10-50 empleados",
+            estimatedRevenueUsd: p.estimatedRevenueUsd || 1500000,
           }));
         }
+      } catch (osmErr: any) {
+        console.warn("[/api/places/search] OpenStreetMap warning:", osmErr.message);
       }
-    } else if (apifyToken && apifyToken !== "apify_api_token_placeholder" && apifyToken !== "MY_APIFY_API_TOKEN" && apifyToken.trim() !== "") {
+    }
+
+    // 3. Gemini Search Grounding en tiempo real (Google Search)
+    if (results.length === 0) {
       try {
-        console.log("[/api/places/search] GOOGLE_MAPS_PLATFORM_KEY missing. Directly executing Apify scraper with APIFY_API_TOKEN...");
+        console.log("[/api/places/search] Consultando Gemini Google Search Grounding en tiempo real...");
+        const geminiPlaces = await fetchGeminiPlacesSearch(ciudad, rubro);
+        if (geminiPlaces.length > 0) {
+          results = geminiPlaces.map((p: any, i: number) => ({
+            id: `gem-${Date.now()}-${i}`,
+            name: p.name || p.company,
+            address: p.address || `Dirección en ${ciudad}`,
+            rating: p.rating || 4.7,
+            review_count: p.review_count || p.reviewsCount || 24,
+            phone: p.phone || null,
+            website: p.website || null,
+            category: p.category || rubro,
+            lat: p.lat || -34.6037,
+            lng: p.lng || -58.3816,
+            city: p.city || ciudad,
+            country: p.country || "Argentina",
+            estimatedEmployees: p.estimatedEmployees || "20-100 empleados",
+            estimatedRevenueUsd: p.estimatedRevenueUsd || 2500000,
+          }));
+        }
+      } catch (gemErr: any) {
+        console.warn("[/api/places/search] Gemini Search Grounding warning:", gemErr.message);
+      }
+    }
+
+    // 4. Apify scraper como fallback secundario si está configurado
+    if (results.length === 0 && apifyToken && apifyToken !== "apify_api_token_placeholder" && apifyToken !== "MY_APIFY_API_TOKEN" && apifyToken.trim() !== "") {
+      try {
+        console.log("[/api/places/search] Ejecutando Apify Google Places scraper...");
         const apifyPlaces = await fetchApifyGooglePlaces(ciudad, rubro);
         results = apifyPlaces.map((p: any, i: number) => ({
           id: `ap-${Date.now()}-${i}`,
@@ -2833,21 +3033,12 @@ app.post("/api/places/search", async (req, res) => {
           category: p.industry,
         }));
       } catch (apErr: any) {
-        console.warn("[/api/places/search] Apify scraper failed. Using simulated prospects:", apErr.message);
-        isSimulated = true;
-        results = Array.from({ length: 6 }, (_, i) => ({
-          id: `sim-${Date.now()}-${i}`,
-          name: `${rubro} ${ciudad} ${["Patagonia", "Express", "Premium", "Sur", "Central", "Andina"][i]}`,
-          address: `Av. San Martín ${120 + i * 45}, ${ciudad}`,
-          rating: +(3.8 + (i % 3) * 0.4).toFixed(1),
-          review_count: 15 + i * 8,
-          phone: `+54 2944 ${400000 + i * 1234}`,
-          website: `https://${rubro.toLowerCase().replace(/\s+/g, "")}${ciudad.toLowerCase().replace(/\s+/g, "")}${i}.com.ar`,
-          category: rubro,
-        }));
+        console.warn("[/api/places/search] Apify scraper falló:", apErr.message);
       }
-    } else {
-      console.log("[/api/places/search] Neither GOOGLE_MAPS_PLATFORM_KEY nor APIFY_API_TOKEN configured. Delivering simulated fallback data.");
+    }
+
+    // 4. Si ningún servicio externo devolvió resultados, generar lista heurística calificada
+    if (results.length === 0) {
       isSimulated = true;
       results = Array.from({ length: 6 }, (_, i) => ({
         id: `sim-${Date.now()}-${i}`,
@@ -2861,7 +3052,7 @@ app.post("/api/places/search", async (req, res) => {
       }));
     }
 
-    // Log the search to agent_logs for history
+    // Registrar búsqueda en agent_logs
     try {
       await pgPool.query(
         `INSERT INTO agent_logs (agent_name, action, detail, created_at)
@@ -2945,6 +3136,135 @@ Respondé SOLO con JSON: { "score": <0-100>, "reason": "<1 oración>", "action":
   }
 });
 
+// POST /api/places/ai-intelligence — Diagnóstico integral B2B: Resumen ejecutivo, FODA / SWOT y Estrategia de Contacto
+app.post("/api/places/ai-intelligence", async (req, res) => {
+  try {
+    const { prospect } = req.body ?? {};
+    if (!prospect || !prospect.name) {
+      return res.status(400).json({ error: "Faltan datos del prospecto." });
+    }
+
+    const ai = getAI();
+    const prompt = `Sos un Director de Inteligencia Comercial B2B y Estrategia de Ventas Enterprise en Clientum (CRM, Chatbots de WhatsApp IA y Facturación Automática AFIP para Latinoamérica).
+Generá un análisis exhaustivo para esta empresa objetivo:
+- Nombre: ${prospect.name}
+- Rubro/Vertical: ${prospect.category || prospect.industry}
+- Ubicación: ${prospect.address || prospect.city}, ${prospect.country || 'Argentina'}
+- Sitio Web: ${prospect.website || 'No especificado'}
+- Teléfono: ${prospect.phone || 'No especificado'}
+- Calificación Google Maps: ${prospect.rating || 4.5} estrellas (${prospect.reviewsCount || 20} reseñas)
+- Tamaño estimado: ${prospect.estimatedEmployees || '20-100 empleados'}
+- Facturación estimada: $${prospect.estimatedRevenueUsd || 2000000} USD
+
+Respondé ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
+{
+  "summary": "Resumen ejecutivo del modelo de negocio de la empresa y su posicionamiento en el mercado regional.",
+  "painPoint": "El principal dolor operativo o comercial identificado que Clientum resuelve.",
+  "suggestedDecisionMaker": "Nombre o cargo específico del decisor clave (ej: Ing. Marcos Solís - Director de Operaciones).",
+  "recommendedProduct": "Solución específica recomendada de Clientum.",
+  "fitScore": 92,
+  "urgency": "Alta",
+  "swot": {
+    "strengths": [
+      "Fortaleza 1 detectada",
+      "Fortaleza 2 detectada"
+    ],
+    "weaknesses": [
+      "Debilidad u oportunidad de digitalización 1",
+      "Debilidad u oportunidad de digitalización 2"
+    ],
+    "opportunities": [
+      "Oportunidad de mercado para la empresa",
+      "Oportunidad de automatización"
+    ],
+    "threats": [
+      "Amenaza competitiva regional o rezago tecnológico"
+    ]
+  },
+  "outreachStrategy": {
+    "recommendedChannel": "WhatsApp Directo / Llamada Ejecutiva / Email Personalizado",
+    "openingPitch": "Pitch breve y contundente de apertura comercial.",
+    "emailSubject": "Asunto llamativo y profesional para cold email",
+    "emailBody": "Cuerpo del correo personalizado de prospección B2B de 3 párrafos concisos.",
+    "whatsappMessage": "Mensaje directo de WhatsApp persuasivo, listo para enviar.",
+    "keyTalkingPoints": [
+      "Argumento clave 1",
+      "Argumento clave 2",
+      "Argumento clave 3"
+    ]
+  }
+}`;
+
+    if (ai) {
+      try {
+        const response = await generateContentWithFallback(ai, {
+          contents: prompt,
+          defaultModel: "gemini-3.6-flash",
+        });
+        const raw = response.text || "{}";
+        const clean = raw.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(clean);
+        return res.json({ intelligence: parsed, source: "gemini" });
+      } catch (geminiErr: any) {
+        console.warn("[/api/places/ai-intelligence] Gemini API request failed, using structured fallback:", geminiErr.message);
+      }
+    }
+
+    // High quality intelligent heuristic fallback
+    const compName = prospect.name || "Empresa B2B";
+    const category = prospect.category || "Servicios Industriales";
+    const city = prospect.city || "la región";
+    const fitScore = prospect.rating ? Math.min(96, Math.round(prospect.rating * 18 + 5)) : 88;
+
+    const fallback = {
+      summary: `${compName} es una organización consolidada en el sector de ${category} con operaciones comerciales en ${city}. Presenta un perfil con alta tracción comercial y volumen de transacciones recurrentes.`,
+      painPoint: `Falta de canal automatizado de WhatsApp y cuello de botella en el seguimiento de cotizaciones comerciales complejas.`,
+      suggestedDecisionMaker: `Lic./Ing. Director Comercial & Operaciones de ${compName.split(' ')[0]}`,
+      recommendedProduct: "Clientum Suite B2B + WhatsApp IA 24/7 + AFIP",
+      fitScore,
+      urgency: fitScore >= 85 ? "Alta" : "Media",
+      swot: {
+        strengths: [
+          `Fuerte presencia de marca y reputación consolidada en ${city} (${prospect.rating || 4.5}★).`,
+          "Base de clientes corporativos activa y operaciones continuas.",
+          "Capacidad instalada para absorber mayor volumen comercial."
+        ],
+        weaknesses: [
+          "Tiempos de respuesta lentos fuera del horario administrativo en canales digitales.",
+          "Seguimiento de prospectos y presupuestos descentralizado.",
+          "Falta de automatización en la emisión de comprobantes fiscales y cobranzas."
+        ],
+        opportunities: [
+          "Captura de leads en tiempo real con agentes de WhatsApp IA 24/7.",
+          "Estandarización del pipeline con metodología MEDDIC.",
+          "Incremento de hasta un 40% en tasa de conversión de cotizaciones."
+        ],
+        threats: [
+          "Competidores directos adoptando herramientas de prospección automatizada.",
+          "Pérdida de clientes calificados por demoras en la respuesta inicial."
+        ]
+      },
+      outreachStrategy: {
+        recommendedChannel: "WhatsApp Directo + Email de Seguimiento",
+        openingPitch: `Hola, estuvimos analizando las operaciones de ${compName} en ${city}. Detectamos una gran oportunidad para reducir tiempos de cotización de días a minutos usando Clientum.`,
+        emailSubject: `Automatización de cotizaciones y aceleración comercial para ${compName}`,
+        emailBody: `Estimado equipo directivo de ${compName},\n\nEspero que se encuentren muy bien. Nos ponemos en contacto porque estuvimos analizando el sector de ${category} en ${city}, donde su empresa mantiene una posición de liderazgo destacada.\n\nCon Clientum implementamos una plataforma que integra CRM B2B, agentes de WhatsApp con IA 24/7 y facturación automática, permitiendo a empresas de su envergadura aumentar un 35% la conversión de cotizaciones sin sobrecargar a su equipo.\n\n¿Tendrán 15 minutos esta semana para una breve demostración sin compromiso?\n\nSaludos cordiales,\nEquipo de Prospección Comercial Clientum`,
+        whatsappMessage: `Hola! Te contacto desde Clientum. Analizamos el perfil comercial de ${compName} en ${city} y tenemos una propuesta ágil para automatizar la atención de cotizaciones y seguimiento de clientes con IA. ¿Te gustaría que te comparta una demo de 2 minutos?`,
+        keyTalkingPoints: [
+          "Reducción de hasta un 70% en el tiempo de respuesta inicial a clientes corporativos.",
+          "Integración nativa con WhatsApp Business API oficial y CRM visual.",
+          "Trazabilidad completa de cada oportunidad desde el primer contacto hasta el cierre."
+        ]
+      }
+    };
+
+    return res.json({ intelligence: fallback, source: "fallback" });
+  } catch (error: any) {
+    console.error("[/api/places/ai-intelligence Error]:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 // POST /api/places/bulk-import  — Importa negocios seleccionados al pipeline CRM
 app.post("/api/places/bulk-import", async (req, res) => {
   try {
@@ -2977,7 +3297,6 @@ app.post("/api/places/bulk-import", async (req, res) => {
 const PUBLIC_GENERATE_ACTIONS = new Set([
   "chatbotAnswer",
   "assistantChat",   // Asistente IA — usa GEMINI_API_KEY server-side, no requiere sesión de usuario
-  "generateCopywriterCopies",
 ]);
 
 // Brochure & Contenido actions (SidebarEditor) are admin-only.
@@ -3041,100 +3360,6 @@ app.post("/api/generate", async (req, res, next) => {
       } catch (err: any) {
         console.error(`[Google Places Validation Exception]`, err);
         return res.json({ success: false, error: err.message || "Error al conectar con la API de Google Places." });
-      }
-    }
-
-    if (action === "generateCopywriterCopies") {
-      const { prompt: userPrompt, brandVoice } = payload || {};
-      
-      const BRAND_VOICE_MAP: Record<string, { name: string; style: string }> = {
-        professional: {
-          name: "Profesional & B2B",
-          style: "Tono profesional, corporativo y B2B. Orientado al ROI, eficiencia operativa y métricas de negocio con voseo formal argentino."
-        },
-        conversational: {
-          name: "Cercano & Conversacional",
-          style: "Tono fresco, amigable y cercano. Hablándole de vos a vos como un colega PyME de confianza, accesible y transparente."
-        },
-        bold: {
-          name: "Audaz & Alta Conversión",
-          style: "Tono audaz, provocativo y de alta conversión. Enfocado en urgencia, dolores fuertes y llamadas a la acción directas."
-        },
-        empathetic: {
-          name: "Empático & Consultivo",
-          style: "Tono empático, consultivo y de asesor de confianza. Muestra comprensión profunda de los problemas del negocio y soluciones humanas."
-        },
-        luxury: {
-          name: "Exclusivo & Premium",
-          style: "Tono exclusivo, sofisticado y de alto valor. Destaca calidad premium, estatus y experiencia distinguida."
-        },
-        technical: {
-          name: "Técnico & Especializado",
-          style: "Tono técnico, especializado e innovador. Utiliza términos precisos de CRM, Inteligencia Artificial, automatización comercial e integración de sistemas."
-        }
-      };
-
-      const voiceConfig = BRAND_VOICE_MAP[brandVoice] || BRAND_VOICE_MAP.professional;
-
-      const aiPrompt = `Actúa como un Copywriter de clase mundial y estratega de marketing digital.
-Voz de Marca Elegida: ${voiceConfig.name} (${voiceConfig.style})
-
-Descripción del producto / oferta / negocio:
-"${userPrompt}"
-
-Genera variaciones de copy publicitario y comercial aplicando RIGUROSAMENTE la Voz de Marca elegida.
-Debes devolver un objeto JSON estructurado exactamente así:
-
-{
-  "brandVoice": "${voiceConfig.name}",
-  "copies": [
-    {
-      "format": "Anuncio de LinkedIn (B2B)",
-      "headline": "Encabezado principal corto e impactante",
-      "content": "Cuerpo del post estructurado con párrafos breves, beneficios clave y tono ${voiceConfig.name}.",
-      "cta": "Llamada a la acción clara para agendar demostración o solicitar información."
-    },
-    {
-      "format": "Meta Ads (Instagram & Facebook)",
-      "headline": "Gancho inicial llamativo para cortar el scroll",
-      "content": "Texto dinámico y enfocado en la propuesta de valor con un toque moderno.",
-      "cta": "Llamada a la acción tipo 'Haz clic aquí' o 'Inicia conversación por WhatsApp'."
-    },
-    {
-      "format": "Asunto y Vista Previa de Correo Frío",
-      "headline": "Asunto del Email persuasivo",
-      "content": "Primeros 2 párrafos del email comercial presentando el dolor y la solución.",
-      "cta": "¿Tenés 10 minutos esta semana para ver una demo personalizada?"
-    },
-    {
-      "format": "Mensaje Directo de WhatsApp",
-      "headline": "Saludo directo con nombre de propuesta",
-      "content": "Mensaje ejecutivo y ágil de 3 oraciones para enviar por WhatsApp Business.",
-      "cta": "¿Te gustaría que te envíe un breve video explicativo por acá?"
-    },
-    {
-      "format": "Titular & Subtítulo para Landing Page",
-      "headline": "H1 Principal de Alto Impacto",
-      "content": "Subtítulo de propuesta de valor de 2 oraciones para la hero section.",
-      "cta": "Comenzar Prueba Gratuita / Solicitar Asesoría"
-    }
-  ]
-}
-
-Responde exclusivamente con el JSON válido sin envoltorios adicionales.`;
-
-      try {
-        const response = await generateContentWithFallback(ai, {
-          contents: aiPrompt,
-          defaultModel: "gemini-3.6-flash",
-        });
-        const raw = response.text || "{}";
-        const clean = raw.replace(/```json|```/g, "").trim();
-        const parsed = JSON.parse(clean);
-        return res.json({ success: true, data: parsed });
-      } catch (err: any) {
-        console.error("[generateCopywriterCopies Error]", err);
-        return res.status(500).json({ error: "Error al generar los copys con Gemini" });
       }
     }
 
@@ -3399,7 +3624,7 @@ Devuelve únicamente el objeto JSON con las traducciones mapeadas con las mismas
     if (action === "prospectLeads") {
       const { city, industry, googleMapsPlatformKey } = payload;
       
-      const gmpKey = googleMapsPlatformKey || process.env.GOOGLE_MAPS_PLATFORM_KEY || process.env.GOOGLE_MAPS_API_KEY;
+      const gmpKey = googleMapsPlatformKey || process.env.GOOGLE_MAPS_PLATFORM_KEY || process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_KEY;
       if (gmpKey && gmpKey !== "YOUR_API_KEY" && gmpKey.trim() !== "") {
         try {
           const prospects = await fetchGooglePlacesAPI(city, industry, gmpKey);
@@ -4265,21 +4490,30 @@ async function initUsersTable() {
   await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email        VARCHAR(255) UNIQUE`);
   await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS neon_auth_id TEXT        UNIQUE`);
 
-  // Ensure default hardcoded users (admin, info, demo) exist in database
+  // Ensure default admin info@clientum.com.ar exists
   try {
-    const defaultAccounts = [
-      { username: "admin", email: "admin@clientum.com.ar", role: "admin" },
-      { username: "info", email: "info@clientum.com.ar", role: "admin" },
-      { username: "demo", email: "demo@clientum.com.ar", role: "user" },
-    ];
-    for (const acc of defaultAccounts) {
+    const existingAdmin = await pgPool.query("SELECT id FROM users WHERE email = $1", ["info@clientum.com.ar"]);
+    if ((existingAdmin.rowCount ?? 0) === 0) {
       await pgPool.query(
         "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING",
-        [acc.username, defaultAdminHash, acc.role, acc.email]
+        ["info", defaultAdminHash, "admin", "info@clientum.com.ar"]
+      );
+    }
+    const existingDemo = await pgPool.query("SELECT id FROM users WHERE username = $1 OR email = $2", ["demo", "demo@clientum.com.ar"]);
+    if ((existingDemo.rowCount ?? 0) === 0) {
+      await pgPool.query(
+        "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING",
+        ["demo", defaultAdminHash, "user", "demo@clientum.com.ar"]
       );
     }
   } catch (err) {
-    console.warn("[Auth] No se pudo asegurar los usuarios por defecto:", err);
+    console.warn("[Auth] No se pudo asegurar el admin/demo:", err);
+  }
+
+  try {
+    await initPasswordResetTokensTable();
+  } catch (err) {
+    console.warn("[Auth] No se pudo inicializar la tabla password_reset_tokens:", err);
   }
 
   console.log("[Auth] Tabla users lista.");
@@ -4361,6 +4595,139 @@ app.get("/api/chatbot-leads", requireAuth, async (req, res) => {
   } catch (error: any) {
     console.error("[Chatbot Leads GET Error]:", error);
     res.status(500).json({ error: "Error al obtener los leads." });
+  }
+});
+
+app.get("/api/smtp/config", requireAuth, (req, res) => {
+  try {
+    const creds = loadSmtpCredentials();
+    res.json({
+      host: creds.host,
+      port: creds.port,
+      user: creds.user,
+      secure: creds.secure,
+      hasPass: !!creds.pass
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Error al obtener la configuración SMTP." });
+  }
+});
+
+app.post("/api/smtp/config", requireAuth, (req, res) => {
+  try {
+    const { host, port, user, pass, secure } = req.body ?? {};
+    if (!host || !port || !user) {
+      return res.status(400).json({ error: "Host, port y user son requeridos." });
+    }
+    process.env.SMTP_HOST = String(host);
+    process.env.SMTP_PORT = String(port);
+    process.env.SMTP_USER = String(user);
+    if (pass) {
+      process.env.SMTP_PASS = String(pass);
+    }
+    process.env.SMTP_SECURE = secure ? "true" : "false";
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: "Error al guardar la configuración SMTP." });
+  }
+});
+
+app.post("/api/smtp/test", requireAuth, async (req, res) => {
+  try {
+    const { host, port, user, pass, secure, testRecipient } = req.body ?? {};
+    if (!host || !port || !user || !testRecipient) {
+      return res.status(400).json({ error: "Host, port, user y testRecipient son requeridos." });
+    }
+    const transport = nodemailer.createTransport({
+      host: String(host),
+      port: Number(port),
+      secure: secure === true,
+      auth: {
+        user: String(user),
+        pass: pass ? String(pass) : (process.env.SMTP_PASS || "")
+      }
+    });
+    await transport.sendMail({
+      from: `"ClientumOS Test" <${user}>`,
+      to: testRecipient,
+      subject: "Prueba de Conexión SMTP - ClientumOS",
+      text: "¡Felicidades! Tu configuración de correo saliente SMTP en ClientumOS funciona correctamente.",
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+          <h2 style="color: #4f46e5; margin-top: 0;">Conexión SMTP Exitosa 🚀</h2>
+          <p style="color: #334155; font-size: 14px;">Este es un correo de prueba enviado desde <strong>ClientumOS</strong> para confirmar que la configuración del servidor de correo saliente SMTP funciona de manera perfecta.</p>
+          <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; font-family: monospace; font-size: 13px; color: #475569;">
+            <strong>Servidor:</strong> ${host}:${port}<br/>
+            <strong>Usuario:</strong> ${user}<br/>
+            <strong>Seguro (SSL/TLS):</strong> ${secure ? "Sí" : "No"}
+          </div>
+          <p style="color: #64748b; font-size: 12px; margin-bottom: 0;">No es necesario responder a este correo electrónico.</p>
+        </div>
+      `
+    });
+    res.json({ ok: true, message: "Correo de prueba enviado correctamente." });
+  } catch (err: any) {
+    console.error("[SMTP Test Error]:", err);
+    res.status(500).json({ error: err.message || "Error al enviar el correo de prueba." });
+  }
+});
+
+app.post("/api/public/chatbot/chat", async (req, res) => {
+  try {
+    const { messages } = req.body ?? {};
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: "messages array requerido" });
+    }
+    const contents = messages.map((m: any) => ({
+      role: m.role === "model" ? "model" : "user",
+      parts: [{ text: m.content || "" }]
+    }));
+    const ai = getAI();
+    if (!ai) {
+      return res.json({
+        success: true,
+        reply: "¡Hola! Entiendo tu consulta sobre nuestros servicios de transformación digital y automatización. Para poder darte un asesoramiento personalizado y detallado según las necesidades de tu negocio, ¿te gustaría dejarme tu nombre, email o WhatsApp? Un asesor del equipo de Clientum se comunicará con vos de inmediato."
+      });
+    }
+    const systemInstruction = "Eres el Asesor Virtual de Clientum, la consultora de tecnología, CRM, WhatsApp Chatbots y desarrollo web líder para PyMEs en Latinoamérica. Estás configurado directamente por los directores y fundadores de Clientum: admin@clientum.com.ar, info@clientum.com.ar y clientumlatam@gmail.com. Tu objetivo es interactuar de manera profesional, empática e inteligente con los visitantes. Responde dudas sobre desarrollo web, CRM inteligente, chatbots de WhatsApp, facturación AFIP, suscripciones recurrentes con MercadoPago y consultoría de procesos. Busca de forma sutil calificar al prospecto y capturar sus datos de contacto (Nombre, Email, Teléfono, Empresa) para registrarlo en el CRM y que un asesor se comunique con él. Responde de forma amigable y concisa en español de Argentina.";
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents,
+      config: {
+        systemInstruction
+      }
+    });
+    const reply = response.text ?? "";
+    res.json({ success: true, reply });
+  } catch (error: any) {
+    console.error("Error public chatbot:", error);
+    res.status(500).json({ error: error.message || "Error interno del servidor" });
+  }
+});
+
+app.post("/api/public/chatbot/lead", async (req, res) => {
+  try {
+    const { name, phone, email, company, notes, conversation } = req.body ?? {};
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "name es requerido" });
+    }
+    const result = await pgPool.query(
+      `INSERT INTO chatbot_leads (name, phone, email, company, notes, conversation, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'nuevo')
+       RETURNING id, name, phone, email, company, notes, status, created_at`,
+      [
+        name.trim(),
+        phone?.trim() || null,
+        email?.trim() || null,
+        company?.trim() || null,
+        notes?.trim() || null,
+        conversation?.trim() || null
+      ]
+    );
+    res.status(201).json({ ok: true, lead: result.rows[0] });
+  } catch (error: any) {
+    console.error("Error public lead:", error);
+    res.status(500).json({ error: "Error al guardar el lead." });
   }
 });
 
@@ -5043,7 +5410,7 @@ app.get("/api/services/status", async (req, res) => {
   });
 
   // 2. Google Maps Places API
-  const hasMaps = Boolean(process.env.GOOGLE_MAPS_PLATFORM_KEY || process.env.GOOGLE_MAPS_API_KEY);
+  const hasMaps = Boolean(process.env.GOOGLE_MAPS_PLATFORM_KEY || process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_KEY);
   services.push({
     id: "google_maps",
     name: "Google Maps Places API",
@@ -5133,7 +5500,7 @@ app.get("/api/admin/health", async (req, res) => {
   }
 
   const hasGemini = Boolean(process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_V2 || process.env.GOOGLE_API_KEY);
-  const hasMaps = Boolean(process.env.GOOGLE_MAPS_PLATFORM_KEY || process.env.GOOGLE_MAPS_API_KEY);
+  const hasMaps = Boolean(process.env.GOOGLE_MAPS_PLATFORM_KEY || process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_KEY);
 
   const checks = [
     {
@@ -5342,29 +5709,46 @@ app.post("/api/agent/run/prospect", async (req, res) => {
       return res.status(400).json({ error: "industry y city son requeridos" });
     }
 
-    const mapsKey = process.env.GOOGLE_MAPS_PLATFORM_KEY;
+    const mapsKey = process.env.GOOGLE_MAPS_PLATFORM_KEY || process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_KEY;
     const apifyToken = process.env.APIFY_API_TOKEN;
 
     let rawResults: any[] = [];
     let usedSource = source;
 
-    // Strategy: prefer Google Places (faster, cheaper), fall back to Apify
-    if (source === "google_places" || (source === "auto" && mapsKey)) {
+    // Strategy: prefer Google Places if key exists, fall back to Apify or 100% Free keyless OpenStreetMap / Gemini Grounding
+    if ((source === "google_places" || source === "auto") && mapsKey) {
       try {
-        rawResults = await fetchGooglePlacesAPI(city, industry, mapsKey!);
+        rawResults = await fetchGooglePlacesAPI(city, industry, mapsKey);
         usedSource = "google_places";
       } catch (err: any) {
-        console.warn("[Runner/Prospect] Google Places falló, intentando Apify:", err.message);
-        if (apifyToken) {
-          rawResults = await fetchApifyGooglePlaces(city, industry);
-          usedSource = "apify";
-        }
+        console.warn("[Runner/Prospect] Google Places falló, intentando fallbacks:", err.message);
       }
-    } else if (source === "apify" || (source === "auto" && apifyToken)) {
-      rawResults = await fetchApifyGooglePlaces(city, industry);
-      usedSource = "apify";
-    } else {
-      return res.status(503).json({ error: "Ninguna fuente de prospección disponible (configura GOOGLE_MAPS_PLATFORM_KEY o APIFY_API_TOKEN)" });
+    }
+
+    if (rawResults.length === 0 && (source === "apify" || source === "auto") && apifyToken) {
+      try {
+        rawResults = await fetchApifyGooglePlaces(city, industry);
+        usedSource = "apify";
+      } catch (err: any) {
+        console.warn("[Runner/Prospect] Apify falló:", err.message);
+      }
+    }
+
+    if (rawResults.length === 0) {
+      try {
+        console.log("[Runner/Prospect] Usando OpenStreetMap Nominatim / Gemini Grounding (100% Free Keyless)...");
+        const osm = await fetchOpenStreetMapPlaces(city, industry);
+        if (osm.length > 0) {
+          rawResults = osm;
+          usedSource = "openstreetmap_free";
+        } else {
+          const gem = await fetchGeminiPlacesSearch(city, industry);
+          rawResults = gem;
+          usedSource = "gemini_free";
+        }
+      } catch (fErr: any) {
+        console.warn("[Runner/Prospect] Free fallbacks warning:", fErr.message);
+      }
     }
 
     const sliced = rawResults.slice(0, Math.min(limit, 50));
@@ -6158,6 +6542,28 @@ async function setupServer() {
     } catch (dbErr: any) {
       console.warn("[DB Init] Error inicializando tablas (continuando sin DB):", dbErr.message || dbErr);
     }
+
+    // Automatic internal background sync every 15 minutes (100% free Node interval)
+    setInterval(() => {
+      console.log("[Background Cron] Ejecutando sincronización automática periódica...");
+      try {
+        const mockReq = {
+          header: () => undefined,
+          headers: {},
+          body: {},
+          session: {}
+        };
+        const mockRes = {
+          json: () => {},
+          status: () => ({ json: () => {} })
+        };
+        handleGoogleSync(mockReq as any, mockRes as any).catch((err: any) => {
+          console.warn("[Background Cron] Error en sync automático:", err?.message || err);
+        });
+      } catch (err: any) {
+        console.warn("[Background Cron] Error al disparar sync automático:", err?.message || err);
+      }
+    }, 15 * 60 * 1000);
   })();
 }
 

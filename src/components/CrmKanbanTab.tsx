@@ -113,10 +113,62 @@ const INITIAL_DEALS: Deal[] = [
 ];
 
 export function CrmKanbanTab() {
-  const [deals, setDeals] = useState<Deal[]>(INITIAL_DEALS);
+  const [deals, setDeals] = useState<Deal[]>(() => {
+    const saved = localStorage.getItem('clientum_crm_deals');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return INITIAL_DEALS;
+      }
+    }
+    return INITIAL_DEALS;
+  });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'ARS'>('USD');
   const [filterOwner, setFilterOwner] = useState('todos');
+
+  // Listen to prospect export events
+  React.useEffect(() => {
+    const handleLeadAdded = (e: CustomEvent) => {
+      if (e.detail) {
+        const d = e.detail;
+        const newDeal: Deal = {
+          id: d.id || `deal-${Date.now()}`,
+          companyName: d.companyName || 'Nueva Empresa',
+          contactName: d.contactName || 'Contacto Comercial',
+          dealValueUsd: d.dealValueUsd || 25000,
+          dealValueArs: (d.dealValueUsd || 25000) * 1300,
+          stageId: d.stageId || 'lead',
+          meddicScore: d.meddicScore || 80,
+          country: d.country || 'Argentina',
+          probability: 25,
+          expectedCloseDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+          owner: 'Gonzalo Fernández'
+        };
+
+        setDeals(prev => {
+          if (prev.some(item => item.id === newDeal.id || item.companyName === newDeal.companyName)) {
+            return prev;
+          }
+          const next = [newDeal, ...prev];
+          localStorage.setItem('clientum_crm_deals', JSON.stringify(next));
+          return next;
+        });
+      }
+    };
+
+    window.addEventListener('crm-lead-added' as any, handleLeadAdded);
+    return () => window.removeEventListener('crm-lead-added' as any, handleLeadAdded);
+  }, []);
+
+  const updateDealsState = (updater: (prev: Deal[]) => Deal[]) => {
+    setDeals(prev => {
+      const next = updater(prev);
+      localStorage.setItem('clientum_crm_deals', JSON.stringify(next));
+      return next;
+    });
+  };
 
   // Form state
   const [newCompanyName, setNewCompanyName] = useState('');
@@ -129,7 +181,7 @@ export function CrmKanbanTab() {
 
   const moveDealStage = (dealId: string, direction: 'next' | 'prev') => {
     const stageKeys: Deal['stageId'][] = ['lead', 'contacted', 'proposal', 'closing', 'won'];
-    setDeals(prev => prev.map(d => {
+    updateDealsState(prev => prev.map(d => {
       if (d.id === dealId) {
         const currentIndex = stageKeys.indexOf(d.stageId);
         const nextIndex = direction === 'next' ? Math.min(currentIndex + 1, stageKeys.length - 1) : Math.max(currentIndex - 1, 0);
@@ -157,7 +209,7 @@ export function CrmKanbanTab() {
       owner: 'Gonzalo Fernández'
     };
 
-    setDeals([newDeal, ...deals]);
+    updateDealsState(prev => [newDeal, ...prev]);
     setIsAddModalOpen(false);
     setNewCompanyName('');
     setNewContactName('');

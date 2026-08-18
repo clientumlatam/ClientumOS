@@ -48,6 +48,7 @@ import { VscrmInvoicesTab } from './components/vscrm/VscrmInvoicesTab';
 import { VscrmExpensesTab } from './components/vscrm/VscrmExpensesTab';
 import { VscrmAfipTab } from './components/vscrm/VscrmAfipTab';
 import { AdminConsole } from './components/AdminConsole';
+import { AiMarketingExpert } from './components/AiMarketingExpert';
 import { CommandPalette } from './components/CommandPalette';
 import { Breadcrumbs } from './components/Breadcrumbs';
 import PublicWebsite from './components/PublicWebsite';
@@ -104,12 +105,26 @@ export default function App() {
 
   useEffect(() => {
     fetchSession(window.location.search.includes('login=success'));
-    const handleAuthChange = () => {
-      fetchSession(true);
+    const handleAuthChange = (e?: Event) => {
+      const customDetail = (e as CustomEvent)?.detail;
+      if (customDetail?.user) {
+        setCurrentUser(customDetail.user.username);
+        setActiveTab('overview');
+      } else {
+        fetchSession(true);
+      }
     };
-    window.addEventListener('auth-changed', handleAuthChange);
+    window.addEventListener('auth-changed', handleAuthChange as EventListener);
+    const handleNavigateTab = (e: Event) => {
+      const target = (e as CustomEvent)?.detail?.tab;
+      if (target) {
+        setActiveTab(target);
+      }
+    };
+    window.addEventListener('navigate-tab', handleNavigateTab as EventListener);
     return () => {
-      window.removeEventListener('auth-changed', handleAuthChange);
+      window.removeEventListener('auth-changed', handleAuthChange as EventListener);
+      window.removeEventListener('navigate-tab', handleNavigateTab as EventListener);
     };
   }, []);
 
@@ -143,9 +158,10 @@ export default function App() {
             window.dispatchEvent(new CustomEvent('open-login-modal'));
           }}
           onLogout={handleLogout}
+          onLoginSuccess={() => setActiveTab('overview')}
         />
         <div className="hidden">
-          <AuthButton />
+          <AuthButton onLoginSuccess={() => setActiveTab('overview')} />
         </div>
         {resetModalElement}
       </div>
@@ -175,7 +191,7 @@ export default function App() {
               onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
             />
             <ErrorBoundary resetKey={activeTab}>
-              {activeTab === 'overview' && <OverviewTab currency={currency} region={region} />}
+              {activeTab === 'overview' && <OverviewTab currency={currency} region={region} onNavigate={setActiveTab} />}
               {activeTab === 'ai_hub' && <AiHubTab />}
               {activeTab === 'meddic' && <MeddicTab />}
               {activeTab === 'icp_builder' && <IcpBuilderTab />}
@@ -220,6 +236,7 @@ export default function App() {
               {activeTab === 'vscrm_invoices' && <VscrmInvoicesTab />}
               {activeTab === 'vscrm_expenses' && <VscrmExpensesTab />}
               {activeTab === 'vscrm_afip' && <VscrmAfipTab />}
+              {activeTab === 'ai_marketing_expert' && <AiMarketingExpert />}
               {activeTab === 'account' && (
                 <AccountView
                   username={currentUser || 'admin'}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, Plus, Download, Printer, CheckCircle, Clock, Trash2, X } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import { VscrmInvoice, VscrmClient } from '../../types';
 import { INITIAL_VS_INVOICES, INITIAL_VS_CLIENTS } from './vscrmData';
 
@@ -50,6 +51,99 @@ export function VscrmInvoicesTab() {
     setTimeout(() => {
       window.print();
     }, 200);
+  };
+
+  const handleDownloadPdf = (inv: VscrmInvoice) => {
+    const doc = new jsPDF();
+    doc.setFillColor(30, 41, 59);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ClientumOS', 15, 25);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Sales & CRM Operating System', 15, 31);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FACTURA', 195, 25, { align: 'right' });
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nº: ${inv.invoiceNumber}`, 195, 31, { align: 'right' });
+    doc.setTextColor(51, 65, 85);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DETALLES DE FACTURACIÓN', 15, 55);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(`Fecha de Emisión: ${inv.issueDate}`, 15, 63);
+    doc.text(`Fecha de Vencimiento: ${inv.dueDate}`, 15, 69);
+    doc.text(`Estado: ${inv.status}`, 15, 75);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('CLIENTE', 120, 55);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(`Nombre/Empresa: ${inv.clientName}`, 120, 63);
+    const clientDetails = clients.find(c => c.id === inv.clientId);
+    if (clientDetails) {
+      doc.text(`Email: ${clientDetails.email}`, 120, 69);
+      doc.text(`Teléfono: ${clientDetails.phone}`, 120, 75);
+      doc.text(`País: ${clientDetails.country}`, 120, 81);
+    }
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.5);
+    doc.line(15, 90, 195, 90);
+    doc.setFillColor(248, 250, 252);
+    doc.rect(15, 95, 180, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(71, 85, 105);
+    doc.text('Descripción del Concepto / Servicio', 18, 100);
+    doc.text('Cant.', 125, 100, { align: 'right' });
+    doc.text('Precio Unit.', 155, 100, { align: 'right' });
+    doc.text('Total', 192, 100, { align: 'right' });
+    let currentY = 110;
+    let subtotal = 0;
+    inv.items.forEach((item) => {
+      const itemTotal = item.quantity * item.unitPrice;
+      subtotal += itemTotal;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(15, 23, 42);
+      const splitDesc = doc.splitTextToSize(item.description, 100);
+      doc.text(splitDesc, 18, currentY);
+      doc.text(item.quantity.toString(), 125, currentY, { align: 'right' });
+      doc.text(`$${item.unitPrice.toFixed(2)}`, 155, currentY, { align: 'right' });
+      doc.text(`$${itemTotal.toFixed(2)}`, 192, currentY, { align: 'right' });
+      currentY += (splitDesc.length * 5) + 5;
+    });
+    doc.setDrawColor(241, 245, 249);
+    doc.line(15, currentY, 195, currentY);
+    currentY += 10;
+    const taxAmount = subtotal * (inv.taxRate / 100);
+    const total = subtotal + taxAmount;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text('Subtotal:', 140, currentY, { align: 'right' });
+    doc.setTextColor(15, 23, 42);
+    doc.text(`$${subtotal.toFixed(2)} USD`, 192, currentY, { align: 'right' });
+    currentY += 7;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text(`IVA / Impuestos (${inv.taxRate}%):`, 140, currentY, { align: 'right' });
+    doc.setTextColor(15, 23, 42);
+    doc.text(`$${taxAmount.toFixed(2)} USD`, 192, currentY, { align: 'right' });
+    currentY += 7;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(79, 70, 229);
+    doc.text('Total Facturado:', 140, currentY, { align: 'right' });
+    doc.text(`$${total.toFixed(2)} USD`, 192, currentY, { align: 'right' });
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Gracias por su confianza y por hacer negocios con nosotros.', 105, 275, { align: 'center' });
+    doc.save(`${inv.invoiceNumber}.pdf`);
   };
 
   const toggleStatus = (id: string) => {
@@ -122,10 +216,17 @@ export function VscrmInvoicesTab() {
                     <td className="p-4 text-right flex items-center justify-end gap-2">
                       <button
                         onClick={() => handlePrint(inv)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition-colors"
-                        title="Generar PDF / Imprimir"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition-colors cursor-pointer"
+                        title="Imprimir Factura"
                       >
-                        <Printer className="w-3.5 h-3.5" /> PDF
+                        <Printer className="w-3.5 h-3.5" /> Imprimir
+                      </button>
+                      <button
+                        onClick={() => handleDownloadPdf(inv)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg font-semibold transition-colors cursor-pointer"
+                        title="Descargar PDF"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Descargar
                       </button>
                     </td>
                   </tr>
