@@ -21,8 +21,14 @@ import {
   ShieldCheck,
   Star,
   Check,
-  ListOrdered
+  ListOrdered,
+  FileText,
+  Calendar,
+  Paperclip,
+  Clock,
+  Briefcase
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ClientsTab } from './ClientsTab';
 import { ListsTab } from './ListsTab';
 import { PdfExportButton } from './common/PdfExportButton';
@@ -157,6 +163,7 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
   const [selectedCountry, setSelectedCountry] = useState<string>('todos');
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   const [activeContactModal, setActiveContactModal] = useState<B2BContact | null>(null);
+  const [panelTab, setPanelTab] = useState<'timeline' | 'tasks' | 'notes' | 'files' | 'emails'>('timeline');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [showBulkWAModal, setShowBulkWAModal] = useState<boolean>(false);
 
@@ -589,82 +596,181 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
         </table>
       </div>
 
-      {/* Modal: Full Contact Detail */}
-      {activeContactModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 text-slate-900 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-start border-b border-slate-200 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-900 text-white font-bold text-base flex items-center justify-center">
-                  {activeContactModal.name.charAt(0)}
+      {/* Side Panel: Full Contact Detail (Twenty CRM Style) */}
+      <AnimatePresence>
+        {activeContactModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveContactModal(null)}
+              className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ x: '100%', opacity: 0.5 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0.5 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white shadow-2xl flex flex-col border-l border-slate-200"
+            >
+              <div className="flex flex-col h-full overflow-hidden">
+                {/* Header Profile */}
+                <div className="p-6 border-b border-slate-200 bg-slate-50/50 relative shrink-0">
+                  <button
+                    onClick={() => setActiveContactModal(null)}
+                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 text-white font-bold text-xl flex items-center justify-center shadow-inner">
+                      {activeContactModal.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-xl text-slate-900 tracking-tight">{activeContactModal.name}</h3>
+                      <p className="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
+                        <Briefcase className="w-3.5 h-3.5" />
+                        {activeContactModal.role} · {activeContactModal.company}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-5">
+                    <a
+                      href={`https://wa.me/${activeContactModal.phone.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs rounded-lg transition-colors border border-emerald-200"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </a>
+                    <a
+                      href={`mailto:${activeContactModal.email}`}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs rounded-lg transition-colors border border-indigo-200"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Email
+                    </a>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-base text-slate-900">{activeContactModal.name}</h3>
-                  <p className="text-xs text-slate-500">{activeContactModal.role} · {activeContactModal.company}</p>
-                </div>
-              </div>
 
-              <button
-                onClick={() => setActiveContactModal(null)}
-                className="text-slate-400 hover:text-slate-700 font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
-                <span className="text-slate-400 font-medium block">Información de Contacto:</span>
-                <p className="font-semibold text-slate-800">{activeContactModal.email}</p>
-                <p className="font-mono text-slate-600">{activeContactModal.phone}</p>
-                <p className="text-slate-500">{activeContactModal.city}, {activeContactModal.country}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
-                  <span className="text-indigo-600 font-bold block text-[10px] uppercase">Arquetipo Persona:</span>
-                  <span className="font-extrabold text-indigo-900 text-xs block mt-0.5">{activeContactModal.personaTag}</span>
-                </div>
-
-                <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
-                  <span className="text-emerald-700 font-bold block text-[10px] uppercase">Lead Scoring:</span>
-                  <span className="font-extrabold text-emerald-900 text-sm block mt-0.5">{activeContactModal.leadScore} / 100</span>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-slate-400 font-medium block mb-1">Listas de Segmentación:</span>
-                <div className="flex flex-wrap gap-1">
-                  {activeContactModal.lists.map((l, i) => (
-                    <span key={i} className="bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded text-[10px]">
-                      {l}
-                    </span>
+                {/* Sub-Tabs (Twenty CRM Style) */}
+                <div className="flex items-center px-6 border-b border-slate-200 bg-white shrink-0 overflow-x-auto hide-scrollbar">
+                  {[
+                    { id: 'timeline', label: 'Timeline', icon: Clock },
+                    { id: 'tasks', label: 'Tasks', icon: CheckCircle2 },
+                    { id: 'notes', label: 'Notes', icon: FileText },
+                    { id: 'files', label: 'Files', icon: Paperclip },
+                    { id: 'emails', label: 'Emails', icon: Mail }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setPanelTab(tab.id as any)}
+                      className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
+                        panelTab === tab.id
+                          ? 'border-slate-900 text-slate-900'
+                          : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-300'
+                      }`}
+                    >
+                      <tab.icon className="w-3.5 h-3.5" />
+                      {tab.label}
+                    </button>
                   ))}
                 </div>
+
+                {/* Scrollable Content Area */}
+                <div className="flex-1 overflow-y-auto p-6 bg-white">
+                  {panelTab === 'timeline' && (
+                    <div className="space-y-6">
+                      {/* At-a-glance Info Blocks */}
+                      <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                          <span className="text-slate-500 font-bold block text-[10px] uppercase mb-1">Scoring</span>
+                          <div className="flex items-end gap-2">
+                            <span className="font-extrabold text-slate-900 text-xl leading-none">{activeContactModal.leadScore}</span>
+                            <span className="text-xs text-slate-400 font-medium mb-0.5">/ 100</span>
+                          </div>
+                        </div>
+                        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                          <span className="text-slate-500 font-bold block text-[10px] uppercase mb-1">Arquetipo</span>
+                          <span className="font-bold text-slate-900 text-sm block truncate">{activeContactModal.personaTag}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-2">Información de Contacto</h4>
+                        <div className="space-y-3 text-sm">
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-slate-500">Email</span>
+                            <span className="font-medium text-slate-900">{activeContactModal.email}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-slate-500">Teléfono</span>
+                            <span className="font-mono text-slate-900">{activeContactModal.phone}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-slate-500">Ubicación</span>
+                            <span className="font-medium text-slate-900">{activeContactModal.city}, {activeContactModal.country}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-slate-500">Agregado</span>
+                            <span className="font-medium text-slate-900">{activeContactModal.addedDate}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t border-slate-100">
+                        <h4 className="font-bold text-sm text-slate-900">Listas & Segmentos</h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {activeContactModal.lists.map((l, i) => (
+                            <span key={i} className="bg-slate-100 text-slate-600 font-semibold px-2.5 py-1 rounded-md text-[11px] border border-slate-200">
+                              {l}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {panelTab === 'tasks' && (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
+                      <CheckCircle2 className="w-12 h-12 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-500">No hay tareas pendientes para este contacto.</p>
+                      <button className="text-indigo-600 font-bold text-xs hover:underline">Agregar nueva tarea</button>
+                    </div>
+                  )}
+
+                  {panelTab === 'notes' && (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
+                      <FileText className="w-12 h-12 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-500">No hay notas registradas.</p>
+                      <button className="text-indigo-600 font-bold text-xs hover:underline">Crear nota</button>
+                    </div>
+                  )}
+
+                  {panelTab === 'files' && (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
+                      <Paperclip className="w-12 h-12 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-500">No se adjuntaron archivos.</p>
+                      <button className="text-indigo-600 font-bold text-xs hover:underline">Subir archivo</button>
+                    </div>
+                  )}
+
+                  {panelTab === 'emails' && (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
+                      <Mail className="w-12 h-12 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-500">Sin historial de correos.</p>
+                      <button className="text-indigo-600 font-bold text-xs hover:underline">Conectar bandeja</button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-
-            <div className="flex justify-between items-center border-t border-slate-200 pt-3">
-              <a
-                href={`https://wa.me/${activeContactModal.phone.replace(/[^0-9]/g, '')}`}
-                target="_blank"
-                rel="noreferrer"
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-md"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Iniciar Chat WhatsApp</span>
-              </a>
-
-              <button
-                onClick={() => setActiveContactModal(null)}
-                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 cursor-pointer"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Modal: Add New Contact */}
       {showAddModal && (

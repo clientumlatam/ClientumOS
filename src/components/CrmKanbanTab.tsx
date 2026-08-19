@@ -20,8 +20,13 @@ import {
   PhoneCall,
   Mail,
   ShieldCheck,
-  MessageSquare
+  MessageSquare,
+  FileText,
+  Paperclip,
+  Clock,
+  Briefcase
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { BulkWhatsAppModal } from './BulkWhatsAppModal';
 
 export interface Deal {
@@ -179,6 +184,10 @@ export function CrmKanbanTab() {
   const [newDealValueUsd, setNewDealValueUsd] = useState(15000);
   const [newStageId, setNewStageId] = useState<Deal['stageId']>('lead');
 
+  // Side Panel State
+  const [activeDealModal, setActiveDealModal] = useState<Deal | null>(null);
+  const [panelTab, setPanelTab] = useState<'timeline' | 'tasks' | 'notes' | 'files' | 'emails'>('timeline');
+
   const totalPipelineValue = deals.reduce((acc, d) => acc + (selectedCurrency === 'USD' ? d.dealValueUsd : d.dealValueArs), 0);
   const totalWeightedValue = deals.reduce((acc, d) => acc + ((selectedCurrency === 'USD' ? d.dealValueUsd : d.dealValueArs) * (d.probability / 100)), 0);
 
@@ -332,37 +341,42 @@ export function CrmKanbanTab() {
               {/* Deal Cards */}
               <div className="space-y-3 flex-1">
                 {stageDeals.map((deal) => (
-                  <div key={deal.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-all space-y-2.5">
-                    <div className="flex items-start justify-between gap-1">
-                      <h4 className="font-extrabold text-xs text-slate-900 leading-snug">{deal.companyName}</h4>
-                      <span className="bg-indigo-50 text-indigo-700 font-mono text-[9px] font-black px-1.5 py-0.5 rounded-sm">
-                        MEDDIC {deal.meddicScore}
-                      </span>
-                    </div>
+                  <div key={deal.id} className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden">
+                    <div 
+                      onClick={() => setActiveDealModal(deal)}
+                      className="p-4 space-y-2.5 cursor-pointer hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-1">
+                        <h4 className="font-extrabold text-xs text-slate-900 leading-snug">{deal.companyName}</h4>
+                        <span className="bg-indigo-50 text-indigo-700 font-mono text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0">
+                          MEDDIC {deal.meddicScore}
+                        </span>
+                      </div>
 
-                    <p className="text-[11px] text-slate-500 flex items-center gap-1">
-                      <User className="w-3 h-3 text-slate-400" />
-                      <span>{deal.contactName}</span>
-                    </p>
+                      <p className="text-[11px] text-slate-500 flex items-center gap-1">
+                        <User className="w-3 h-3 text-slate-400" />
+                        <span>{deal.contactName}</span>
+                      </p>
 
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-                      <span className="text-xs font-black text-emerald-600">
-                        {selectedCurrency === 'USD' ? `$${deal.dealValueUsd.toLocaleString()} USD` : `$${deal.dealValueArs.toLocaleString()} ARS`}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-bold">{deal.probability}% Prob.</span>
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
+                        <span className="text-xs font-black text-emerald-600">
+                          {selectedCurrency === 'USD' ? `$${deal.dealValueUsd.toLocaleString()} USD` : `$${deal.dealValueArs.toLocaleString()} ARS`}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-bold">{deal.probability}% Prob.</span>
+                      </div>
                     </div>
 
                     {/* Move Stage Quick Controls */}
-                    <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-t border-slate-100">
                       <button
-                        onClick={() => moveDealStage(deal.id, 'prev')}
+                        onClick={(e) => { e.stopPropagation(); moveDealStage(deal.id, 'prev'); }}
                         disabled={stage.id === 'lead'}
                         className="text-[10px] font-bold text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
                       >
                         ← Anterior
                       </button>
                       <button
-                        onClick={() => moveDealStage(deal.id, 'next')}
+                        onClick={(e) => { e.stopPropagation(); moveDealStage(deal.id, 'next'); }}
                         disabled={stage.id === 'won'}
                         className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-30 cursor-pointer"
                       >
@@ -382,6 +396,163 @@ export function CrmKanbanTab() {
           );
         })}
       </div>
+
+      {/* Side Panel: Full Deal Detail (Twenty CRM Style) */}
+      <AnimatePresence>
+        {activeDealModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveDealModal(null)}
+              className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ x: '100%', opacity: 0.5 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0.5 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white shadow-2xl flex flex-col border-l border-slate-200"
+            >
+              <div className="flex flex-col h-full overflow-hidden">
+                {/* Header Profile */}
+                <div className="p-6 border-b border-slate-200 bg-slate-50/50 relative shrink-0">
+                  <button
+                    onClick={() => setActiveDealModal(null)}
+                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-800 to-slate-900 text-white font-bold text-xl flex items-center justify-center shadow-inner">
+                      {activeDealModal.companyName.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-xl text-slate-900 tracking-tight">{activeDealModal.companyName}</h3>
+                      <p className="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
+                        <User className="w-3.5 h-3.5" />
+                        {activeDealModal.contactName}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-5">
+                    <div className="flex-1 px-4 py-2 bg-emerald-50 text-emerald-800 font-bold text-sm rounded-lg border border-emerald-200 flex flex-col items-center justify-center">
+                      <span className="text-[10px] text-emerald-600 uppercase tracking-wide">Monto Estimado</span>
+                      {selectedCurrency === 'USD' ? `$${activeDealModal.dealValueUsd.toLocaleString()} USD` : `$${activeDealModal.dealValueArs.toLocaleString()} ARS`}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub-Tabs (Twenty CRM Style) */}
+                <div className="flex items-center px-6 border-b border-slate-200 bg-white shrink-0 overflow-x-auto hide-scrollbar">
+                  {[
+                    { id: 'timeline', label: 'Timeline', icon: Clock },
+                    { id: 'tasks', label: 'Tasks', icon: CheckCircle2 },
+                    { id: 'notes', label: 'Notes', icon: FileText },
+                    { id: 'files', label: 'Files', icon: Paperclip },
+                    { id: 'emails', label: 'Emails', icon: Mail }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setPanelTab(tab.id as any)}
+                      className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
+                        panelTab === tab.id
+                          ? 'border-indigo-600 text-indigo-700'
+                          : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-300'
+                      }`}
+                    >
+                      <tab.icon className="w-3.5 h-3.5" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Scrollable Content Area */}
+                <div className="flex-1 overflow-y-auto p-6 bg-white">
+                  {panelTab === 'timeline' && (
+                    <div className="space-y-6">
+                      {/* At-a-glance Info Blocks */}
+                      <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between">
+                          <div>
+                            <span className="text-slate-500 font-bold block text-[10px] uppercase mb-1">Score MEDDIC</span>
+                            <span className="font-extrabold text-slate-900 text-lg leading-none">{activeDealModal.meddicScore}</span>
+                          </div>
+                          <ShieldCheck className="w-6 h-6 text-indigo-400" />
+                        </div>
+                        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between">
+                          <div>
+                            <span className="text-slate-500 font-bold block text-[10px] uppercase mb-1">Probabilidad</span>
+                            <span className="font-extrabold text-emerald-600 text-lg leading-none">{activeDealModal.probability}%</span>
+                          </div>
+                          <TrendingUp className="w-6 h-6 text-emerald-400" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-2">Detalles de Oportunidad</h4>
+                        <div className="space-y-3 text-sm">
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-slate-500">Etapa Actual</span>
+                            <span className="font-medium text-slate-900">
+                              {STAGES.find(s => s.id === activeDealModal.stageId)?.name}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-slate-500">Fecha Cierre Estimada</span>
+                            <span className="font-medium text-slate-900">{activeDealModal.expectedCloseDate}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-slate-500">Propietario</span>
+                            <span className="font-medium text-slate-900">{activeDealModal.owner}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-slate-500">Región</span>
+                            <span className="font-medium text-slate-900">{activeDealModal.country}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {panelTab === 'tasks' && (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
+                      <CheckCircle2 className="w-12 h-12 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-500">No hay tareas pendientes.</p>
+                      <button className="text-indigo-600 font-bold text-xs hover:underline">Agregar nueva tarea</button>
+                    </div>
+                  )}
+
+                  {panelTab === 'notes' && (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
+                      <FileText className="w-12 h-12 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-500">No hay notas en esta oportunidad.</p>
+                      <button className="text-indigo-600 font-bold text-xs hover:underline">Añadir nota</button>
+                    </div>
+                  )}
+
+                  {panelTab === 'files' && (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
+                      <Paperclip className="w-12 h-12 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-500">No hay propuestas ni contratos adjuntos.</p>
+                      <button className="text-indigo-600 font-bold text-xs hover:underline">Subir documento</button>
+                    </div>
+                  )}
+
+                  {panelTab === 'emails' && (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
+                      <Mail className="w-12 h-12 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-500">No hay correos en esta oportunidad.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Add Deal Modal */}
       {isAddModalOpen && (

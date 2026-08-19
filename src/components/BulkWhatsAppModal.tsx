@@ -236,16 +236,51 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
   // Current contact for preview
   const currentPreviewContact = selectedContacts[previewContactIndex] || selectedContacts[0] || contacts[0];
 
+  // Missing variables validation
+  const missingVariablesWarnings = useMemo(() => {
+    const warnings: string[] = [];
+    if (!messageTemplate || selectedContacts.length === 0) return warnings;
+
+    const usesName = /{{nombre}}|{{name}}|{{primer_nombre}}|{{first_name}}/.test(messageTemplate);
+    const usesCompany = /{{empresa}}|{{company}}/.test(messageTemplate);
+    const usesRole = /{{cargo}}|{{role}}/.test(messageTemplate);
+    const usesCity = /{{ciudad}}|{{city}}/.test(messageTemplate);
+
+    let missingCompany = 0;
+    let missingRole = 0;
+    let missingCity = 0;
+    let missingName = 0;
+
+    selectedContacts.forEach(c => {
+      if (usesName && !c.name?.trim()) missingName++;
+      if (usesCompany && !c.company?.trim()) missingCompany++;
+      if (usesRole && !c.role?.trim()) missingRole++;
+      if (usesCity && !c.city?.trim()) missingCity++;
+    });
+
+    if (missingName > 0) warnings.push(`Falta el nombre en ${missingName} contacto(s). Se usará el valor por defecto.`);
+    if (missingCompany > 0) warnings.push(`Falta la empresa en ${missingCompany} contacto(s). Se usará 'su empresa'.`);
+    if (missingRole > 0) warnings.push(`Falta el cargo en ${missingRole} contacto(s). Se usará 'Directivo'.`);
+    if (missingCity > 0) warnings.push(`Falta la ciudad en ${missingCity} contacto(s). Se usará 'la región'.`);
+
+    return warnings;
+  }, [messageTemplate, selectedContacts]);
+
   // Helper to replace template tags
   const renderMessageForContact = (template: string, contact: BulkContactItem | undefined) => {
     if (!contact) return template;
     const firstName = contact.name.split(' ')[0] || contact.name;
     return template
       .replace(/{{nombre}}/g, contact.name)
+      .replace(/{{name}}/g, contact.name)
       .replace(/{{primer_nombre}}/g, firstName)
+      .replace(/{{first_name}}/g, firstName)
       .replace(/{{empresa}}/g, contact.company || 'su empresa')
+      .replace(/{{company}}/g, contact.company || 'su empresa')
       .replace(/{{cargo}}/g, contact.role || 'Directivo')
+      .replace(/{{role}}/g, contact.role || 'Directivo')
       .replace(/{{ciudad}}/g, contact.city || 'la región')
+      .replace(/{{city}}/g, contact.city || 'la región')
       .replace(/{{scoring}}/g, String(contact.leadScore || 85));
   };
 
@@ -617,7 +652,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                   {/* Variables dinámicas badges */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                     <span className="text-[10px] text-slate-400 font-mono">Insertar:</span>
-                    {['nombre', 'primer_nombre', 'empresa', 'cargo', 'ciudad', 'scoring'].map(v => (
+                    {['nombre', 'name', 'primer_nombre', 'empresa', 'company', 'cargo', 'ciudad', 'scoring'].map(v => (
                       <button
                         key={v}
                         type="button"
@@ -628,6 +663,21 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                       </button>
                     ))}
                   </div>
+
+                  {/* Advertencia de variables faltantes */}
+                  {missingVariablesWarnings.length > 0 && (
+                    <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2 items-start">
+                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-700 space-y-1">
+                        <p className="font-bold">Advertencia: Faltan datos en algunos contactos</p>
+                        <ul className="list-disc pl-4 space-y-0.5">
+                          {missingVariablesWarnings.map((warn, i) => (
+                            <li key={i}>{warn}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Vista Previa de WhatsApp en Vivo */}

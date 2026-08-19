@@ -584,11 +584,11 @@ export default function PublicWebsite({
   // Content Data structures
   const OFFICES = useMemo(() => ({
     roca: {
-      name: "Sede — General Roca, Patagonia",
-      address: contact.address,
-      phone: contact.phone,
+      name: "Sede — Arraial do Cabo",
+      address: "Matias Andres Rotili Poinsof - Arraial do Cabo",
+      phone: "+54 9 291 440-9805",
       email: contact.email,
-      desc: "Nacimos en 2016 en esta ciudad y seguimos operando desde la Patagonia Norte. Atendemos clientes en todo el país en modalidad 100% remota."
+      desc: "Operando de manera global y digital desde nuestras instalaciones en Brasil. Atendemos a clientes de todo el continente de manera 100% remota."
     }
   }), [contact]);
 
