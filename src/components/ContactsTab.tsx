@@ -18,6 +18,7 @@ import {
   Plus,
   Send,
   X,
+  CheckSquare,
   ShieldCheck,
   Star,
   Check,
@@ -289,127 +290,126 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
 
       {subTab === 'contacts' && (
         <div id="contacts-list-container" className="space-y-6">
-          {/* Top Banner */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full font-mono">
-              Directorio B2B
-            </span>
-            <span className="text-slate-400 text-xs">· Módulo 2.3 Conocer tu Audiencia</span>
+          {/* Header (Frappe Style) */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+            <div>
+              <h1 className="text-[20px] font-semibold text-gray-900 tracking-tight flex items-center gap-2">
+                <Users className="w-5 h-5 text-gray-600" /> Directorio de Contactos
+              </h1>
+              <p className="text-gray-500 text-[13px] mt-0.5">
+                Base de datos verificada de ejecutivos decisores.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowBulkWAModal(true)}
+                className="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-md text-[13px] font-medium transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 text-gray-500" />
+                <span>Mensaje Masivo</span>
+              </button>
+              <PdfExportButton
+                targetId="contacts-list-container"
+                title="Directorio de Contactos B2B"
+                filename="Directorio_Contactos_B2B.pdf"
+                label="Exportar a PDF"
+                variant="outline"
+                size="md"
+                branding={{
+                  companyName: 'Clientum B2B Intelligence',
+                  primaryColor: '#059669'
+                }}
+              />
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-md text-[13px] font-medium transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nuevo Contacto</span>
+              </button>
+            </div>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Users className="w-7 h-7 text-emerald-600" /> Contactos y Destinatarios B2B
-          </h1>
-          <p className="text-slate-500 text-xs mt-1">
-            Base de datos verificada de ejecutivos decisores, canales de comunicación directa y puntaje de intención (Scoring).
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowBulkWAModal(true)}
-            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer border-0"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>Envío Masivo WhatsApp (IA)</span>
-          </button>
-          <PdfExportButton
-            targetId="contacts-list-container"
-            title="Directorio de Contactos B2B"
-            filename="Directorio_Contactos_B2B.pdf"
-            label="Exportar a PDF"
-            variant="outline"
-            size="md"
-            branding={{
-              companyName: 'Clientum B2B Intelligence',
-              primaryColor: '#059669'
-            }}
-          />
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer border-0"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Nuevo Contacto</span>
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Stats Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+      {/* KPI Stats Bar (Frappe Style) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Total Destinatarios</span>
-            <span className="text-2xl font-black text-slate-900">{contacts.length}</span>
-            <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">100% Activos</span>
+            <span className="text-gray-500 text-[11px] font-medium uppercase tracking-wider block">Destinatarios</span>
+            <span className="text-lg font-semibold text-gray-900 leading-tight mt-0.5">{contacts.length}</span>
+            <span className="text-[11px] text-gray-400 block">Total en base</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <Users className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500">
+            <Users className="w-4 h-4" />
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">WhatsApp Verificados</span>
-            <span className="text-2xl font-black text-emerald-600">
+            <span className="text-gray-500 text-[11px] font-medium uppercase tracking-wider block">WhatsApp</span>
+            <span className="text-lg font-semibold text-emerald-600 leading-tight mt-0.5">
               {contacts.filter(c => c.whatsappVerified).length}
             </span>
-            <span className="text-[10px] text-slate-500 font-semibold block mt-0.5">Direct wa.me Chat Ready</span>
+            <span className="text-[11px] text-gray-400 block">Números verificados</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <MessageCircle className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-md bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+            <MessageCircle className="w-4 h-4" />
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Decisores C-Level</span>
-            <span className="text-2xl font-black text-slate-900">
+            <span className="text-gray-500 text-[11px] font-medium uppercase tracking-wider block">C-Level</span>
+            <span className="text-lg font-semibold text-gray-900 leading-tight mt-0.5">
               {contacts.filter(c => c.personaTag.includes('CEO') || c.personaTag.includes('CRO') || c.personaTag.includes('CTO')).length}
             </span>
-            <span className="text-[10px] text-indigo-600 font-bold block mt-0.5">Alta Capacidad de Cierre</span>
+            <span className="text-[11px] text-gray-400 block">Decisores</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-            <ShieldCheck className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+            <ShieldCheck className="w-4 h-4" />
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Lead Score Promedio</span>
-            <span className="text-2xl font-black text-slate-900">
-              {Math.round(contacts.reduce((acc, c) => acc + c.leadScore, 0) / contacts.length)} / 100
+            <span className="text-gray-500 text-[11px] font-medium uppercase tracking-wider block">Avg Lead Score</span>
+            <span className="text-lg font-semibold text-gray-900 leading-tight mt-0.5">
+              {Math.round(contacts.reduce((acc, c) => acc + c.leadScore, 0) / contacts.length)}
             </span>
-            <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">Matriz MEDDIC & ICP Fit</span>
+            <span className="text-[11px] text-gray-400 block">/ 100 MEDDIC</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-            <Star className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-md bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+            <Star className="w-4 h-4" />
           </div>
         </div>
       </div>
 
-      {/* Filter and Control Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-        <div className="flex flex-col md:flex-row justify-between gap-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+      {/* Filter and Control Bar (Frappe Style) */}
+      <div className="bg-white rounded-md border border-gray-200 shadow-sm p-2 flex flex-col space-y-2">
+        <div className="flex flex-col md:flex-row justify-between gap-2 items-center">
+          <div className="relative flex-1 w-full flex items-center">
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar contacto por Nombre, Email, Empresa o WhatsApp..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-hidden focus:border-emerald-500 font-medium"
+              placeholder="Buscar (Nombre, Empresa)..."
+              className="w-full bg-transparent border-none pl-8 pr-16 py-1.5 text-[13px] focus:outline-hidden focus:ring-0 text-gray-900 placeholder-gray-400"
             />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
+              <span className="px-1.5 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-400 text-[10px] font-mono leading-none">⌘</span>
+              <span className="px-1.5 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-400 text-[10px] font-mono leading-none">K</span>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 px-2 md:px-0">
+            <div className="h-5 w-px bg-gray-200 mx-1 hidden md:block"></div>
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-hidden"
+              className="bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 transition-colors focus:outline-hidden focus:border-gray-300 focus:ring-0 cursor-pointer"
             >
-              <option value="todos">Todos los Roles Persona</option>
+              <option value="todos">Todos los Roles</option>
               <option value="CEO PyME">CEO PyME / Dueño</option>
               <option value="CRO / Ventas">CRO / Ventas</option>
               <option value="CTO / Sistemas">CTO / Sistemas</option>
@@ -419,7 +419,7 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-hidden"
+              className="bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 transition-colors focus:outline-hidden focus:border-gray-300 focus:ring-0 cursor-pointer"
             >
               <option value="todos">Todos los Estados</option>
               <option value="Cliente">Cliente</option>
@@ -431,7 +431,7 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
             <select
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-hidden"
+              className="bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 transition-colors focus:outline-hidden focus:border-gray-300 focus:ring-0 cursor-pointer"
             >
               <option value="todos">Todos los Países</option>
               <option value="Argentina">🇦🇷 Argentina</option>
@@ -443,160 +443,164 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
 
         {/* Selected Batch Bar */}
         {selectedContactIds.length > 0 && (
-          <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl flex items-center justify-between text-xs text-emerald-950 font-medium">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>{selectedContactIds.length} contacto(s) seleccionado(s)</span>
+          <div className="bg-gray-50 border-t border-gray-100 p-2 flex items-center justify-between text-[13px] text-gray-700">
+            <div className="flex items-center gap-2 pl-1">
+              <CheckSquare className="w-4 h-4 text-gray-400" />
+              <span>{selectedContactIds.length} filas seleccionadas</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setShowBulkWAModal(true)}
-                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-2.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-md text-[12px] font-medium transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Enviar WhatsApp con IA ({selectedContactIds.length})</span>
+                <MessageCircle className="w-3.5 h-3.5 text-gray-400" />
+                WhatsApp Masivo
               </button>
               <button
-                onClick={() => alert(`Añadiendo ${selectedContactIds.length} contactos a la Lista de Segmentación...`)}
-                className="px-3 py-1 bg-white border border-emerald-300 text-emerald-800 rounded-lg font-bold text-[11px] hover:bg-emerald-100/50 cursor-pointer"
+                onClick={() => alert(`Añadiendo ${selectedContactIds.length} contactos a la Lista...`)}
+                className="px-2.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-md text-[12px] font-medium transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                Asignar a Lista
+                <Tag className="w-3.5 h-3.5 text-gray-400" />
+                Etiquetar
               </button>
               <button
                 onClick={() => setSelectedContactIds([])}
-                className="text-slate-500 hover:text-slate-700 text-[11px] font-bold"
+                className="px-2.5 py-1.5 text-gray-500 hover:text-gray-700 text-[12px] font-medium transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                Deseleccionar
+                <X className="w-3.5 h-3.5" />
+                Limpiar
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Main Table View */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
-              <th className="p-3.5 w-10 text-center">
-                <input
-                  type="checkbox"
-                  checked={selectedContactIds.length === filteredContacts.length && filteredContacts.length > 0}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="rounded text-emerald-600 focus:ring-emerald-500"
-                />
-              </th>
-              <th className="p-3.5">Contacto & Cargo</th>
-              <th className="p-3.5">Empresa & Ubicación</th>
-              <th className="p-3.5">Persona ICP</th>
-              <th className="p-3.5">Score Intención</th>
-              <th className="p-3.5">Canal Directo</th>
-              <th className="p-3.5">Estado</th>
-              <th className="p-3.5 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {filteredContacts.map((contact) => {
-              const isSelected = selectedContactIds.includes(contact.id);
-              const waCleanPhone = contact.phone.replace(/[^0-9]/g, '');
+      {/* Main Table View (Frappe Style) */}
+      <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-200 text-gray-500 font-medium text-[12px]">
+                <th className="px-4 py-2.5 w-10 text-center font-medium">
+                  <input
+                    type="checkbox"
+                    checked={selectedContactIds.length === filteredContacts.length && filteredContacts.length > 0}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="rounded-sm border-gray-300 text-gray-900 focus:ring-gray-900"
+                  />
+                </th>
+                <th className="px-4 py-2.5 font-medium whitespace-nowrap">Contacto</th>
+                <th className="px-4 py-2.5 font-medium whitespace-nowrap">Empresa</th>
+                <th className="px-4 py-2.5 font-medium whitespace-nowrap">ICP</th>
+                <th className="px-4 py-2.5 font-medium whitespace-nowrap">Score</th>
+                <th className="px-4 py-2.5 font-medium whitespace-nowrap">Contacto Directo</th>
+                <th className="px-4 py-2.5 font-medium whitespace-nowrap">Estado</th>
+                <th className="px-4 py-2.5 text-right font-medium whitespace-nowrap"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-[13px] text-gray-800">
+              {filteredContacts.map((contact) => {
+                const isSelected = selectedContactIds.includes(contact.id);
+                const waCleanPhone = contact.phone.replace(/[^0-9]/g, '');
 
-              return (
-                <tr key={contact.id} className={`hover:bg-slate-50/80 transition-colors ${isSelected ? 'bg-emerald-50/40' : ''}`}>
-                  <td className="p-3.5 text-center">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleToggleSelect(contact.id)}
-                      className="rounded text-emerald-600 focus:ring-emerald-500"
-                    />
-                  </td>
+                return (
+                  <tr key={contact.id} className={`hover:bg-gray-50 transition-colors group ${isSelected ? 'bg-gray-50/80' : ''}`}>
+                    <td className="px-4 py-2.5 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleSelect(contact.id)}
+                        className="rounded-sm border-gray-300 text-gray-900 focus:ring-gray-900"
+                      />
+                    </td>
 
-                  <td className="p-3.5">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                        {contact.name.charAt(0)}
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-md bg-gray-100 text-gray-600 font-medium text-xs flex items-center justify-center shrink-0 border border-gray-200/60">
+                          {contact.name.charAt(0)}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-900 leading-tight">{contact.name}</span>
+                          <span className="text-[11px] text-gray-500 leading-tight mt-0.5">{contact.role}</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-bold text-slate-900 block">{contact.name}</span>
-                        <span className="text-[11px] text-slate-500">{contact.role}</span>
+                    </td>
+
+                    <td className="px-4 py-2.5">
+                      <span className="font-medium text-gray-900 block leading-tight">{contact.company}</span>
+                      <span className="text-[11px] text-gray-500 block leading-tight mt-0.5">{contact.city}, {contact.country}</span>
+                    </td>
+
+                    <td className="px-4 py-2.5">
+                      <span className="inline-flex items-center bg-gray-100 text-gray-700 px-2 py-0.5 rounded-sm text-[11px] font-medium border border-gray-200">
+                        {contact.personaTag}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-700 w-5">{contact.leadScore}</span>
+                        <div className="w-12 bg-gray-100 rounded-sm h-1.5 overflow-hidden">
+                          <div
+                            className={`h-full ${
+                              contact.leadScore >= 90 ? 'bg-emerald-500' : contact.leadScore >= 75 ? 'bg-blue-500' : 'bg-amber-500'
+                            }`}
+                            style={{ width: `${contact.leadScore}%` }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="p-3.5">
-                    <span className="font-semibold text-slate-800 block">{contact.company}</span>
-                    <span className="text-[10px] text-slate-400">{contact.city}, {contact.country}</span>
-                  </td>
-
-                  <td className="p-3.5">
-                    <span className="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded text-[10px]">
-                      {contact.personaTag}
-                    </span>
-                  </td>
-
-                  <td className="p-3.5">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-12 bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div
-                          className={`h-full ${
-                            contact.leadScore >= 90 ? 'bg-emerald-500' : contact.leadScore >= 75 ? 'bg-indigo-500' : 'bg-amber-500'
-                          }`}
-                          style={{ width: `${contact.leadScore}%` }}
-                        />
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <a
+                          href={`https://wa.me/${waCleanPhone}?text=Hola%20${encodeURIComponent(contact.name)},%20te%20contacto%20desde%20Clientum`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                          title={`Enviar WhatsApp a ${contact.phone}`}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                        </a>
+                        <a
+                          href={`mailto:${contact.email}`}
+                          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          title={`Enviar Email a ${contact.email}`}
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                        </a>
                       </div>
-                      <span className="font-black text-slate-800 text-[11px]">{contact.leadScore}</span>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="p-3.5">
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={`https://wa.me/${waCleanPhone}?text=Hola%20${encodeURIComponent(contact.name)},%20te%20contacto%20desde%20Clientum`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-lg transition-colors"
-                        title={`Enviar WhatsApp a ${contact.phone}`}
+                    <td className="px-4 py-2.5">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[11px] font-medium border ${
+                        contact.status === 'Cliente' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                        contact.status === 'Oportunidad' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                        contact.status === 'Lead Calificado' ? 'bg-purple-50 text-purple-700 border-purple-100' :
+                        'bg-gray-50 text-gray-600 border-gray-200'
+                      }`}>
+                        {contact.status}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-2.5 text-right">
+                      <button
+                        onClick={() => setActiveContactModal(contact)}
+                        className="opacity-0 group-hover:opacity-100 px-2.5 py-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 font-medium text-[11px] rounded-md transition-all cursor-pointer shadow-sm"
                       >
-                        <MessageCircle className="w-4 h-4" />
-                      </a>
-                      <a
-                        href={`mailto:${contact.email}`}
-                        className="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
-                        title={`Enviar Email a ${contact.email}`}
-                      >
-                        <Mail className="w-4 h-4" />
-                      </a>
-                    </div>
-                  </td>
-
-                  <td className="p-3.5">
-                    <span className={`font-bold text-[10px] px-2.5 py-0.5 rounded-full ${
-                      contact.status === 'Cliente' ? 'bg-emerald-100 text-emerald-800' :
-                      contact.status === 'Oportunidad' ? 'bg-indigo-100 text-indigo-800' :
-                      contact.status === 'Lead Calificado' ? 'bg-blue-100 text-blue-800' :
-                      'bg-slate-100 text-slate-700'
-                    }`}>
-                      {contact.status}
-                    </span>
-                  </td>
-
-                  <td className="p-3.5 text-right">
-                    <button
-                      onClick={() => setActiveContactModal(contact)}
-                      className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] rounded-lg transition-all cursor-pointer"
-                    >
-                      Ver Ficha
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                        Abrir
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Side Panel: Full Contact Detail (Twenty CRM Style) */}
+      {/* Side Panel: Full Contact Detail (Frappe UI Style) */}
       <AnimatePresence>
         {activeContactModal && (
           <>
@@ -605,61 +609,60 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActiveContactModal(null)}
-              className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[2px]"
+              className="fixed inset-0 z-40 bg-gray-900/20 backdrop-blur-[1px]"
             />
             <motion.div
               initial={{ x: '100%', opacity: 0.5 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0.5 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white shadow-2xl flex flex-col border-l border-slate-200"
+              className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-gray-50 shadow-2xl flex flex-col border-l border-gray-200"
             >
               <div className="flex flex-col h-full overflow-hidden">
                 {/* Header Profile */}
-                <div className="p-6 border-b border-slate-200 bg-slate-50/50 relative shrink-0">
+                <div className="px-6 py-5 border-b border-gray-200 bg-white relative shrink-0">
                   <button
                     onClick={() => setActiveContactModal(null)}
-                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+                    className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </button>
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 text-white font-bold text-xl flex items-center justify-center shadow-inner">
+                    <div className="w-12 h-12 rounded-md bg-gray-100 text-gray-700 font-semibold text-lg flex items-center justify-center border border-gray-200">
                       {activeContactModal.name.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-xl text-slate-900 tracking-tight">{activeContactModal.name}</h3>
-                      <p className="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
-                        <Briefcase className="w-3.5 h-3.5" />
+                      <h3 className="font-semibold text-lg text-gray-900 leading-tight">{activeContactModal.name}</h3>
+                      <p className="text-[13px] text-gray-500 font-medium flex items-center gap-1.5 mt-0.5">
                         {activeContactModal.role} · {activeContactModal.company}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 mt-5">
+                  <div className="flex gap-2 mt-4">
                     <a
                       href={`https://wa.me/${activeContactModal.phone.replace(/[^0-9]/g, '')}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs rounded-lg transition-colors border border-emerald-200"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white text-gray-700 hover:bg-gray-50 font-medium text-[13px] rounded-md transition-colors border border-gray-200 shadow-sm"
                     >
-                      <MessageCircle className="w-4 h-4" />
+                      <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                       WhatsApp
                     </a>
                     <a
                       href={`mailto:${activeContactModal.email}`}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs rounded-lg transition-colors border border-indigo-200"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white text-gray-700 hover:bg-gray-50 font-medium text-[13px] rounded-md transition-colors border border-gray-200 shadow-sm"
                     >
-                      <Mail className="w-4 h-4" />
+                      <Mail className="w-3.5 h-3.5 text-blue-600" />
                       Email
                     </a>
                   </div>
                 </div>
 
-                {/* Sub-Tabs (Twenty CRM Style) */}
-                <div className="flex items-center px-6 border-b border-slate-200 bg-white shrink-0 overflow-x-auto hide-scrollbar">
+                {/* Sub-Tabs (Frappe CRM Style) */}
+                <div className="flex items-center px-4 bg-white border-b border-gray-200 shrink-0 overflow-x-auto hide-scrollbar">
                   {[
-                    { id: 'timeline', label: 'Timeline', icon: Clock },
+                    { id: 'timeline', label: 'Overview', icon: Clock },
                     { id: 'tasks', label: 'Tasks', icon: CheckCircle2 },
                     { id: 'notes', label: 'Notes', icon: FileText },
                     { id: 'files', label: 'Files', icon: Paperclip },
@@ -668,67 +671,72 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
                     <button
                       key={tab.id}
                       onClick={() => setPanelTab(tab.id as any)}
-                      className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
+                      className={`flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium border-b-2 whitespace-nowrap transition-colors ${
                         panelTab === tab.id
-                          ? 'border-slate-900 text-slate-900'
-                          : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-300'
+                          ? 'border-gray-900 text-gray-900'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }`}
                     >
-                      <tab.icon className="w-3.5 h-3.5" />
                       {tab.label}
                     </button>
                   ))}
                 </div>
 
                 {/* Scrollable Content Area */}
-                <div className="flex-1 overflow-y-auto p-6 bg-white">
+                <div className="flex-1 overflow-y-auto p-6">
                   {panelTab === 'timeline' && (
                     <div className="space-y-6">
                       {/* At-a-glance Info Blocks */}
                       <div className="grid grid-cols-2 gap-3 mb-6">
-                        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                          <span className="text-slate-500 font-bold block text-[10px] uppercase mb-1">Scoring</span>
-                          <div className="flex items-end gap-2">
-                            <span className="font-extrabold text-slate-900 text-xl leading-none">{activeContactModal.leadScore}</span>
-                            <span className="text-xs text-slate-400 font-medium mb-0.5">/ 100</span>
+                        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm">
+                          <span className="text-gray-500 font-medium block text-[11px] uppercase tracking-wider mb-1">Scoring</span>
+                          <div className="flex items-end gap-1.5">
+                            <span className="font-semibold text-gray-900 text-lg leading-none">{activeContactModal.leadScore}</span>
+                            <span className="text-[11px] text-gray-400 font-medium mb-0.5">/ 100</span>
                           </div>
                         </div>
-                        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                          <span className="text-slate-500 font-bold block text-[10px] uppercase mb-1">Arquetipo</span>
-                          <span className="font-bold text-slate-900 text-sm block truncate">{activeContactModal.personaTag}</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <h4 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-2">Información de Contacto</h4>
-                        <div className="space-y-3 text-sm">
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-slate-500">Email</span>
-                            <span className="font-medium text-slate-900">{activeContactModal.email}</span>
-                          </div>
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-slate-500">Teléfono</span>
-                            <span className="font-mono text-slate-900">{activeContactModal.phone}</span>
-                          </div>
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-slate-500">Ubicación</span>
-                            <span className="font-medium text-slate-900">{activeContactModal.city}, {activeContactModal.country}</span>
-                          </div>
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-slate-500">Agregado</span>
-                            <span className="font-medium text-slate-900">{activeContactModal.addedDate}</span>
-                          </div>
+                        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm">
+                          <span className="text-gray-500 font-medium block text-[11px] uppercase tracking-wider mb-1">Arquetipo</span>
+                          <span className="font-medium text-gray-900 text-[13px] block truncate">{activeContactModal.personaTag}</span>
                         </div>
                       </div>
 
-                      <div className="space-y-4 pt-4 border-t border-slate-100">
-                        <h4 className="font-bold text-sm text-slate-900">Listas & Segmentos</h4>
-                        <div className="flex flex-wrap gap-1.5">
-                          {activeContactModal.lists.map((l, i) => (
-                            <span key={i} className="bg-slate-100 text-slate-600 font-semibold px-2.5 py-1 rounded-md text-[11px] border border-slate-200">
-                              {l}
-                            </span>
-                          ))}
+                      <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
+                          <h4 className="font-medium text-[13px] text-gray-900">Información de Contacto</h4>
+                        </div>
+                        <div className="p-4 space-y-3 text-[13px]">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Email</span>
+                            <span className="font-medium text-gray-900">{activeContactModal.email}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Teléfono</span>
+                            <span className="font-mono text-gray-900">{activeContactModal.phone}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Ubicación</span>
+                            <span className="font-medium text-gray-900">{activeContactModal.city}, {activeContactModal.country}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Agregado</span>
+                            <span className="font-medium text-gray-900">{activeContactModal.addedDate}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
+                          <h4 className="font-medium text-[13px] text-gray-900">Listas & Segmentos</h4>
+                        </div>
+                        <div className="p-4">
+                          <div className="flex flex-wrap gap-1.5">
+                            {activeContactModal.lists.map((l, i) => (
+                              <span key={i} className="bg-gray-100 text-gray-700 font-medium px-2 py-0.5 rounded-sm text-[11px] border border-gray-200">
+                                {l}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -736,33 +744,33 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
 
                   {panelTab === 'tasks' && (
                     <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
-                      <CheckCircle2 className="w-12 h-12 text-slate-300" />
-                      <p className="text-sm font-medium text-slate-500">No hay tareas pendientes para este contacto.</p>
-                      <button className="text-indigo-600 font-bold text-xs hover:underline">Agregar nueva tarea</button>
+                      <CheckCircle2 className="w-8 h-8 text-gray-300" />
+                      <p className="text-[13px] font-medium text-gray-500">No hay tareas pendientes.</p>
+                      <button className="text-gray-900 font-medium text-[12px] hover:underline cursor-pointer border border-gray-200 px-3 py-1.5 rounded-md bg-white">Agregar tarea</button>
                     </div>
                   )}
 
                   {panelTab === 'notes' && (
                     <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
-                      <FileText className="w-12 h-12 text-slate-300" />
-                      <p className="text-sm font-medium text-slate-500">No hay notas registradas.</p>
-                      <button className="text-indigo-600 font-bold text-xs hover:underline">Crear nota</button>
+                      <FileText className="w-8 h-8 text-gray-300" />
+                      <p className="text-[13px] font-medium text-gray-500">No hay notas registradas.</p>
+                      <button className="text-gray-900 font-medium text-[12px] hover:underline cursor-pointer border border-gray-200 px-3 py-1.5 rounded-md bg-white">Crear nota</button>
                     </div>
                   )}
 
                   {panelTab === 'files' && (
                     <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
-                      <Paperclip className="w-12 h-12 text-slate-300" />
-                      <p className="text-sm font-medium text-slate-500">No se adjuntaron archivos.</p>
-                      <button className="text-indigo-600 font-bold text-xs hover:underline">Subir archivo</button>
+                      <Paperclip className="w-8 h-8 text-gray-300" />
+                      <p className="text-[13px] font-medium text-gray-500">No se adjuntaron archivos.</p>
+                      <button className="text-gray-900 font-medium text-[12px] hover:underline cursor-pointer border border-gray-200 px-3 py-1.5 rounded-md bg-white">Subir archivo</button>
                     </div>
                   )}
 
                   {panelTab === 'emails' && (
                     <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
-                      <Mail className="w-12 h-12 text-slate-300" />
-                      <p className="text-sm font-medium text-slate-500">Sin historial de correos.</p>
-                      <button className="text-indigo-600 font-bold text-xs hover:underline">Conectar bandeja</button>
+                      <Mail className="w-8 h-8 text-gray-300" />
+                      <p className="text-[13px] font-medium text-gray-500">Sin historial de correos.</p>
+                      <button className="text-gray-900 font-medium text-[12px] hover:underline cursor-pointer border border-gray-200 px-3 py-1.5 rounded-md bg-white">Conectar bandeja</button>
                     </div>
                   )}
                 </div>
@@ -774,86 +782,86 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
 
       {/* Modal: Add New Contact */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <form onSubmit={handleAddContact} className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 text-slate-900 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-              <h3 className="font-bold text-base text-slate-900">Agregar Nuevo Contacto B2B</h3>
+        <div className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center p-4">
+          <form onSubmit={handleAddContact} className="bg-white border border-gray-200 rounded-lg max-w-lg w-full shadow-2xl flex flex-col">
+            <div className="flex justify-between items-center border-b border-gray-200 px-5 py-4">
+              <h3 className="font-semibold text-[15px] text-gray-900">Nuevo Contacto</h3>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold"
+                className="text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 p-1.5 rounded-md transition-colors"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="p-5 space-y-4 text-[13px]">
               <div>
-                <label className="block font-medium text-slate-700 mb-1">Nombre Completo:</label>
+                <label className="block font-medium text-gray-700 mb-1.5">Nombre Completo <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ing. Fernando Sola"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
+                  placeholder="Ej. Fernando Sola"
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 focus:outline-hidden focus:border-gray-400 focus:ring-0 placeholder:text-gray-400 transition-colors"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Cargo / Puesto:</label>
+                  <label className="block font-medium text-gray-700 mb-1.5">Cargo / Puesto</label>
                   <input
                     type="text"
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     placeholder="Gerente Comercial"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 focus:outline-hidden focus:border-gray-400 focus:ring-0 placeholder:text-gray-400 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Empresa:</label>
+                  <label className="block font-medium text-gray-700 mb-1.5">Empresa</label>
                   <input
                     type="text"
                     value={formData.company}
                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                     placeholder="Empresa S.A."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 focus:outline-hidden focus:border-gray-400 focus:ring-0 placeholder:text-gray-400 transition-colors"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Email Corporativo:</label>
+                  <label className="block font-medium text-gray-700 mb-1.5">Email Corporativo <span className="text-red-500">*</span></label>
                   <input
                     type="email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="fernando@empresa.com"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 focus:outline-hidden focus:border-gray-400 focus:ring-0 placeholder:text-gray-400 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">WhatsApp / Teléfono:</label>
+                  <label className="block font-medium text-gray-700 mb-1.5">WhatsApp / Teléfono</label>
                   <input
                     type="text"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+5492984123456"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono"
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 font-mono text-[12px] focus:outline-hidden focus:border-gray-400 focus:ring-0 placeholder:text-gray-400 transition-colors"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Arquetipo Persona:</label>
+                  <label className="block font-medium text-gray-700 mb-1.5">Arquetipo Persona</label>
                   <select
                     value={formData.personaTag}
                     onChange={(e) => setFormData({ ...formData, personaTag: e.target.value as any })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 focus:outline-hidden focus:border-gray-400 focus:ring-0 transition-colors"
                   >
                     <option value="CEO PyME">CEO PyME / Dueño</option>
                     <option value="CRO / Ventas">CRO / Ventas</option>
@@ -864,11 +872,11 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
                 </div>
 
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">País:</label>
+                  <label className="block font-medium text-gray-700 mb-1.5">País</label>
                   <select
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 focus:outline-hidden focus:border-gray-400 focus:ring-0 transition-colors"
                   >
                     <option value="Argentina">Argentina</option>
                     <option value="Chile">Chile</option>
@@ -878,19 +886,19 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+            <div className="flex justify-end gap-2 px-5 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 cursor-pointer"
+                className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-md text-[13px] font-medium hover:bg-gray-50 cursor-pointer shadow-sm transition-colors"
               >
-                Cancelar
+                Descartar
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md"
+                className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-md text-[13px] font-medium cursor-pointer shadow-sm transition-colors"
               >
-                Guardar Contacto
+                Guardar
               </button>
             </div>
           </form>

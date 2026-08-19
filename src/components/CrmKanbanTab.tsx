@@ -228,43 +228,37 @@ export function CrmKanbanTab() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-4">
+      {/* Top Header (Frappe Style) */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full font-mono">
-              Sales CRM Pipeline
-            </span>
-            <span className="text-slate-400 text-xs">· Módulo 3.2 Prospección & Pipeline</span>
-          </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Kanban className="w-7 h-7 text-indigo-600" /> Tablero CRM Kanban Sales
+          <h1 className="text-[20px] font-semibold text-gray-900 tracking-tight flex items-center gap-2">
+            <Kanban className="w-5 h-5 text-gray-600" /> Tablero CRM Kanban Sales
           </h1>
-          <p className="text-slate-500 text-xs mt-1">
-            Gestión de oportunidades B2B, seguimiento de etapas de venta, scoring MEDDIC y proyecciones de facturación.
+          <p className="text-gray-500 text-[13px] mt-0.5">
+            Oportunidades B2B, seguimiento de etapas de venta y scoring MEDDIC.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowBulkWAModal(true)}
-            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer border-0"
+            className="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-md text-[13px] font-medium transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
-            <MessageSquare className="w-4 h-4" />
+            <MessageSquare className="w-4 h-4 text-emerald-600" />
             <span>Envío Masivo WA</span>
           </button>
 
-          <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 text-xs font-bold">
+          <div className="bg-gray-100 p-0.5 rounded-md border border-gray-200 flex items-center text-[12px] font-medium">
             <button
               onClick={() => setSelectedCurrency('USD')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${selectedCurrency === 'USD' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'}`}
+              className={`px-2.5 py-1 rounded transition-all cursor-pointer ${selectedCurrency === 'USD' ? 'bg-white text-gray-900 shadow-xs font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
             >
               USD ($)
             </button>
             <button
               onClick={() => setSelectedCurrency('ARS')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${selectedCurrency === 'ARS' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'}`}
+              className={`px-2.5 py-1 rounded transition-all cursor-pointer ${selectedCurrency === 'ARS' ? 'bg-white text-gray-900 shadow-xs font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
             >
               ARS ($)
             </button>
@@ -272,7 +266,7 @@ export function CrmKanbanTab() {
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-indigo-600/20 cursor-pointer border-0"
+            className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-md text-[13px] font-medium transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Nueva Oportunidad</span>
@@ -280,105 +274,125 @@ export function CrmKanbanTab() {
         </div>
       </div>
 
-      {/* Pipeline Summary Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Valor Total Pipeline</span>
-          <span className="text-2xl font-black text-slate-900">
-            {selectedCurrency === 'USD' ? `$${totalPipelineValue.toLocaleString()} USD` : `$${totalPipelineValue.toLocaleString()} ARS`}
-          </span>
-          <span className="text-[10px] text-slate-500 block mt-0.5 font-semibold">{deals.length} oportunidades activas</span>
+      {/* Pipeline Summary Bar (Frappe Style) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-gray-500 text-[11px] font-medium uppercase tracking-wider block">Valor Total Pipeline</span>
+            <span className="text-lg font-semibold text-gray-900 leading-tight mt-0.5 block">
+              {selectedCurrency === 'USD' ? `$${totalPipelineValue.toLocaleString()} USD` : `$${totalPipelineValue.toLocaleString()} ARS`}
+            </span>
+            <span className="text-[11px] text-gray-400 block">{deals.length} oportunidades activas</span>
+          </div>
+          <div className="w-8 h-8 rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500">
+            <DollarSign className="w-4 h-4" />
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Pronóstico Ponderado</span>
-          <span className="text-2xl font-black text-emerald-600">
-            {selectedCurrency === 'USD' ? `$${Math.round(totalWeightedValue).toLocaleString()} USD` : `$${Math.round(totalWeightedValue).toLocaleString()} ARS`}
-          </span>
-          <span className="text-[10px] text-emerald-600 block mt-0.5 font-bold">Ajustado por probabilidad</span>
+        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-gray-500 text-[11px] font-medium uppercase tracking-wider block">Pronóstico Ponderado</span>
+            <span className="text-lg font-semibold text-gray-900 leading-tight mt-0.5 block">
+              {selectedCurrency === 'USD' ? `$${Math.round(totalWeightedValue).toLocaleString()} USD` : `$${Math.round(totalWeightedValue).toLocaleString()} ARS`}
+            </span>
+            <span className="text-[11px] text-gray-400 block">Ajustado por probabilidad</span>
+          </div>
+          <div className="w-8 h-8 rounded-md bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+            <TrendingUp className="w-4 h-4" />
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Score MEDDIC Promedio</span>
-          <span className="text-2xl font-black text-indigo-600">
-            {Math.round(deals.reduce((a, b) => a + b.meddicScore, 0) / deals.length)} / 100
-          </span>
-          <span className="text-[10px] text-indigo-600 block mt-0.5 font-bold">Calificación Comercial Alta</span>
+        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-gray-500 text-[11px] font-medium uppercase tracking-wider block">Score MEDDIC Promedio</span>
+            <span className="text-lg font-semibold text-gray-900 leading-tight mt-0.5 block">
+              {Math.round(deals.reduce((a, b) => a + b.meddicScore, 0) / (deals.length || 1))} / 100
+            </span>
+            <span className="text-[11px] text-gray-400 block">Calificación Comercial Alta</span>
+          </div>
+          <div className="w-8 h-8 rounded-md bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+            <Award className="w-4 h-4" />
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Ciclo Promedio Cierre</span>
-          <span className="text-2xl font-black text-slate-900">24 días</span>
-          <span className="text-[10px] text-slate-500 block mt-0.5 font-semibold">B2B LATAM Standard</span>
+        <div className="bg-white p-3 rounded-md border border-gray-200 shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-gray-500 text-[11px] font-medium uppercase tracking-wider block">Ciclo Promedio Cierre</span>
+            <span className="text-lg font-semibold text-gray-900 leading-tight mt-0.5 block">24 días</span>
+            <span className="text-[11px] text-gray-400 block">B2B LATAM Standard</span>
+          </div>
+          <div className="w-8 h-8 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+            <Clock className="w-4 h-4" />
+          </div>
         </div>
       </div>
 
-      {/* Kanban Board Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-4">
+      {/* Kanban Board Columns (Frappe Style) */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 overflow-x-auto pb-4">
         {STAGES.map((stage) => {
           const stageDeals = deals.filter(d => d.stageId === stage.id);
           const stageTotalUsd = stageDeals.reduce((a, b) => a + (selectedCurrency === 'USD' ? b.dealValueUsd : b.dealValueArs), 0);
 
           return (
-            <div key={stage.id} className="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex flex-col min-w-[260px] space-y-3">
+            <div key={stage.id} className="bg-gray-50 rounded-md p-2.5 border border-gray-200 flex flex-col min-w-[250px] space-y-2.5">
               {/* Column Header */}
               <div className="flex items-center justify-between px-1">
-                <span className={`text-xs font-black px-2.5 py-1 rounded-lg border ${stage.color}`}>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${stage.color}`}>
                   {stage.name}
                 </span>
-                <span className="text-xs font-bold text-slate-400 font-mono">
-                  ({stageDeals.length})
+                <span className="text-[11px] font-mono font-medium text-gray-500">
+                  {stageDeals.length}
                 </span>
               </div>
 
-              <div className="text-[11px] font-bold text-slate-500 px-1 border-b border-slate-200 pb-2 flex justify-between">
+              <div className="text-[11px] text-gray-500 px-1 border-b border-gray-200 pb-2 flex justify-between">
                 <span>Subtotal:</span>
-                <span className="text-slate-900 font-black">
+                <span className="text-gray-900 font-semibold">
                   {selectedCurrency === 'USD' ? `$${stageTotalUsd.toLocaleString()} USD` : `$${stageTotalUsd.toLocaleString()} ARS`}
                 </span>
               </div>
 
               {/* Deal Cards */}
-              <div className="space-y-3 flex-1">
+              <div className="space-y-2 flex-1">
                 {stageDeals.map((deal) => (
-                  <div key={deal.id} className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden">
+                  <div key={deal.id} className="bg-white rounded-md border border-gray-200 shadow-2xs hover:border-gray-300 transition-all flex flex-col overflow-hidden group">
                     <div 
                       onClick={() => setActiveDealModal(deal)}
-                      className="p-4 space-y-2.5 cursor-pointer hover:bg-slate-50 transition-colors"
+                      className="p-3 space-y-2 cursor-pointer hover:bg-gray-50/80 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-1">
-                        <h4 className="font-extrabold text-xs text-slate-900 leading-snug">{deal.companyName}</h4>
-                        <span className="bg-indigo-50 text-indigo-700 font-mono text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0">
+                        <h4 className="font-semibold text-[13px] text-gray-900 leading-snug group-hover:text-gray-700">{deal.companyName}</h4>
+                        <span className="bg-gray-100 text-gray-700 font-mono text-[9px] font-medium px-1.5 py-0.5 rounded border border-gray-200 shrink-0">
                           MEDDIC {deal.meddicScore}
                         </span>
                       </div>
 
-                      <p className="text-[11px] text-slate-500 flex items-center gap-1">
-                        <User className="w-3 h-3 text-slate-400" />
+                      <p className="text-[11px] text-gray-500 flex items-center gap-1">
+                        <User className="w-3 h-3 text-gray-400" />
                         <span>{deal.contactName}</span>
                       </p>
 
-                      <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
-                        <span className="text-xs font-black text-emerald-600">
+                      <div className="flex items-center justify-between border-t border-gray-100 pt-2 mt-1">
+                        <span className="text-[12px] font-semibold text-gray-900">
                           {selectedCurrency === 'USD' ? `$${deal.dealValueUsd.toLocaleString()} USD` : `$${deal.dealValueArs.toLocaleString()} ARS`}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-bold">{deal.probability}% Prob.</span>
+                        <span className="text-[10px] text-gray-500">{deal.probability}% Prob.</span>
                       </div>
                     </div>
 
                     {/* Move Stage Quick Controls */}
-                    <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-t border-slate-100">
+                    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-t border-gray-100">
                       <button
                         onClick={(e) => { e.stopPropagation(); moveDealStage(deal.id, 'prev'); }}
                         disabled={stage.id === 'lead'}
-                        className="text-[10px] font-bold text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                        className="text-[10px] font-medium text-gray-500 hover:text-gray-800 disabled:opacity-30 cursor-pointer"
                       >
                         ← Anterior
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); moveDealStage(deal.id, 'next'); }}
                         disabled={stage.id === 'won'}
-                        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-30 cursor-pointer"
+                        className="text-[10px] font-medium text-gray-900 hover:text-black disabled:opacity-30 cursor-pointer"
                       >
                         Siguiente →
                       </button>
@@ -387,8 +401,8 @@ export function CrmKanbanTab() {
                 ))}
 
                 {stageDeals.length === 0 && (
-                  <div className="p-6 text-center text-slate-400 text-xs italic border border-dashed border-slate-200 rounded-xl">
-                    No hay oportunidades en esta etapa.
+                  <div className="p-4 text-center text-gray-400 text-[11px] italic border border-dashed border-gray-200 rounded-md">
+                    Sin oportunidades
                   </div>
                 )}
               </div>
@@ -554,61 +568,64 @@ export function CrmKanbanTab() {
         )}
       </AnimatePresence>
 
-      {/* Add Deal Modal */}
+      {/* Add Deal Modal (Frappe Style) */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-indigo-600" /> Nueva Oportunidad Comercial
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border border-gray-200 flex flex-col">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+              <h3 className="font-semibold text-[15px] text-gray-900 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-gray-700" /> Nueva Oportunidad Comercial
               </h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
-                <X className="w-5 h-5" />
+              <button 
+                onClick={() => setIsAddModalOpen(false)} 
+                className="text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 p-1.5 rounded-md transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleAddDeal} className="space-y-3">
+            <form onSubmit={handleAddDeal} className="p-5 space-y-3.5 text-[13px]">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Nombre de la Empresa</label>
+                <label className="block font-medium text-gray-700 mb-1">Empresa <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   required
                   value={newCompanyName}
                   onChange={(e) => setNewCompanyName(e.target.value)}
                   placeholder="Ej: Agroservicios Pampeanos S.A."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:outline-hidden"
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 text-[13px] focus:outline-hidden focus:border-gray-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Contacto Principal</label>
+                <label className="block font-medium text-gray-700 mb-1">Contacto Principal <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   required
                   value={newContactName}
                   onChange={(e) => setNewContactName(e.target.value)}
                   placeholder="Ej: Lic. Marcelo Rossi"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:outline-hidden"
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 text-[13px] focus:outline-hidden focus:border-gray-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Monto Estimado (USD)</label>
+                <label className="block font-medium text-gray-700 mb-1">Monto Estimado (USD)</label>
                 <input
                   type="number"
                   required
                   value={newDealValueUsd}
                   onChange={(e) => setNewDealValueUsd(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:outline-hidden"
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 font-semibold text-[13px] focus:outline-hidden focus:border-gray-400 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Etapa Inicial</label>
+                <label className="block font-medium text-gray-700 mb-1">Etapa Inicial</label>
                 <select
                   value={newStageId}
                   onChange={(e) => setNewStageId(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:outline-hidden"
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-900 text-[13px] focus:outline-hidden focus:border-gray-400 transition-colors"
                 >
                   {STAGES.map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
@@ -616,17 +633,17 @@ export function CrmKanbanTab() {
                 </select>
               </div>
 
-              <div className="pt-2 flex justify-end gap-2">
+              <div className="pt-3 border-t border-gray-200 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl cursor-pointer"
+                  className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-[13px] font-medium rounded-md hover:bg-gray-50 shadow-xs cursor-pointer transition-colors"
                 >
-                  Cancelar
+                  Descartar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl cursor-pointer shadow-md"
+                  className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-[13px] font-medium rounded-md shadow-xs cursor-pointer transition-colors"
                 >
                   Guardar Oportunidad
                 </button>
