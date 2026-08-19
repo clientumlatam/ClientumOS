@@ -13,7 +13,7 @@ import { Pool } from "pg";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { loadSmtpCredentials } from "./src/lib/smtp.js";
-import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, createMailTransport } from "./server/mailer.js";
+import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, createMailTransport } from "./server_lib/mailer.js";
 
 dotenv.config();
 
@@ -399,7 +399,7 @@ app.use((req: AuthRequest, res: AuthResponse, next: AuthNext) => {
 const USERNAME_RE = /^[a-zA-Z0-9_.@+\-]{3,64}$/;
 
 // ---------------------------------------------------------------------------
-// Email — Gmail SMTP via Nodemailer (loaded from ./server/mailer)
+// Email — Gmail SMTP via Nodemailer (loaded from ./server_lib/mailer)
 // ---------------------------------------------------------------------------
 
 
