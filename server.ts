@@ -225,6 +225,7 @@ const inMemoryPgPool = {
 
 let realPgPool: Pool | null = null;
 let usePgPool = false;
+let pgUserIdType = "INTEGER";
 
 if (isUrlValid(databaseUrl)) {
   try {
@@ -4295,7 +4296,7 @@ async function initLmsTables() {
   await pgPool.query(`
     CREATE TABLE IF NOT EXISTS lms_enrollments (
       id          SERIAL PRIMARY KEY,
-      user_id     INTEGER NOT NULL,
+      user_id     ${pgUserIdType} NOT NULL,
       course_slug VARCHAR(100) NOT NULL,
       course_name VARCHAR(255) NOT NULL,
       enrolled_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -4303,6 +4304,13 @@ async function initLmsTables() {
     );
     CREATE INDEX IF NOT EXISTS idx_lms_enrollments_user ON lms_enrollments(user_id);
   `);
+
+  if (pgUserIdType === "TEXT") {
+    try {
+      await pgPool.query(`ALTER TABLE lms_enrollments ALTER COLUMN user_id TYPE TEXT USING user_id::text`);
+    } catch (e) {}
+  }
+
   try {
     await pgPool.query(`
       ALTER TABLE lms_enrollments 
@@ -4311,14 +4319,12 @@ async function initLmsTables() {
       ADD CONSTRAINT lms_enrollments_user_id_fkey 
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
     `);
-  } catch (e) {
-    // ignore if users table or PK not ready yet
-  }
+  } catch (e) {}
 
   await pgPool.query(`
     CREATE TABLE IF NOT EXISTS lms_progress (
       id            SERIAL PRIMARY KEY,
-      user_id       INTEGER NOT NULL,
+      user_id       ${pgUserIdType} NOT NULL,
       course_slug   VARCHAR(100) NOT NULL,
       progress_pct  INTEGER NOT NULL DEFAULT 0 CHECK (progress_pct >= 0 AND progress_pct <= 100),
       completed     BOOLEAN NOT NULL DEFAULT FALSE,
@@ -4327,6 +4333,13 @@ async function initLmsTables() {
       UNIQUE(user_id, course_slug)
     );
   `);
+
+  if (pgUserIdType === "TEXT") {
+    try {
+      await pgPool.query(`ALTER TABLE lms_progress ALTER COLUMN user_id TYPE TEXT USING user_id::text`);
+    } catch (e) {}
+  }
+
   try {
     await pgPool.query(`
       ALTER TABLE lms_progress 
@@ -4340,13 +4353,20 @@ async function initLmsTables() {
   await pgPool.query(`
     CREATE TABLE IF NOT EXISTS lms_certificates (
       id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id     INTEGER NOT NULL,
+      user_id     ${pgUserIdType} NOT NULL,
       course_slug VARCHAR(100) NOT NULL,
       user_name   TEXT NOT NULL,
       issued_at   TIMESTAMP NOT NULL DEFAULT NOW(),
       UNIQUE(user_id, course_slug)
     );
   `);
+
+  if (pgUserIdType === "TEXT") {
+    try {
+      await pgPool.query(`ALTER TABLE lms_certificates ALTER COLUMN user_id TYPE TEXT USING user_id::text`);
+    } catch (e) {}
+  }
+
   try {
     await pgPool.query(`
       ALTER TABLE lms_certificates 
@@ -4485,12 +4505,32 @@ async function initUsersTable() {
       created_at    TIMESTAMP NOT NULL DEFAULT NOW()
     );
   `);
-  // Migrations for Neon Auth columns (idempotent)
+
+  try {
+    const typeRes = await pgPool.query(`
+      SELECT data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'id'
+      LIMIT 1
+    `);
+    if (typeRes.rows.length > 0) {
+      const dt = typeRes.rows[0].data_type.toLowerCase();
+      if (dt.includes("char") || dt.includes("text") || dt.includes("uuid")) {
+        pgUserIdType = "TEXT";
+      }
+    }
+  } catch (err) {
+  }
+
+  try {
+    await pgPool.query(`ALTER TABLE users ADD CONSTRAINT users_username_key UNIQUE (username)`);
+  } catch (err) {
+  }
+
   await pgPool.query(`ALTER TABLE users ALTER COLUMN username TYPE VARCHAR(255)`);
   await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email        VARCHAR(255) UNIQUE`);
   await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS neon_auth_id TEXT        UNIQUE`);
 
-  // Ensure default admin info@clientum.com.ar exists
   try {
     const existingAdmin = await pgPool.query("SELECT id FROM users WHERE email = $1", ["info@clientum.com.ar"]);
     if ((existingAdmin.rowCount ?? 0) === 0) {
@@ -4523,7 +4563,7 @@ async function initPasswordResetTokensTable() {
   await pgPool.query(`
     CREATE TABLE IF NOT EXISTS password_reset_tokens (
       id          SERIAL PRIMARY KEY,
-      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      user_id     ${pgUserIdType} NOT NULL,
       token_hash  TEXT NOT NULL UNIQUE,
       expires_at  TIMESTAMP NOT NULL,
       used_at     TIMESTAMP,
@@ -4532,6 +4572,23 @@ async function initPasswordResetTokensTable() {
     CREATE INDEX IF NOT EXISTS idx_prt_token_hash ON password_reset_tokens(token_hash);
     CREATE INDEX IF NOT EXISTS idx_prt_user_id    ON password_reset_tokens(user_id);
   `);
+
+  if (pgUserIdType === "TEXT") {
+    try {
+      await pgPool.query(`ALTER TABLE password_reset_tokens ALTER COLUMN user_id TYPE TEXT USING user_id::text`);
+    } catch (e) {}
+  }
+
+  try {
+    await pgPool.query(`
+      ALTER TABLE password_reset_tokens
+      DROP CONSTRAINT IF EXISTS password_reset_tokens_user_id_fkey;
+      ALTER TABLE password_reset_tokens
+      ADD CONSTRAINT password_reset_tokens_user_id_fkey
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+    `);
+  } catch (e) {}
+
   console.log("[Auth] Tabla password_reset_tokens lista.");
 }
 
@@ -4837,12 +4894,29 @@ async function initProspectingTable() {
   await pgPool.query(`
     CREATE TABLE IF NOT EXISTS prospecting_searches (
       id         SERIAL PRIMARY KEY,
-      user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      user_id    ${pgUserIdType},
       query      JSONB,
       results    JSONB,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+
+  if (pgUserIdType === "TEXT") {
+    try {
+      await pgPool.query(`ALTER TABLE prospecting_searches ALTER COLUMN user_id TYPE TEXT USING user_id::text`);
+    } catch (e) {}
+  }
+
+  try {
+    await pgPool.query(`
+      ALTER TABLE prospecting_searches
+      DROP CONSTRAINT IF EXISTS prospecting_searches_user_id_fkey;
+      ALTER TABLE prospecting_searches
+      ADD CONSTRAINT prospecting_searches_user_id_fkey
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
+    `);
+  } catch (e) {}
+
   console.log("[Maps] Tabla prospecting_searches lista.");
 }
 

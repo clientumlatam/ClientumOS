@@ -1,6 +1,7 @@
 export type ActiveTab = 
   | 'overview' 
   | 'unified_crm'
+  | 'modern_erp_crm'
   | 'crm_whatsapp'
   | 'strategy' 
   | 'copywriter' 

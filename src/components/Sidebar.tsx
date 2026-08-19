@@ -101,6 +101,7 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       badge: 'Suite 360°',
       icon: Users,
       items: [
+        { id: 'modern_erp_crm', label: 'Suite ERP & CRM Open-Source', icon: Layers, badge: 'All-in-1' },
         { id: 'unified_crm', label: 'Suite CRM 360° (Consola)', icon: Layers, badge: 'Hub' },
         { id: 'crm_kanban', label: 'Pipeline CRM & MEDDIC', icon: Kanban, badge: 'Deals' },
         { id: 'contacts', label: 'Base de Datos Leads', icon: Users, badge: 'Unified' },
