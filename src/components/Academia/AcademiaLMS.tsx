@@ -6,6 +6,7 @@ import {
   TrendingUp, Mail, MapPin, Search, FileText, Check, Palette,
   ArrowRight, ShieldCheck, RefreshCw, Send, AlertTriangle
 } from "lucide-react";
+import { COURSES_DATA, CourseItem } from "./coursesData";
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -30,284 +31,7 @@ interface Certificate {
 
 // ── Cursos Disponibles ────────────────────────────────────────────────────────
 
-const COURSES = [
-  {
-    slug: "crm-moderno-automatizacion",
-    name: "CRM Clientum: Ventas, Kanban y Pipeline Inteligente",
-    tagline: "4 semanas · Interactivo · Certificado Oficial Clientum + ISSAG",
-    desc: "Dominá el ciclo de vida del cliente. Aprendé a configurar tu embudo de ventas Kanban, orquestar contactos con Inteligencia Artificial, y calificar oportunidades automáticamente para multiplicar tus ventas.",
-    duration: "4 semanas",
-    hours: "12 hs totales",
-    students: "Inscripción Libre",
-    level: "Básico a Intermedio",
-    badge: "Más Popular",
-    color: "from-blue-600 to-indigo-700",
-    icon: TrendingUp,
-    img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-    topics: [
-      "Configuración y diseño de columnas en el Embudo Kanban comercial",
-      "Orquestación inteligente de contactos y lead scoring automático",
-      "Automatización de notas, recordatorios y alertas con IA",
-      "Mapeo de rentabilidad y lectura de dashboards de conversión"
-    ],
-    slides: [
-      {
-        title: "Estructura del Embudo Kanban",
-        concept: "El pilar de un CRM moderno es la visibilidad. Un tablero Kanban mapea el recorrido del cliente desde el primer contacto hasta el cierre. Cada columna representa un hito claro con acciones definidas.",
-        bullets: [
-          "Mantener las tarjetas actualizadas reduce la fricción del equipo en un 40%.",
-          "Mover un lead debe requerir un criterio objetivo de cumplimiento.",
-          "Cada tarjeta de cliente centraliza chats, mails, notas y tareas pendientes."
-        ]
-      },
-      {
-        title: "Calificación con Inteligencia Artificial",
-        concept: "Calificar prospectos te ahorra cientos de horas. Utilizando la metodología MEDDIC o BANT enriquecida con IA, podés identificar inmediatamente cuáles leads tienen presupuesto y urgencia real.",
-        bullets: [
-          "El Orquestador analiza conversaciones para evaluar la intención de compra.",
-          "Un lead bien calificado incrementa la velocidad de cierre de ventas.",
-          "Los leads fríos deben nutrirse automáticamente en columnas secundarias."
-        ]
-      },
-      {
-        title: "Seguimiento Automático y Notas de Voz",
-        concept: "El 80% de las ventas requieren más de 5 seguimientos. Clientum automatiza las alertas internas y genera resúmenes automáticos de cada llamada o nota para que tu equipo se enfoque puramente en cerrar.",
-        bullets: [
-          "Asignar tareas automáticas al cambiar de columna evita que el lead se enfríe.",
-          "La IA transcribe y extrae compromisos clave de las reuniones con clientes.",
-          "Acciones automáticas gatillan plantillas optimizadas para acelerar la venta."
-        ]
-      }
-    ],
-    quiz: [
-      {
-        q: "¿Cuál es la principal ventaja de estructurar un CRM con columnas Kanban?",
-        options: [
-          "Tener un diseño colorido sin funcionalidad real.",
-          "Obtener visibilidad completa del recorrido de venta y detectar cuellos de botella instantáneamente.",
-          "Reemplazar completamente al equipo de vendedores por robots."
-        ],
-        correct: 1
-      },
-      {
-        q: "¿Para qué sirve el Scoring de Leads automatizado por IA?",
-        options: [
-          "Para calificar prospectos según su urgencia, presupuesto e interés real, optimizando el tiempo del equipo comercial.",
-          "Para enviar correos masivos de spam a todos los contactos sin distinción.",
-          "Para ordenar los clientes alfabéticamente de manera aleatoria."
-        ],
-        correct: 0
-      }
-    ]
-  },
-  {
-    slug: "ia-outreach-email-marketing",
-    name: "Outbound & Email Marketing Automatizado con IA",
-    tagline: "3 semanas · Especializado · 100% Práctico",
-    desc: "Aprendé a estructurar secuencias de prospección en frío (Outreach) y campañas de email masivas. Diseñá copys persuasivos usando IA e integrá variables dinámicas del CRM para lograr tasas de apertura superiores al 45%.",
-    duration: "3 semanas",
-    hours: "10 hs totales",
-    students: "Cupos Limitados",
-    level: "Intermedio",
-    badge: "Nuevo",
-    color: "from-violet-600 to-fuchsia-700",
-    icon: Mail,
-    img: "https://images.unsplash.com/photo-1557200134-90327ee9fafa?auto=format&fit=crop&w=800&q=80",
-    topics: [
-      "Configuración avanzada de SMTP y optimización de entregabilidad",
-      "Estructuras persuasivas (AIDA, PAS) de copywriting aplicadas con IA",
-      "Campos dinámicos de personalización desde la base de datos",
-      "Flujos y secuencias con reglas automáticas según comportamiento"
-    ],
-    slides: [
-      {
-        title: "Entregabilidad y Servidores SMTP",
-        concept: "Si tu correo llega a spam, tu campaña no existe. La entregabilidad depende de una configuración limpia de tu servidor SMTP, firmas SPF/DKIM válidas y de evitar palabras prohibidas por los filtros de spam.",
-        bullets: [
-          "El calentamiento gradual del buzón asegura una buena reputación de envío.",
-          "Utilizar un remitente corporativo real aumenta la tasa de apertura en un 35%.",
-          "Evitar usar mayúsculas y signos de exclamación excesivos en el asunto."
-        ]
-      },
-      {
-        title: "Persuasión y Fusión de Variables",
-        concept: "Nadie responde a un email genérico. Con la IA de Clientum, podés redactar textos utilizando merge-tags del CRM como nombre, industria o desafío para simular un mensaje redactado 1 a 1 de forma manual.",
-        bullets: [
-          "Un asunto personalizado tiene un 50% más de probabilidad de ser abierto.",
-          "La primera línea del email debe aludir a algo específico del destinatario.",
-          "Ofrecer siempre valor inmediato (un reporte, un tip, una propuesta clara)."
-        ]
-      },
-      {
-        title: "Secuencias Outbound de Seguimiento",
-        concept: "La constancia gana. Una secuencia inteligente envía recordatorios automáticos espaciados (día 1, día 4, día 8) y se detiene inmediatamente cuando el prospecto responde, garantizando un trato sumamente profesional.",
-        bullets: [
-          "Los seguimientos breves tipo 'bache' suelen tener la mayor tasa de respuesta.",
-          "Definir llamadas a la acción (CTA) ultra-simples como '¿te queda cómodo un café virtual?'.",
-          "Analizar métricas de clics para iterar continuamente la propuesta."
-        ]
-      }
-    ],
-    quiz: [
-      {
-        q: "¿Qué factor determina que tus campañas de email marketing no caigan en la carpeta de Spam?",
-        options: [
-          "El color de los botones dentro de la plantilla del correo.",
-          "La correcta configuración técnica del servidor SMTP y evitar bases de datos compradas o sucias.",
-          "Enviar miles de correos simultáneamente desde una cuenta nueva."
-        ],
-        correct: 1
-      },
-      {
-        q: "¿Cuál es el principal beneficio de pausar automáticamente una secuencia de Outreach?",
-        options: [
-          "Evita seguir molestando a un cliente que ya contestó, permitiendo que un humano tome el control de la conversación de forma natural.",
-          "Ahorrar espacio en el servidor de correos electrónicos.",
-          "Hacer que el cliente piense que la empresa se olvidó de él."
-        ],
-        correct: 0
-      }
-    ]
-  },
-  {
-    slug: "seo-local-prospeccion-geolocalizada",
-    name: "SEO Local & Prospección Inteligente con Mapas",
-    tagline: "3 semanas · Estratégico · Automatizado",
-    desc: "Descubrí clientes ideales a tu alrededor. Aprendé a extraer prospectos geolocalizados directo de Google Maps, analizar su salud web con un Auditor SEO On-Page automático y armar propuestas comerciales imposibles de rechazar.",
-    duration: "3 semanas",
-    hours: "8 hs totales",
-    students: "Abierto",
-    level: "Todos los niveles",
-    badge: "Práctico",
-    color: "from-emerald-600 to-teal-700",
-    icon: MapPin,
-    img: "https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80",
-    topics: [
-      "Extracción geolocalizada de comercios y pymes locales",
-      "Diagnósticos de velocidad, etiquetas y meta description con un click",
-      "Uso de mapas interactivos de calor para identificar zonas calientes",
-      "Estructuración de ofertas de optimización de perfiles en Google Maps"
-    ],
-    slides: [
-      {
-        title: "Extracción Local en Google Maps",
-        concept: "Las pymes locales de tu ciudad suelen tener necesidades críticas de marketing. Scrapear Google Maps por rubro (ej. 'Odontólogos en Cipolletti') te da una lista de prospectos con teléfono, dirección y web listos para calificar.",
-        bullets: [
-          "Filtrar comercios sin sitio web para ofrecerles su primera página.",
-          "La cercanía física genera confianza inmediata y facilita reuniones presenciales.",
-          "Descubrir negocios sin ficha de Google Business Profile reclamada."
-        ]
-      },
-      {
-        title: "Auditoría SEO On-Page en 5 Segundos",
-        concept: "Antes de llamar a un prospecto, debés conocer sus fallas. Un análisis automatizado te revela si su web es lenta, si no tiene SSL seguro o si carece de etiquetas meta-título correctas para posicionarse.",
-        bullets: [
-          "Señalar problemas técnicos reales incrementa la tasa de conversión de la llamada.",
-          "El SEO On-Page básico es fácil de solucionar y tiene un gran impacto inmediato.",
-          "Traducir términos complejos (ej. 'etiqueta H1') en beneficios de negocio para el cliente."
-        ]
-      },
-      {
-        title: "Propuesta de Valor Irresistible",
-        concept: "No ofrezcas 'SEO'. Ofrecé 'Más clientes llamando desde el celular'. Al presentar un mapa interactivo con sus competidores posicionados arriba, el prospecto entiende inmediatamente el costo de oportunidad perdido.",
-        bullets: [
-          "Mostrar imágenes comparativas claras del antes y después.",
-          "Ofrecer una auditoría gratuita rápida en el primer contacto.",
-          "Estructurar un abono mensual de optimización fácil de presupuestar."
-        ]
-      }
-    ],
-    quiz: [
-      {
-        q: "¿Cuál es la forma más efectiva de captar la atención de un negocio local para venderle servicios de marketing?",
-        options: [
-          "Llamar y hablar con términos técnicos complejos para sonar inteligente.",
-          "Mostrarle un diagnóstico claro con las fallas SEO de su web actual frente a sus competidores locales directos.",
-          "Ofrecerle posicionarlo en el puesto número 1 de Google en 24 horas de manera garantizada."
-        ],
-        correct: 1
-      },
-      {
-        q: "¿Qué indica que un comercio local no ha reclamado su perfil de Google Business Profile?",
-        options: [
-          "Que Google cerrará su negocio pronto.",
-          "Que el perfil aparece en los mapas pero carece de verificación oficial, dejando al negocio vulnerable a cambios no autorizados y con peor visibilidad.",
-          "Que el negocio no tiene habilitación municipal."
-        ],
-        correct: 1
-      }
-    ]
-  },
-  {
-    slug: "diseno-brochures-materiales-ia",
-    name: "Creación de Brochures y Material de Ventas con IA",
-    tagline: "2 semanas · Express · Gran Salida Laboral",
-    desc: "Dejá de enviar presupuestos aburridos en texto plano. Aprendé a generar folletos corporativos, brochures de servicios y propuestas PDF interactivas de alto impacto visual adaptadas a la identidad de tu cliente.",
-    duration: "2 semanas",
-    hours: "6 hs totales",
-    students: "Inscripción Libre",
-    level: "Básico",
-    badge: "Express",
-    color: "from-amber-600 to-orange-700",
-    icon: FileText,
-    img: "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?auto=format&fit=crop&w=800&q=80",
-    topics: [
-      "Estructura comercial persuasiva de un dossier de servicios",
-      "Redacción automática de propuestas a la medida de cada industria",
-      "Definición y aplicación ágil de marcas y paletas cromáticas",
-      "Exportación limpia a formato PDF profesional desde la nube"
-    ],
-    slides: [
-      {
-        title: "La Anatomía de un Brochure Ganador",
-        concept: "Un buen brochure no habla de lo increíble que es tu empresa; habla de los problemas que le solucionás al cliente. Debe contar con una portada potente, desglose de soluciones, casos de éxito y un llamado a la acción claro.",
-        bullets: [
-          "La portada debe incluir un título centrado en el beneficio principal del cliente.",
-          "Limitar el texto a párrafos cortos de lectura rápida y ágil.",
-          "Incluir siempre testimonios o validaciones reales para bajar el riesgo percibido."
-        ]
-      },
-      {
-        title: "Armonía Visual y Psicología del Color",
-        concept: "El color comunica antes que las palabras. Las marcas de salud usan tonos verdes o celestes para denotar calma; las de tecnología usan azules profundos para confianza; y las de retail usan naranjas o rojos para urgencia.",
-        bullets: [
-          "Mantener consistencia tipográfica: máximo 2 familias de fuentes.",
-          "El espacio en blanco es tan importante como el texto; dale aire al diseño.",
-          "Utilizar iconos modernos e imágenes de alta calidad contextualizadas."
-        ]
-      },
-      {
-        title: "Exportación Directa y Ventas Rápidas",
-        concept: "La agilidad cierra ventas. Crear un catálogo interactivo que se adapte con un solo click a las variables del CRM te permite enviar una propuesta formal personalizada en 2 minutos luego de colgar una llamada.",
-        bullets: [
-          "Un cliente que recibe una propuesta veloz siente que la empresa es sumamente eficiente.",
-          "Ofrecer alternativas de precios (ej. plan básico, recomendado y premium).",
-          "Asegurarse de que el archivo PDF esté optimizado para verse perfectamente en celulares."
-        ]
-      }
-    ],
-    quiz: [
-      {
-        q: "¿Cuál debe ser el enfoque principal del texto en un Brochure comercial de servicios?",
-        options: [
-          "Contar detalladamente la historia de la fundación de la empresa y todos sus hitos internos.",
-          "Destacar las soluciones a los dolores específicos del cliente y los beneficios de contratar el servicio.",
-          "Escribir textos largos de más de mil palabras en la primera página."
-        ],
-        correct: 1
-      },
-      {
-        q: "¿Por qué es importante la velocidad en el envío de un brochure adaptado después de una llamada?",
-        options: [
-          "Para demostrar un nivel de profesionalismo, agilidad y compromiso que te diferencie instantáneamente de la competencia.",
-          "Para que el cliente no tenga tiempo de pensar en otras opciones.",
-          "Porque el enlace de descarga del PDF expira en pocas horas."
-        ],
-        correct: 0
-      }
-    ]
-  }
-];
+const COURSES: CourseItem[] = COURSES_DATA;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -903,6 +627,49 @@ export default function AcademiaLMS({ authUser, onNeedLogin }: Props) {
               ))}
             </div>
 
+            {/* Ficha Técnica de Propuesta Oficial (si aplica) */}
+            {(selectedCourse as any).sku && (
+              <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100/80 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-indigo-600 text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-md">
+                      SKU: {(selectedCourse as any).sku}
+                    </span>
+                    <span className="text-xs font-bold text-indigo-900">
+                      Precio Oficial: {(selectedCourse as any).price ?? "USD 15"}
+                    </span>
+                  </div>
+                  <a
+                    href="/docs/academia/Propuesta_Curso_Marketing_Digital_Principiantes_CRS-1321.docx"
+                    download="Propuesta_Curso_Marketing_Digital_Principiantes_CRS-1321.docx"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-100/70 border border-indigo-200 px-3 py-1 rounded-xl transition-all shadow-2xs"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Descargar Propuesta .DOCX</span>
+                  </a>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-slate-700">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-mono block">Sede:</span>
+                    <span className="font-semibold text-slate-800">{(selectedCourse as any).location ?? "Aula ISSAG Gral. Roca (Cnel. Rodhe 55)"}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-mono block">Fecha de Inicio:</span>
+                    <span className="font-bold text-indigo-700">{(selectedCourse as any).cohortStartDate ?? "1 de septiembre de 2026"}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-mono block">Cupo Mínimo / Cierre:</span>
+                    <span className="font-semibold text-slate-800">{(selectedCourse as any).minStudents ?? 10} alumnos (cierre 3d antes)</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-mono block">Canales de Venta:</span>
+                    <span className="font-semibold text-slate-800">ISSAG · Campus · Hotmart</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Temario Clave */}
             <div className="pt-4 border-t border-slate-100">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 font-mono mb-3">Habilidades que vas a adquirir</h4>
@@ -1077,6 +844,12 @@ export default function AcademiaLMS({ authUser, onNeedLogin }: Props) {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {[
+            {
+              title: "Propuesta CRS-1321 (Word)",
+              desc: "Marketing Digital para Principiantes (.docx)",
+              href: "/docs/academia/Propuesta_Curso_Marketing_Digital_Principiantes_CRS-1321.docx",
+              icon: Download,
+            },
             {
               title: "Propuesta Académica v2",
               desc: "Programa de estudio oficial ISSAG General Roca",

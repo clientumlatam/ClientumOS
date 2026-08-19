@@ -4,21 +4,127 @@ import { AIAgent, MCPTool, RAGDocument, N8nWorkflow } from '../types';
 import { N8nFlowEditor } from './N8nFlowEditor';
 
 interface AiAgentsViewProps {
-  agents: AIAgent[];
-  mcpTools: MCPTool[];
-  ragDocs: RAGDocument[];
-  n8nWorkflows: N8nWorkflow[];
-  onExecuteAgent: (agentId: string, taskGoal: string) => Promise<void>;
-  onRefresh: () => void;
+  agents?: AIAgent[];
+  mcpTools?: MCPTool[];
+  ragDocs?: RAGDocument[];
+  n8nWorkflows?: N8nWorkflow[];
+  onExecuteAgent?: (agentId: string, taskGoal: string) => Promise<void>;
+  onRefresh?: () => void;
 }
 
+const DEFAULT_AGENTS: AIAgent[] = [
+  {
+    id: 'agent_santi',
+    name: 'Santi (SDR Autónomo)',
+    role: 'Sales',
+    avatar: '🤖',
+    status: 'online',
+    goals: ['Prospección en frío', 'Cualificación MEDDIC', 'Generación de propuestas'],
+    systemPrompt: 'Eres Santi, agente comercial especializado en venta consultiva B2B para pymes.',
+    memorySizeKB: 512,
+    assignedSubdomain: 'sales.clientum.la',
+    mcpToolsConnected: ['crm_read_leads', 'email_sender', 'maps_prospector'],
+    currentTask: 'Calificando leads entrantes',
+    activeReasoningChain: ['Revisar sector', 'Evaluar ticket promedio', 'Generar hook comercial'],
+    tasksCompleted: 142,
+    accuracyPct: 96,
+    lastActionAt: 'Hace 2 min'
+  },
+  {
+    id: 'agent_seo',
+    name: 'Sofia (SEO & Content)',
+    role: 'Marketing',
+    avatar: '📈',
+    status: 'online',
+    goals: ['Auditoría técnica on-page', 'Investigación de palabras clave', 'Calendario editorial'],
+    systemPrompt: 'Especialista en posicionamiento orgánico en LATAM y redacción persuasiva.',
+    memorySizeKB: 256,
+    assignedSubdomain: 'seo.clientum.la',
+    mcpToolsConnected: ['search_console', 'crawler', 'gemini_content'],
+    currentTask: 'Analizando tendencias de búsqueda en Patagonia',
+    activeReasoningChain: ['Auditar backlinks', 'Revisar meta tags'],
+    tasksCompleted: 88,
+    accuracyPct: 94,
+    lastActionAt: 'Hace 10 min'
+  }
+];
+
+const DEFAULT_MCP_TOOLS: MCPTool[] = [
+  {
+    id: 'tool_crm_read',
+    name: 'crm_read_leads',
+    server: 'localhost:3000',
+    description: 'Lee datos de oportunidades y contactos del CRM local y remoto.',
+    parameters: { filter: 'string', limit: 'number' },
+    permissionsRequired: ['crm:read'],
+    category: 'CRM',
+    isAvailable: true
+  },
+  {
+    id: 'tool_email_send',
+    name: 'smtp_send_email',
+    server: 'smtp.clientum.la',
+    description: 'Envía correos electrónicos y secuencias automatizadas vía SMTP.',
+    parameters: { to: 'string', subject: 'string', body: 'string' },
+    permissionsRequired: ['email:send'],
+    category: 'Outreach',
+    isAvailable: true
+  }
+];
+
+const DEFAULT_RAG_DOCS: RAGDocument[] = [
+  {
+    id: 'rag_1',
+    title: 'Manual de Ventas B2B Clientum Patagonia.pdf',
+    sourceType: 'PDF',
+    subdomain: 'sales',
+    fileSizeMB: 3.4,
+    status: 'indexed',
+    totalEmbeddings: 1240,
+    chunkCount: 140,
+    lastIndexedAt: '2026-08-15'
+  },
+  {
+    id: 'rag_2',
+    title: 'Catálogo de Servicios y Precios 2026.docx',
+    sourceType: 'Doc',
+    subdomain: 'pricing',
+    fileSizeMB: 1.2,
+    status: 'indexed',
+    totalEmbeddings: 520,
+    chunkCount: 65,
+    lastIndexedAt: '2026-08-18'
+  }
+];
+
+const DEFAULT_WORKFLOWS: N8nWorkflow[] = [
+  {
+    id: 'wf_lead_enrich',
+    name: 'Enriquecimiento Automático de Leads',
+    trigger: 'Nuevo Lead en CRM',
+    status: 'active',
+    executionCount: 512,
+    lastRunAt: 'Hace 5 min',
+    targetApp: 'Clientum CRM'
+  },
+  {
+    id: 'wf_invoice_alert',
+    name: 'Recordatorio de Vencimiento de Facturas',
+    trigger: 'Cron Diario 09:00',
+    status: 'active',
+    executionCount: 94,
+    lastRunAt: 'Hoy 09:00',
+    targetApp: 'VS-CRM Finanzas'
+  }
+];
+
 export const AiAgentsView: React.FC<AiAgentsViewProps> = ({
-  agents,
-  mcpTools,
-  ragDocs,
-  n8nWorkflows,
-  onExecuteAgent,
-  onRefresh,
+  agents = DEFAULT_AGENTS,
+  mcpTools = DEFAULT_MCP_TOOLS,
+  ragDocs = DEFAULT_RAG_DOCS,
+  n8nWorkflows = DEFAULT_WORKFLOWS,
+  onExecuteAgent = async () => {},
+  onRefresh = () => {},
 }) => {
   const [activeTab, setActiveTab] = useState<'agents' | 'mcp' | 'rag' | 'n8n'>('agents');
   const [selectedAgent, setSelectedAgent] = useState<AIAgent>(agents[0] || {} as AIAgent);

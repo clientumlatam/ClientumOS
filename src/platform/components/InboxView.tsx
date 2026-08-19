@@ -457,7 +457,9 @@ export const InboxView: React.FC<InboxViewProps> = ({
                       </p>
                       {conv.pinned && <Pin className="w-2.5 h-2.5 text-amber-500 fill-amber-500 shrink-0" />}
                       {overdueTasksSet.has(conv.id) && (
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" title="Tarea vencida" />
+                        <span title="Tarea vencida" className="inline-flex items-center">
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        </span>
                       )}
                       {convPriorities[conv.id] && (
                         <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${

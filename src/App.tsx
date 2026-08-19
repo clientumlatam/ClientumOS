@@ -49,6 +49,8 @@ import { VscrmExpensesTab } from './components/vscrm/VscrmExpensesTab';
 import { VscrmAfipTab } from './components/vscrm/VscrmAfipTab';
 import { AdminConsole } from './components/AdminConsole';
 import { AiMarketingExpert } from './components/AiMarketingExpert';
+import { UnifiedCrmSuite } from './components/UnifiedCrmSuite';
+import CrmFullWhatsApp from './components/crm-full/CrmFullWhatsApp';
 import { CommandPalette } from './components/CommandPalette';
 import { Breadcrumbs } from './components/Breadcrumbs';
 import PublicWebsite from './components/PublicWebsite';
@@ -192,6 +194,8 @@ export default function App() {
             />
             <ErrorBoundary resetKey={activeTab}>
               {activeTab === 'overview' && <OverviewTab currency={currency} region={region} onNavigate={setActiveTab} />}
+              {activeTab === 'unified_crm' && <UnifiedCrmSuite initialView="kanban" onNavigateTab={setActiveTab} />}
+              {activeTab === 'crm_whatsapp' && <CrmFullWhatsApp />}
               {activeTab === 'ai_hub' && <AiHubTab />}
               {activeTab === 'meddic' && <MeddicTab />}
               {activeTab === 'icp_builder' && <IcpBuilderTab />}

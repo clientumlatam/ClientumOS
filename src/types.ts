@@ -1,5 +1,7 @@
 export type ActiveTab = 
   | 'overview' 
+  | 'unified_crm'
+  | 'crm_whatsapp'
   | 'strategy' 
   | 'copywriter' 
   | 'seo' 
@@ -150,21 +152,30 @@ export interface AutomationWorkflow {
 }
 
 
-export interface CRMDeal { address?: string; meddicMetrics?: number;
+export interface CRMDeal {
   id: string;
   company: string;
   contactName?: string;
   contact?: string;
   contactTitle?: string;
   city?: string;
+  address?: string;
   source?: string;
   email?: string;
   phone?: string;
   amount: number;
-  stage: 'leads' | 'contacted' | 'meeting' | 'proposal' | 'closed';
+  stage: 'leads' | 'contacted' | 'meeting' | 'proposal' | 'closed' | 'negotiation' | 'closed_won' | string;
   industry: string;
   painPoint?: string;
   notes?: string;
+  score?: number;
+  dealSize?: string;
+  fit?: string;
+  status?: string;
+  owner?: string;
+  priority?: string;
+  created?: string;
+  meddicMetrics?: number;
   meddic?: {
     metrics?: string;
     economicBuyer?: string;
@@ -173,6 +184,7 @@ export interface CRMDeal { address?: string; meddicMetrics?: number;
     identifyPain?: string;
     champion?: string;
   };
+  [key: string]: any;
 }
 
 export interface BrochureData {

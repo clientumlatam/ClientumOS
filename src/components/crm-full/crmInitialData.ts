@@ -41,17 +41,12 @@ export const initialBranches: Branch[] = [
   },
 ];
 
-export const initialProducts: Product[] = (catalogData as Array<{
-  id: string;
-  name: string;
-  cat: string;
-  desc?: string;
-  price?: string;
-}>).map(item => ({
-  id: item.id,
-  code: item.id,
-  name: item.name,
-  price: item.price ? parseFloat(item.price) : undefined,
+export const initialProducts: Product[] = ((catalogData as any)?.servicios || []).map((item: any) => ({
+  id: String(item.id),
+  code: String(item.id),
+  name: item.title || item.name || 'Servicio',
+  price: item.price ? parseFloat(item.price) : 25000,
   active: true,
-  category: item.cat,
+  category: item.cat || item.category || 'Servicios CRM',
+  subcategory: item.description || '',
 }));

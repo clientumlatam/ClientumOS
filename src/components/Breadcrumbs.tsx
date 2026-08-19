@@ -15,6 +15,8 @@ interface SubTab {
 
 const tabCategoryMap: Partial<Record<ActiveTab, { category: string; label: string; groupKey: string }>> = {
   overview: { category: 'Dirección, OS & APIs', label: 'Dashboard General', groupKey: 'direction' },
+  unified_crm: { category: 'CRM & Ventas B2B', label: 'Suite CRM 360° (Consola Unificada)', groupKey: 'crm_sales' },
+  crm_whatsapp: { category: 'CRM & Ventas B2B', label: 'WhatsApp AI & Hermes Agent', groupKey: 'crm_sales' },
   analytics_dashboard: { category: 'Dirección, OS & APIs', label: 'Reportes Financieros & Atribución', groupKey: 'direction' },
   chat: { category: 'Dirección, OS & APIs', label: 'Asistente CMO', groupKey: 'direction' },
 

@@ -555,7 +555,7 @@ export function BrochureGeneratorTab() {
         />
       </div>
 
-      <div className="absolute left-[-9999px] top-[-9999px] w-[1000px] pointer-events-none no-print" id="brochure-full-export-container">
+      <div className="opacity-0 pointer-events-none fixed left-0 top-0 z-[-100] w-[1050px] overflow-hidden" id="brochure-full-export-container">
         <BrochurePreview
           data={data}
           colorTheme={colorTheme}

@@ -27,6 +27,8 @@ export interface CustomerSegment {
   createdAt: string;
   updatedAt: string;
   contactCount?: number;
+  leadCount?: number;
+  filterTag?: string;
   avgLifetimeValue?: number;
 }
 
@@ -655,7 +657,9 @@ export interface Invoice {
   subscriptionId: string;
   amount: number;
   dueDate: string;
-  status: 'paid' | 'unpaid' | 'overdue';
+  status: 'paid' | 'unpaid' | 'overdue' | 'open';
+  companyName?: string;
+  itemsDescription?: string;
 }
 
 export interface AIAgent {

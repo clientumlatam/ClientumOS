@@ -28,7 +28,8 @@ import {
   Briefcase, 
   X, 
   Share2,
-  Shield
+  Shield,
+  Layers
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -94,15 +95,17 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const navGroups: NavGroup[] = [
     {
       key: 'crm',
-      title: '1. CRM & Prospección',
+      title: '1. CRM & Ventas B2B',
       shortTitle: 'CRM',
       color: 'indigo',
-      badge: 'Leads',
+      badge: 'Suite 360°',
       icon: Users,
       items: [
-        { id: 'contacts', label: 'Base de Datos Leads', icon: Users, badge: 'Unified' },
-        { id: 'geolocated_prospecting', label: 'Prospección Maps IA', icon: Compass, badge: 'IA' },
+        { id: 'unified_crm', label: 'Suite CRM 360° (Consola)', icon: Layers, badge: 'Hub' },
         { id: 'crm_kanban', label: 'Pipeline CRM & MEDDIC', icon: Kanban, badge: 'Deals' },
+        { id: 'contacts', label: 'Base de Datos Leads', icon: Users, badge: 'Unified' },
+        { id: 'crm_whatsapp', label: 'WhatsApp AI & Bot', icon: MessageSquareCode, badge: 'IA' },
+        { id: 'geolocated_prospecting', label: 'Prospección Maps IA', icon: Compass, badge: 'Maps' },
         { id: 'icp_builder', label: 'ICP & Buyer Personas', icon: Target },
         { id: 'meddic', label: 'Lead Scoring MEDDIC', icon: ShieldCheck },
         { id: 'crm_agents', label: 'Agentes Comerciales IA', icon: Cpu, badge: 'Auto' },

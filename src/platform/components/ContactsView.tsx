@@ -282,8 +282,8 @@ export const ContactsView: React.FC<ContactsViewProps> = ({
       source: contact.source,
       assignedAgentId: contact.assignedAgentId || currentAgent.id,
       city: contact.city || 'Buenos Aires',
-      tagsStr: contact.tags.join(', '),
-      notes: contact.notes || ''
+      tagsStr: contact.tags ? (Array.isArray(contact.tags) ? contact.tags.join(', ') : String(contact.tags)) : '',
+      notes: Array.isArray(contact.notes) ? contact.notes.join('\n') : (contact.notes || '')
     });
     setIsModalOpen(true);
   };

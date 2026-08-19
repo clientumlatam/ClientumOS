@@ -84,9 +84,11 @@ export default function ActivityTab() {
     return () => window.removeEventListener(ACTIVITY_EVENT, handleExternalUpdate);
   }, []);
 
-  const sorted = [...activities].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const sorted = [...activities].sort((a, b) => {
+    const timeB = new Date(b.date || b.createdAt || 0).getTime();
+    const timeA = new Date(a.date || a.createdAt || 0).getTime();
+    return timeB - timeA;
+  });
 
   function handleAdd() {
     if (!title.trim()) return;
@@ -105,14 +107,14 @@ export default function ActivityTab() {
     setAdding(false);
   }
 
-  function handleToggle(id: number) {
+  function handleToggle(id: string | number) {
     setActivities((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, completed: !a.completed } : a))
+      prev.map((a) => (String(a.id) === String(id) ? { ...a, completed: !a.completed } : a))
     );
   }
 
-  function handleDelete(id: number) {
-    setActivities((prev) => prev.filter((a) => a.id !== id));
+  function handleDelete(id: string | number) {
+    setActivities((prev) => prev.filter((a) => String(a.id) !== String(id)));
   }
 
   return (
@@ -241,7 +243,7 @@ export default function ActivityTab() {
                         {activity.title}
                       </p>
                       <p className="text-[10px] text-slate-400 mt-0.5">
-                        {formatDate(activity.date)}
+                        {formatDate(activity.date || activity.createdAt || activity.timestamp || new Date().toISOString())}
                       </p>
                       {activity.notes && (
                         <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">

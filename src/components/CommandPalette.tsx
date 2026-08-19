@@ -5,7 +5,7 @@ import {
   Database, Settings2, User, Server, ArrowLeftRight, Globe2, Building2, 
   ListOrdered, Compass, Kanban, ShieldCheck, Zap, FileText, FileSpreadsheet, 
   Layout, FileCode, Send, Workflow, TrendingUp, BarChart3, MessageSquareCode,
-  Briefcase, Clock, DollarSign, FileCheck
+  Briefcase, Clock, DollarSign, FileCheck, Layers
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -33,6 +33,8 @@ export function CommandPalette({ isOpen, onClose, setActiveTab }: CommandPalette
     { label: 'Listas y Segmentos', tab: 'lists', category: '2. Conocer tu Audiencia', icon: ListOrdered },
 
     // 3. Prospección & Pipeline
+    { label: 'Consola Unificada CRM 360°', tab: 'unified_crm', category: '3. Prospección & Pipeline', icon: Layers },
+    { label: 'WhatsApp AI & Hermes Agent', tab: 'crm_whatsapp', category: '3. Prospección & Pipeline', icon: MessageSquareCode },
     { label: 'Prospección Maps IA (Google Maps)', tab: 'geolocated_prospecting', category: '3. Prospección & Pipeline', icon: Compass },
     { label: 'Pipeline Sales CRM (Kanban)', tab: 'crm_kanban', category: '3. Prospección & Pipeline', icon: Kanban },
     { label: 'Lead Scoring MEDDIC', tab: 'meddic', category: '3. Prospección & Pipeline', icon: ShieldCheck },

@@ -26,6 +26,7 @@ import {
 import { ClientsTab } from './ClientsTab';
 import { ListsTab } from './ListsTab';
 import { PdfExportButton } from './common/PdfExportButton';
+import { BulkWhatsAppModal } from './BulkWhatsAppModal';
 
 export interface B2BContact {
   id: string;
@@ -157,6 +158,7 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   const [activeContactModal, setActiveContactModal] = useState<B2BContact | null>(null);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [showBulkWAModal, setShowBulkWAModal] = useState<boolean>(false);
 
   // New Contact Form
   const [formData, setFormData] = useState({
@@ -298,6 +300,13 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBulkWAModal(true)}
+            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer border-0"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>Envío Masivo WhatsApp (IA)</span>
+          </button>
           <PdfExportButton
             targetId="contacts-list-container"
             title="Directorio de Contactos B2B"
@@ -435,8 +444,15 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
 
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setShowBulkWAModal(true)}
+                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Enviar WhatsApp con IA ({selectedContactIds.length})</span>
+              </button>
+              <button
                 onClick={() => alert(`Añadiendo ${selectedContactIds.length} contactos a la Lista de Segmentación...`)}
-                className="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold text-[11px] hover:bg-emerald-700 cursor-pointer"
+                className="px-3 py-1 bg-white border border-emerald-300 text-emerald-800 rounded-lg font-bold text-[11px] hover:bg-emerald-100/50 cursor-pointer"
               >
                 Asignar a Lista
               </button>
@@ -774,6 +790,14 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
           </form>
         </div>
       )}
+
+      {/* Modal de Envío Masivo WhatsApp con IA */}
+      <BulkWhatsAppModal
+        isOpen={showBulkWAModal}
+        onClose={() => setShowBulkWAModal(false)}
+        initialContacts={contacts}
+        preselectedIds={selectedContactIds.length > 0 ? selectedContactIds : undefined}
+      />
         </div>
       )}
     </div>

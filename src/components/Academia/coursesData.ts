@@ -29,6 +29,7 @@ export interface CourseWeek {
 
 export interface CourseItem {
   slug: string;
+  sku?: string;
   name: string;
   category: "crm" | "marketing" | "bots" | "finanzas";
   tagline: string;
@@ -41,6 +42,16 @@ export interface CourseItem {
   color: string;
   icon: any;
   img: string;
+  price?: string;
+  modality?: string;
+  location?: string;
+  cohortStartDate?: string;
+  salesChannels?: { channel: string; price: string }[];
+  audience?: string[];
+  learningObjectives?: string[];
+  modulesTable?: { module: number; topic: string; duration: string }[];
+  enrollmentInfo?: { method: string; deposit: string; deadline: string; minStudents: number; totalCapacity?: number };
+  salesCopies?: { channel: string; copy: string }[];
   topics: string[];
   weeks: CourseWeek[];
   slides: CourseSlide[];
@@ -643,6 +654,156 @@ export const COURSES_DATA: CourseItem[] = [
           "Para demostrar un nivel de profesionalismo, agilidad y compromiso que te diferencie instantáneamente de la competencia.",
           "Para que el cliente no tenga tiempo de pensar en otras opciones.",
           "Porque el enlace de descarga del PDF expira en pocas horas."
+        ],
+        correct: 0
+      }
+    ]
+  },
+  {
+    slug: "marketing-digital-principiantes",
+    sku: "CRS-1321",
+    name: "Marketing Digital para Principiantes",
+    category: "marketing",
+    tagline: "Presencial · Sede ISSAG General Roca · 13 hs · Certificado Oficial",
+    desc: "Curso introductorio y 100% práctico pensado para dueños de PyME, emprendedores y profesionales del Alto Valle que quieren dar sus primeros pasos en marketing digital sin conocimientos previos. Aprendé a vender por redes sociales, ordenar tu presencia online y captar clientes reales.",
+    duration: "6 módulos / 3 semanas",
+    hours: "13 hs totales",
+    students: "Cohorte Piloto (145 vacantes)",
+    level: "Principiante / Sin conocimientos previos",
+    badge: "Nueva Cohorte ISSAG",
+    color: "from-rose-600 to-indigo-700",
+    icon: Sparkles,
+    img: "https://images.unsplash.com/photo-1557838923-2985c318be48?auto=format&fit=crop&w=800&q=80",
+    price: "USD 15",
+    modality: "Presencial (Aula ISSAG)",
+    location: "Sede ISSAG General Roca (Cnel. Rodhe 55, General Roca, Río Negro)",
+    cohortStartDate: "1 de septiembre de 2026",
+    salesChannels: [
+      { channel: "ISSAG (Presencial)", price: "USD 15" },
+      { channel: "Campus virtual (clientum.com.ar)", price: "USD 15" },
+      { channel: "Hotmart", price: "USD 15" }
+    ],
+    audience: [
+      "Dueños y encargados de comercios del Alto Valle que todavía no tienen presencia digital ordenada",
+      "Emprendedores que arrancan un negocio y necesitan una base sólida de marketing",
+      "Personal administrativo o de ventas que quiere sumar herramientas digitales y comerciales a su rol"
+    ],
+    learningObjectives: [
+      "Comprender los pilares del marketing digital y cómo aplicarlos a una PyME del Alto Valle",
+      "Definir un plan de presencia digital básico (Instagram, Facebook, Google My Business y WhatsApp)",
+      "Diseñar contenido y comunicación efectiva adaptada al negocio propio",
+      "Interpretar métricas simples (alcance, interacciones, mensajes) para medir resultados",
+      "Dar los primeros pasos en campañas de publicidad paga (Meta Ads sin complejidades)"
+    ],
+    modulesTable: [
+      { module: 1, topic: "Fundamentos del marketing digital para PyMEs", duration: "2 hs" },
+      { module: 2, topic: "Definición de público y propuesta de valor", duration: "2 hs" },
+      { module: 3, topic: "Redes sociales: Instagram y Facebook para vender", duration: "3 hs" },
+      { module: 4, topic: "Calendario de contenido y buenas prácticas", duration: "2 hs" },
+      { module: 5, topic: "Introducción a la publicidad paga (Meta Ads)", duration: "2 hs" },
+      { module: 6, topic: "Métricas básicas y cierre con caso práctico", duration: "2 hs" }
+    ],
+    enrollmentInfo: {
+      method: "Formulario web con seña del 30%",
+      deposit: "30% de reserva",
+      deadline: "3 días antes del inicio",
+      minStudents: 10,
+      totalCapacity: 145
+    },
+    salesCopies: [
+      {
+        channel: "ISSAG (Presencial)",
+        copy: "¿Tenés un negocio y no sabés por dónde arrancar en redes o WhatsApp? Este curso te da las herramientas básicas para vender más, sin vueltas técnicas. Empezás en ISSAG General Roca (Cnel. Rodhe 55)."
+      },
+      {
+        channel: "Campus Virtual (clientum.com.ar)",
+        copy: "Marketing Digital para Principiantes — el punto de partida ideal para tu PyME. Aprendé a estar donde están tus clientes, con ejercicios sobre tu propio negocio. USD 15."
+      },
+      {
+        channel: "Hotmart",
+        copy: "De cero a tu primera campaña digital. Curso práctico para dueños de negocio que quieren vender más usando redes, WhatsApp y publicidad online — sin conocimientos previos."
+      }
+    ],
+    topics: [
+      "Fundamentos del marketing digital aplicados a comercios locales del Alto Valle",
+      "Público objetivo, propuesta de valor y posicionamiento en Google y redes",
+      "Creación de perfiles atractivos en Instagram y WhatsApp Business para vender",
+      "Diseño de calendarios de contenido que atraen consultas y cierres"
+    ],
+    weeks: [
+      {
+        week: 1,
+        title: "Fundamentos y Propuesta de Valor PyME",
+        lessons: [
+          "Módulo 1: Fundamentos del marketing digital para PyMEs (2 hs)",
+          "Módulo 2: Definición de público y propuesta de valor (2 hs)",
+          "Entregable: Ficha de cliente ideal y propuesta de valor del negocio"
+        ]
+      },
+      {
+        week: 2,
+        title: "Redes Sociales y Calendario de Contenido",
+        lessons: [
+          "Módulo 3: Redes sociales: Instagram y Facebook para vender (3 hs)",
+          "Módulo 4: Calendario de contenido y buenas prácticas (2 hs)",
+          "Entregable: Perfiles optimizados y calendario mensual de publicaciones"
+        ]
+      },
+      {
+        week: 3,
+        title: "Publicidad Paga, Métricas y Plan Personal",
+        lessons: [
+          "Módulo 5: Introducción a la publicidad paga en Meta Ads (2 hs)",
+          "Módulo 6: Métricas básicas y cierre con plan de acción propio (2 hs)",
+          "Entregable: Plan de marketing digital personalizado y evaluación final"
+        ]
+      }
+    ],
+    slides: [
+      {
+        title: "Presencia Digital y Relevancia Local",
+        concept: "Tener un local en General Roca o Cipolletti ya no alcanza si no existís en el celular de tus vecinos. El 85% de las compras comienzan con una búsqueda en Google Maps o una recomendación en Instagram.",
+        bullets: [
+          "Tener el perfil de Google My Business y WhatsApp Business completo genera confianza inmediata.",
+          "La coherencia visual y de datos (teléfono, dirección, horarios) evita perder clientes.",
+          "Cada publicación debe tener una intención clara: educar, inspirar o vender."
+        ]
+      },
+      {
+        title: "Contenido que Resuelve Problemas",
+        concept: "El error común de los comercios es publicar solo fotos de productos con precios. El contenido que mejor funciona es aquel que muestra cómo el producto soluciona un problema real o mejora la vida del cliente.",
+        bullets: [
+          "Explicar el 'detrás de escena' humaniza tu marca.",
+          "Responder a las dudas frecuentes en historias y reels genera cercanía.",
+          "Un llamado a la acción simple ('Escribinos al WhatsApp') convierte visitas en consultas."
+        ]
+      },
+      {
+        title: "Primeros Pasos en Publicidad y Medición",
+        concept: "No necesitás presupuestos gigantescos para hacer publicidad. Con inversiones mínimas bien segmentadas en tu localidad podés llegar a miles de personas que viven a menos de 5 km de tu negocio.",
+        bullets: [
+          "Segmentar por radio geográfico en el Alto Valle optimiza cada peso invertido.",
+          "Medir la cantidad de mensajes recibidos por cada peso gastado para saber el retorno.",
+          "Ajustar la comunicación en base a qué publicaciones generaron más consultas reales."
+        ]
+      }
+    ],
+    quiz: [
+      {
+        q: "¿Cuál es el primer paso antes de invertir dinero en anuncios de redes sociales?",
+        options: [
+          "Gastar todo el presupuesto en un solo día para ver qué pasa.",
+          "Tener el perfil optimizado, la propuesta de valor clara y un canal de respuesta rápida como WhatsApp.",
+          "Comprar seguidores falsos para aparentar popularidad."
+        ],
+        correct: 1
+      },
+      {
+        q: "¿Por qué es crucial para una PyME del Alto Valle tener actualizada su ficha de Google My Business?",
+        options: [
+          "Porque permite a los clientes cercanos encontrar la dirección exacta, horarios y contactar directamente desde el mapa.",
+          "Solo sirve si la empresa tiene más de 500 empleados.",
+          "No tiene ningún impacto en las ventas locales."
         ],
         correct: 0
       }

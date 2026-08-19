@@ -19,8 +19,10 @@ import {
   Layers,
   PhoneCall,
   Mail,
-  ShieldCheck
+  ShieldCheck,
+  MessageSquare
 } from 'lucide-react';
+import { BulkWhatsAppModal } from './BulkWhatsAppModal';
 
 export interface Deal {
   id: string;
@@ -125,6 +127,7 @@ export function CrmKanbanTab() {
     return INITIAL_DEALS;
   });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [showBulkWAModal, setShowBulkWAModal] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'ARS'>('USD');
   const [filterOwner, setFilterOwner] = useState('todos');
 
@@ -235,6 +238,14 @@ export function CrmKanbanTab() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBulkWAModal(true)}
+            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer border-0"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Envío Masivo WA</span>
+          </button>
+
           <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 text-xs font-bold">
             <button
               onClick={() => setSelectedCurrency('USD')}
@@ -453,6 +464,24 @@ export function CrmKanbanTab() {
           </div>
         </div>
       )}
+
+      {/* Modal de Envío Masivo WhatsApp con IA */}
+      <BulkWhatsAppModal
+        isOpen={showBulkWAModal}
+        onClose={() => setShowBulkWAModal(false)}
+        initialContacts={deals.map(d => ({
+          id: d.id,
+          name: d.contactName,
+          company: d.companyName,
+          phone: '+54 9 298 443-0000',
+          city: d.country === 'Argentina' ? 'Neuquén / Gral. Roca' : d.country,
+          country: d.country,
+          leadScore: d.meddicScore,
+          status: d.stageId === 'won' ? 'Cliente' : d.stageId === 'proposal' ? 'Oportunidad' : 'Lead Calificado',
+          personaTag: 'CRO / Ventas',
+          whatsappVerified: true
+        }))}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Bot, User, Phone, Search, RefreshCw, ToggleLeft, ToggleRight, Zap, Clock, AlertCircle, CheckCheck } from 'lucide-react';
+import { MessageSquare, Send, Bot, User, Phone, Search, RefreshCw, ToggleLeft, ToggleRight, Zap, Clock, AlertCircle, CheckCheck, Sparkles, Users } from 'lucide-react';
+import { BulkWhatsAppModal } from '../BulkWhatsAppModal';
 
 interface WaConversation {
   id: number;
@@ -64,6 +65,7 @@ export default function CrmFullWhatsApp() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sending, setSending] = useState(false);
   const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null);
+  const [showBulkWAModal, setShowBulkWAModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { loadConversations(); }, []);
@@ -171,24 +173,34 @@ export default function CrmFullWhatsApp() {
   return (
     <div className="text-slate-200" style={{ height: 'calc(100vh - 160px)', minHeight: 480 }}>
       {/* Header */}
-      <div className="mb-4">
-        <h1 className="text-3xl font-bold text-white mb-1 flex items-center gap-3">
-          <MessageSquare className="w-8 h-8 text-emerald-400" />
-          WhatsApp AI
-        </h1>
-        <div className="flex items-center gap-3">
-          <p className="text-slate-400">Bandeja de conversaciones · Copilot IA · Hermes Agent</p>
-          {backendAvailable === false && (
-            <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full">
-              Modo demo — Hermes Agent no conectado
-            </span>
-          )}
-          {backendAvailable === true && (
-            <span className="text-xs px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full">
-              ● Conectado
-            </span>
-          )}
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-1 flex items-center gap-3">
+            <MessageSquare className="w-8 h-8 text-emerald-400" />
+            WhatsApp AI
+          </h1>
+          <div className="flex items-center gap-3">
+            <p className="text-slate-400">Bandeja de conversaciones · Copilot IA · Hermes Agent</p>
+            {backendAvailable === false && (
+              <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full">
+                Modo demo — Hermes Agent no conectado
+              </span>
+            )}
+            {backendAvailable === true && (
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full">
+                ● Conectado
+              </span>
+            )}
+          </div>
         </div>
+
+        <button
+          onClick={() => setShowBulkWAModal(true)}
+          className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/20 cursor-pointer border-0 shrink-0"
+        >
+          <Sparkles className="w-4 h-4 text-emerald-200" />
+          <span>Envío Masivo Personalizado (IA)</span>
+        </button>
       </div>
 
       {/* Main layout */}
@@ -400,6 +412,24 @@ export default function CrmFullWhatsApp() {
           )}
         </div>
       </div>
+
+      {/* Modal de Envío Masivo WhatsApp con IA */}
+      <BulkWhatsAppModal
+        isOpen={showBulkWAModal}
+        onClose={() => setShowBulkWAModal(false)}
+        initialContacts={conversations.map(c => ({
+          id: String(c.id),
+          name: c.contact_name || c.phone,
+          company: c.contact_name || 'Empresa Patagónica',
+          phone: c.phone,
+          city: 'General Roca / Neuquén',
+          country: 'Argentina',
+          leadScore: 88,
+          status: 'Cliente',
+          personaTag: 'CEO PyME',
+          whatsappVerified: true
+        }))}
+      />
     </div>
   );
 }

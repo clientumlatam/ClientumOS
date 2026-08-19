@@ -39,10 +39,29 @@ import {
 } from '../types';
 
 interface ChatbotViewProps {
-  config: ChatbotConfig;
-  agents: Agent[];
-  onUpdateConfig: (newConfig: ChatbotConfig) => void;
+  config?: ChatbotConfig;
+  agents?: Agent[];
+  onUpdateConfig?: (newConfig: ChatbotConfig) => void;
 }
+
+const DEFAULT_CONFIG: ChatbotConfig = {
+  botName: 'Clientum AI Assistant',
+  welcomeMessage: '¡Hola! 👋 Soy el Asistente Virtual Inteligente de Clientum CRM. ¿En qué te puedo asesorar hoy?',
+  isEnabled: true,
+  fallbackToHuman: true,
+  collectLeadInfo: true,
+  leadFields: ['name', 'email', 'company', 'phone', 'interest'],
+  handoverRules: [],
+  faqs: [
+    {
+      id: 'faq_1',
+      question: '¿Qué soluciones ofrece Clientum?',
+      answer: 'Ofrecemos CRM B2B, automatización de marketing, prospección inteligente con IA y gestión de canales WhatsApp.',
+      category: 'CRM Features',
+      keywords: ['servicios', 'crm', 'que hacen']
+    }
+  ]
+};
 
 interface TestChatMessage {
   id: string;
@@ -56,9 +75,9 @@ interface TestChatMessage {
 }
 
 export const ChatbotView: React.FC<ChatbotViewProps> = ({
-  config,
-  agents,
-  onUpdateConfig
+  config = DEFAULT_CONFIG,
+  agents = [],
+  onUpdateConfig = () => {}
 }) => {
   const [activeTab, setActiveTab] = useState<'faqs' | 'handover' | 'collector' | 'simulator'>('simulator');
   const [searchFaq, setSearchFaq] = useState('');
@@ -81,7 +100,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({
   const [editingFaq, setEditingFaq] = useState<FaqItem | null>(null);
   const [faqQuestion, setFaqQuestion] = useState('');
   const [faqAnswer, setFaqAnswer] = useState('');
-  const [faqCategory, setFaqCategory] = useState('CRM Features');
+  const [faqCategory, setFaqCategory] = useState<FaqItem['category']>('CRM Features');
   const [faqKeywords, setFaqKeywords] = useState('');
 
   const [showRuleModal, setShowRuleModal] = useState(false);
@@ -254,7 +273,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({
     setEditingRule(rule);
     setRuleName(rule.name);
     setRuleCondition(rule.condition);
-    setRuleThreshold(rule.threshold || 5000);
+    setRuleThreshold(Number(rule.threshold) || 5000);
     setRuleAgentId(rule.defaultAgentId || agents[0]?.id || 'agent_1');
     setRuleDescription(rule.description);
     setShowRuleModal(true);
@@ -817,13 +836,13 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              { id: 'name', label: 'Nombre Completo', desc: 'Indispensable para personalizar las conversaciones' },
-              { id: 'email', label: 'Correo Electrónico', desc: 'Para enviar cotizaciones y propuestas en PDF' },
-              { id: 'company', label: 'Nombre de Empresa', desc: 'Para catalogar oportunidades B2B' },
-              { id: 'phone', label: 'Teléfono / WhatsApp', desc: 'Validación del número de contacto' },
-              { id: 'interest', label: 'Interés / Necesidad Principal', desc: 'Categorización rápida de la consulta' }
-            ].map((f) => {
+            {([
+              { id: 'name' as const, label: 'Nombre Completo', desc: 'Indispensable para personalizar las conversaciones' },
+              { id: 'email' as const, label: 'Correo Electrónico', desc: 'Para enviar cotizaciones y propuestas en PDF' },
+              { id: 'company' as const, label: 'Nombre de Empresa', desc: 'Para catalogar oportunidades B2B' },
+              { id: 'phone' as const, label: 'Teléfono / WhatsApp', desc: 'Validación del número de contacto' },
+              { id: 'interest' as const, label: 'Interés / Necesidad Principal', desc: 'Categorización rápida de la consulta' }
+            ]).map((f) => {
               const isChecked = config.leadFields.includes(f.id);
               return (
                 <div key={f.id} className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start space-x-3">
@@ -891,7 +910,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({
                 <label className="font-bold text-slate-700 block mb-1">Categoría</label>
                 <select
                   value={faqCategory}
-                  onChange={(e) => setFaqCategory(e.target.value)}
+                  onChange={(e) => setFaqCategory(e.target.value as FaqItem['category'])}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 font-bold focus:outline-none focus:border-green-500"
                 >
                   <option value="CRM Features">Funcionalidades CRM</option>

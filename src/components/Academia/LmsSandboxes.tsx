@@ -215,6 +215,37 @@ export default function LmsSandboxes({ course }: Props) {
   const [brochurePalette, setBrochurePalette] = useState("navy");
   const [brochureContent, setBrochureContent] = useState("Standard");
 
+  // ── 9. Sandbox Marketing Digital PyME ────────────────────────────────────
+  const [mdBusinessNiche, setMdBusinessNiche] = useState("Comercio / Indumentaria (Gral. Roca)");
+  const [mdCity, setMdCity] = useState("General Roca");
+  const [mdWeeklyPosts, setMdWeeklyPosts] = useState(3);
+  const [mdDailyAdBudget, setMdDailyAdBudget] = useState(1500);
+  const [mdGeneratedPlan, setMdGeneratedPlan] = useState<any>(null);
+  const [mdGenerating, setMdGenerating] = useState(false);
+
+  const handleGenerateMdPlan = () => {
+    setMdGenerating(true);
+    setTimeout(() => {
+      setMdGeneratedPlan({
+        gmbStatus: "Optimizado con fotos reales, horarios actualizados y botón de WhatsApp",
+        whatsappLink: `https://wa.me/5492984000000?text=Hola!+Vi+su+perfil+en+redes+y+quisiera+consultar+por+un+producto`,
+        calendar: [
+          { day: "Lunes", type: "Educativo / Detrás de escena", idea: "¿Cómo seleccionamos los productos que llegan a nuestro local en Roca?" },
+          { day: "Miércoles", type: "Solución / Producto", idea: "3 formas de resolver una necesidad puntual con atención inmediata" },
+          { day: "Viernes", type: "Oferta & Urgencia", idea: "Beneficio especial de fin de semana con entrega directa en Alto Valle" }
+        ],
+        adCopy: {
+          headline: `¿Buscás atención rápida y de confianza en ${mdCity}? 📍`,
+          body: `Conocé nuestro catálogo renovado en ${mdBusinessNiche}. Atendemos consultas al instante por WhatsApp y coordinamos tu pedido sin demoras.`,
+          cta: "👉 Chatear por WhatsApp",
+          estimatedReach: Math.round(mdDailyAdBudget * 4.5) + " personas/día en Alto Valle",
+          estimatedLeads: Math.round((mdDailyAdBudget / 350) * 30) + " mensajes de clientes/mes"
+        }
+      });
+      setMdGenerating(false);
+    }, 900);
+  };
+
   return (
     <div className="flex flex-col gap-4 flex-1">
       {/* 1. CRM KANBAN */}
@@ -818,6 +849,125 @@ export default function LmsSandboxes({ course }: Props) {
               <Download className="w-3.5 h-3.5" />
               <span>Descargar Muestra PDF</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 9. MARKETING DIGITAL PARA PRINCIPIANTES */}
+      {course.slug === "marketing-digital-principiantes" && (
+        <div className="flex flex-col gap-4 flex-1">
+          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-rose-400" />
+              Práctica de Aula: Simulador de Plan Digital y Publicidad PyME
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Configurá el rubro de tu comercio local, tu presupuesto diario de Meta Ads y generá tu plan editorial de 3 semanas con cálculo de consultas estimadas en el Alto Valle.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Controles de Configuración */}
+            <div className="bg-slate-950/80 rounded-xl p-4 border border-slate-800 flex flex-col gap-3">
+              <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">
+                Parámetros del Negocio Local
+              </span>
+
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Rubro de tu comercio / empresa</label>
+                <select
+                  value={mdBusinessNiche}
+                  onChange={(e) => setMdBusinessNiche(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none"
+                >
+                  <option value="Comercio / Indumentaria (Gral. Roca)">Comercio / Indumentaria (Gral. Roca)</option>
+                  <option value="Gastronomía & Cafetería (Alto Valle)">Gastronomía & Cafetería (Alto Valle)</option>
+                  <option value="Servicios Profesionales / Consultorio">Servicios Profesionales / Consultorio</option>
+                  <option value="Taller de Oficios / Distribuidora">Taller de Oficios / Distribuidora</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Localidad</label>
+                  <input
+                    type="text"
+                    value={mdCity}
+                    onChange={(e) => setMdCity(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Presupuesto Diario Ads</label>
+                  <select
+                    value={mdDailyAdBudget}
+                    onChange={(e) => setMdDailyAdBudget(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none"
+                  >
+                    <option value={1000}>$1.000 ARS/día</option>
+                    <option value={1500}>$1.500 ARS/día (Sugerido)</option>
+                    <option value={3000}>$3.000 ARS/día</option>
+                    <option value={5000}>$5.000 ARS/día</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={handleGenerateMdPlan}
+                disabled={mdGenerating}
+                className="w-full bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-bold text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all mt-1"
+              >
+                {mdGenerating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                <span>{mdGenerating ? "Generando Plan de Aula..." : "Generar Plan de Acción PyME"}</span>
+              </button>
+            </div>
+
+            {/* Resultado Generado */}
+            <div className="bg-slate-950/80 rounded-xl p-4 border border-slate-800 flex flex-col gap-3">
+              <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">
+                Plan de Acción & Simulación de Retorno
+              </span>
+
+              {mdGeneratedPlan ? (
+                <div className="space-y-2.5 text-xs animate-fadeIn">
+                  <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-lg">
+                    <p className="text-[10px] font-mono text-emerald-400 font-bold uppercase">1. Google My Business & WhatsApp</p>
+                    <p className="text-slate-300 text-[11px] mt-0.5">{mdGeneratedPlan.gmbStatus}</p>
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-lg">
+                    <p className="text-[10px] font-mono text-indigo-400 font-bold uppercase">2. Calendario Semanal de Contenido</p>
+                    <ul className="mt-1 space-y-1 text-[11px] text-slate-300">
+                      {mdGeneratedPlan.calendar.map((c: any, idx: number) => (
+                        <li key={idx} className="flex items-start gap-1.5">
+                          <span className="font-bold text-indigo-300">{c.day}:</span>
+                          <span>{c.type} — {c.idea}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-lg">
+                    <p className="text-[10px] font-mono text-rose-400 font-bold uppercase">3. Campaña Meta Ads & Estimaciones</p>
+                    <div className="grid grid-cols-2 gap-2 mt-1.5 text-[11px]">
+                      <div className="bg-slate-950 p-1.5 rounded border border-slate-850">
+                        <span className="text-[9px] text-slate-500 block">Alcance Local</span>
+                        <span className="font-bold text-slate-200">{mdGeneratedPlan.adCopy.estimatedReach}</span>
+                      </div>
+                      <div className="bg-slate-950 p-1.5 rounded border border-slate-850">
+                        <span className="text-[9px] text-slate-500 block">Consultas WhatsApp</span>
+                        <span className="font-bold text-emerald-400">{mdGeneratedPlan.adCopy.estimatedLeads}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 text-center text-slate-600 border border-dashed border-slate-800 rounded-lg">
+                  <Sparkles className="w-6 h-6 text-slate-700 mb-2" />
+                  <p className="text-xs font-medium">Hacé click en 'Generar Plan de Acción PyME' para simular tu estrategia comercial.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

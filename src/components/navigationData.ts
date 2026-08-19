@@ -18,6 +18,7 @@ import {
   Link,
   Calendar,
   Layers,
+  MessageSquare,
   Sparkles,
   ShieldCheck,
   CreditCard,
@@ -79,6 +80,16 @@ export const DASHBOARD_CATEGORIES: HubNavCategory[] = [
     description: 'Gestión completa de prospectos, embudos, leads territoriales y ciclo de ventas.',
     items: [
       {
+        id: 'unified_crm',
+        title: 'Consola Unificada CRM 360°',
+        desc: 'Suite completa con pipeline, contactos, WhatsApp IA, radar Maps y finanzas',
+        icon: Layers,
+        tab: 'unified_crm',
+        category: 'crm',
+        color: 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100',
+        badge: 'Hub'
+      },
+      {
         id: 'crm_kanban',
         title: 'Pipeline Kanban Visual',
         desc: 'Embudo de ventas con gestión drag & drop de oportunidades por etapas',
@@ -86,6 +97,16 @@ export const DASHBOARD_CATEGORIES: HubNavCategory[] = [
         tab: 'crm_kanban',
         category: 'crm',
         color: 'text-blue-500 bg-blue-50 hover:bg-blue-100',
+      },
+      {
+        id: 'crm_whatsapp',
+        title: 'WhatsApp AI & Hermes Agent',
+        desc: 'Bandeja omnicanal de mensajería, agente IA 24/7 y broadcast masivo',
+        icon: MessageSquare,
+        tab: 'crm_whatsapp',
+        category: 'crm',
+        color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100',
+        badge: 'IA'
       },
       {
         id: 'geolocated_prospecting',
