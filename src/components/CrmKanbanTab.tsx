@@ -31,7 +31,13 @@ import {
   PlusCircle,
   Phone,
   FileCheck,
-  Edit2
+  Edit2,
+  Pin,
+  Star,
+  Send,
+  Share2,
+  Settings,
+  ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BulkWhatsAppModal } from './BulkWhatsAppModal';
@@ -316,6 +322,42 @@ export function CrmKanbanTab() {
   const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'ARS'>('USD');
   const [showSaveViewModal, setShowSaveViewModal] = useState(false);
 
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [pinnedViewIds, setPinnedViewIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('clientum_crm_pinned_views');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { return ['view-high-value']; }
+    }
+    return ['view-high-value'];
+  });
+  const [customFields, setCustomFields] = useState<Array<{ id: string; label: string; type: 'text' | 'number' }>>(() => {
+    const saved = localStorage.getItem('clientum_crm_custom_fields');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { return []; }
+    }
+    return [
+      { id: 'cf-industry', label: 'Sector de Negocio', type: 'text' },
+      { id: 'cf-source', label: 'Canal de Origen', type: 'text' }
+    ];
+  });
+  const [dealCustomValues, setDealCustomValues] = useState<Record<string, Record<string, string>>>(() => {
+    const saved = localStorage.getItem('clientum_crm_custom_values');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { return {}; }
+    }
+    return {
+      'deal-101': { 'cf-industry': 'Logística y Transporte', 'cf-source': 'Búsqueda Activa' },
+      'deal-103': { 'cf-industry': 'Agroindustria', 'cf-source': 'Formulario Inbound' }
+    };
+  });
+  const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string>('primer-contacto');
+  const [emailSubject, setEmailSubject] = useState<string>('');
+  const [emailBody, setEmailBody] = useState<string>('');
+  const [teamCommentInput, setTeamCommentInput] = useState<string>('');
+  const [isCustomFieldsModalOpen, setIsCustomFieldsModalOpen] = useState(false);
+  const [newFieldLabel, setNewFieldLabel] = useState('');
+  const [newFieldType, setNewFieldType] = useState<'text' | 'number'>('text');
+
   // Active View & Filters State
   const [selectedViewId, setSelectedViewId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -327,7 +369,7 @@ export function CrmKanbanTab() {
 
   // Side Panel Detail View State
   const [activeDealModal, setActiveDealModal] = useState<Deal | null>(null);
-  const [panelTab, setPanelTab] = useState<'timeline' | 'tasks' | 'notes' | 'details' | 'twilio'>('timeline');
+  const [panelTab, setPanelTab] = useState<'timeline' | 'tasks' | 'notes' | 'details' | 'twilio' | 'emails'>('timeline');
 
   // Lead / Deal Edit States
   const [editContactName, setEditContactName] = useState('');
@@ -385,6 +427,23 @@ export function CrmKanbanTab() {
       if (interval) clearInterval(interval);
     };
   }, [isCalling]);
+
+  useEffect(() => {
+    if (!activeDealModal) return;
+    const contact = editContactName || activeDealModal.contactName;
+    const company = activeDealModal.companyName;
+    const owner = editOwner || activeDealModal.owner;
+    if (selectedEmailTemplate === 'primer-contacto') {
+      setEmailSubject(`Presentación Clientum ERP & CRM - ${company}`);
+      setEmailBody(`Hola ${contact},\n\nEspero que estés muy bien. Me pongo en contacto contigo de Clientum ya que nos dedicamos a optimizar los procesos de ventas, facturación y logística en la región. Me encantaría coordinar una breve llamada de 10 minutos para contarte cómo podemos ayudar a ${company} a potenciar sus operaciones.\n\nQuedo a tu disposición.\n\nAtentamente,\n${owner}`);
+    } else if (selectedEmailTemplate === 'propuesta') {
+      setEmailSubject(`Propuesta Comercial de Servicios - ${company}`);
+      setEmailBody(`Hola ${contact},\n\nUn gusto saludarte nuevamente. Adjunto a este correo encontrarás la propuesta comercial personalizada para los requerimientos de ${company} que conversamos anteriormente.\n\nCualquier consulta o ajuste que requieras, por favor no dudes en escribirme.\n\nSaludos cordiales,\n${owner}`);
+    } else if (selectedEmailTemplate === 'seguimiento-sla') {
+      setEmailSubject(`Seguimiento de Requerimientos - ${company}`);
+      setEmailBody(`Hola ${contact},\n\nTe escribo para realizar un breve seguimiento sobre la propuesta de servicios enviada. ¿Tuvieron oportunidad de revisarla? Estaría encantado de agendar una llamada si tienen dudas sobre el alcance o la implementación.\n\nSaludos,\n${owner}`);
+    }
+  }, [selectedEmailTemplate, activeDealModal, editContactName, editOwner, selectedCurrency]);
 
   // Handle Prospect import custom events
   useEffect(() => {
@@ -638,6 +697,7 @@ export function CrmKanbanTab() {
           createdAt: new Date().toISOString()
         };
         saveActivities([newAct, ...crmActivities]);
+        localStorage.setItem('clientum_crm_custom_values', JSON.stringify(dealCustomValues));
 
         return updated;
       }
@@ -669,6 +729,36 @@ export function CrmKanbanTab() {
       createdAt: new Date().toISOString()
     };
     saveActivities([newAct, ...crmActivities]);
+  };
+
+  const handleSendSimulatedEmail = () => {
+    if (!activeDealModal) return;
+    const newAct: CrmActivity = {
+      id: `act-${Date.now()}`,
+      dealId: activeDealModal.id,
+      type: 'email',
+      title: `Correo enviado: ${emailSubject}`,
+      text: emailBody,
+      createdAt: new Date().toISOString()
+    };
+    saveActivities([newAct, ...crmActivities]);
+    setPanelTab('timeline');
+  };
+
+  const handleAddTeamComment = () => {
+    if (!activeDealModal || !teamCommentInput.trim()) return;
+    const newNote: CrmNote = {
+      id: `note-${Date.now()}`,
+      dealId: activeDealModal.id,
+      text: teamCommentInput,
+      createdAt: new Date().toISOString(),
+      author: 'Usuario Sistema (Tú)'
+    };
+    const nextNotes = [newNote, ...crmNotes];
+    setCrmNotes(nextNotes);
+    localStorage.setItem('clientum_crm_notes_persistent', JSON.stringify(nextNotes));
+    setTeamCommentInput('');
+    setPanelTab('notes');
   };
 
   // Add Task Handler
@@ -749,7 +839,6 @@ export function CrmKanbanTab() {
     setCallNote('');
   };
 
-  // WhatsApp dispatch simulation helper
   const handleTriggerWhatsAppMessage = () => {
     if (!activeDealModal) return;
     const cleanPhone = editPhone.replace(/[\s\-\+]/g, '');
@@ -757,7 +846,6 @@ export function CrmKanbanTab() {
     const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(defaultText)}`;
     window.open(waUrl, '_blank');
 
-    // Register Activity
     const newAct: CrmActivity = {
       id: `act-${Date.now()}`,
       dealId: activeDealModal.id,
@@ -767,6 +855,36 @@ export function CrmKanbanTab() {
       createdAt: new Date().toISOString()
     };
     saveActivities([newAct, ...crmActivities]);
+  };
+
+  const handleSendSimulatedEmail = () => {
+    if (!activeDealModal) return;
+    const newAct: CrmActivity = {
+      id: `act-${Date.now()}`,
+      dealId: activeDealModal.id,
+      type: 'email',
+      title: `Correo enviado: ${emailSubject}`,
+      text: emailBody,
+      createdAt: new Date().toISOString()
+    };
+    saveActivities([newAct, ...crmActivities]);
+    setPanelTab('timeline');
+  };
+
+  const handleAddTeamComment = () => {
+    if (!activeDealModal || !teamCommentInput.trim()) return;
+    const newNote: CrmNote = {
+      id: `note-${Date.now()}`,
+      dealId: activeDealModal.id,
+      text: teamCommentInput,
+      createdAt: new Date().toISOString(),
+      author: 'Usuario Sistema (Tú)'
+    };
+    const nextNotes = [newNote, ...crmNotes];
+    setCrmNotes(nextNotes);
+    localStorage.setItem('clientum_crm_notes_persistent', JSON.stringify(nextNotes));
+    setTeamCommentInput('');
+    setPanelTab('notes');
   };
 
   // Filter Logic Applied
@@ -815,6 +933,21 @@ export function CrmKanbanTab() {
             <MessageSquare className="w-4 h-4 text-emerald-600" />
             <span>Envío Masivo WA</span>
           </button>
+
+          <div className="bg-gray-100 p-0.5 rounded-md border border-gray-200 flex items-center text-[12px] font-medium">
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`px-2.5 py-1 rounded transition-all cursor-pointer ${viewMode === 'kanban' ? 'bg-white text-gray-900 shadow-xs font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
+            >
+              Tablero
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-2.5 py-1 rounded transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-xs font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
+            >
+              Lista
+            </button>
+          </div>
 
           <div className="bg-gray-100 p-0.5 rounded-md border border-gray-200 flex items-center text-[12px] font-medium">
             <button
@@ -1228,6 +1361,7 @@ export function CrmKanbanTab() {
                     { id: 'tasks', label: 'Tareas / Pendientes', icon: CheckCircle2 },
                     { id: 'details', label: 'Editar Contacto', icon: Edit2 },
                     { id: 'twilio', label: 'Simulador Twilio', icon: PhoneCall },
+                    { id: 'emails', label: 'Emails & Plantillas', icon: Mail },
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -1608,6 +1742,35 @@ export function CrmKanbanTab() {
                           </div>
                         </div>
 
+                        {customFields.length > 0 && (
+                          <div className="pt-3.5 border-t border-gray-150 space-y-3">
+                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Campos Personalizados</span>
+                            <div className="grid grid-cols-2 gap-4">
+                              {customFields.map((field) => (
+                                <div key={field.id}>
+                                  <label className="block font-medium text-gray-700 mb-1">{field.label}</label>
+                                  <input
+                                    type={field.type === 'number' ? 'number' : 'text'}
+                                    value={dealCustomValues[activeDealModal?.id || '']?.[field.id] || ''}
+                                    onChange={(e) => {
+                                      if (!activeDealModal) return;
+                                      setDealCustomValues(prev => ({
+                                        ...prev,
+                                        [activeDealModal.id]: {
+                                          ...(prev[activeDealModal.id] || {}),
+                                          [field.id]: e.target.value
+                                        }
+                                      }));
+                                    }}
+                                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-950 focus:outline-none focus:border-gray-400 text-xs transition-colors"
+                                    placeholder={`Ingresar ${field.label.toLowerCase()}...`}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <div className="pt-3 border-t border-gray-100 flex justify-end">
                           <button
                             onClick={handleSaveContactDetails}
@@ -1692,6 +1855,108 @@ export function CrmKanbanTab() {
                             * Escribe los comentarios durante la llamada activa; se guardarán automáticamente al colgar.
                           </span>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {panelTab === 'emails' && (
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
+                        <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                          <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Simulador de Correo Electrónico</span>
+                          <span className="text-[10px] bg-indigo-500/10 text-indigo-700 px-2.5 py-0.5 rounded font-mono font-semibold">SMTP: Conectado</span>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-6 items-center gap-2 text-xs">
+                            <span className="col-span-1 font-semibold text-gray-400">De:</span>
+                            <span className="col-span-5 text-gray-700 font-medium bg-white px-2.5 py-1.5 rounded border border-gray-200">{editOwner} &lt;{editOwner.toLowerCase().replace(/\s/g, '')}@clientum.com&gt;</span>
+                          </div>
+                          <div className="grid grid-cols-6 items-center gap-2 text-xs">
+                            <span className="col-span-1 font-semibold text-gray-400">Para:</span>
+                            <span className="col-span-5 text-gray-700 font-medium bg-white px-2.5 py-1.5 rounded border border-gray-200">{editContactName} &lt;{editEmail}&gt;</span>
+                          </div>
+
+                          <div className="grid grid-cols-6 items-center gap-2 text-xs">
+                            <span className="col-span-1 font-semibold text-gray-400">Plantilla:</span>
+                            <select
+                              value={selectedEmailTemplate}
+                              onChange={(e) => setSelectedEmailTemplate(e.target.value)}
+                              className="col-span-5 bg-white border border-gray-300 rounded-md px-2 py-1.5 text-gray-700 text-xs focus:outline-none"
+                            >
+                              <option value="primer-contacto">Primer Contacto B2B / Presentación</option>
+                              <option value="propuesta">Propuesta Comercial de Servicios</option>
+                              <option value="seguimiento-sla">Seguimiento Periódico / SLA Alert</option>
+                            </select>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-semibold text-gray-500">Asunto del Correo</label>
+                            <input
+                              type="text"
+                              value={emailSubject}
+                              onChange={(e) => setEmailSubject(e.target.value)}
+                              className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-800 font-medium focus:outline-none focus:border-gray-400"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-semibold text-gray-500">Cuerpo del Mensaje</label>
+                            <textarea
+                              rows={8}
+                              value={emailBody}
+                              onChange={(e) => setEmailBody(e.target.value)}
+                              className="w-full bg-white border border-gray-300 rounded-md p-3 text-xs text-gray-800 focus:outline-none focus:border-gray-400 font-sans whitespace-pre-wrap leading-relaxed"
+                            />
+                          </div>
+
+                          <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-200">
+                            <button
+                              onClick={handleSendSimulatedEmail}
+                              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs border-none animate-none"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              <span>Enviar Email Comercial</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-200/60 space-y-3">
+                        <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider block">Colaboración Interna (Tag & Comment)</span>
+                        <div className="space-y-2">
+                          <textarea
+                            placeholder="Escribe un comentario interno etiquetando al equipo, ej: '@Gonzalo revisa el SLA de esta cuenta para acelerar la firma.'"
+                            value={teamCommentInput}
+                            onChange={(e) => setTeamCommentInput(e.target.value)}
+                            rows={2}
+                            className="w-full bg-white border border-gray-200 rounded-md p-2.5 text-gray-800 text-xs focus:outline-none focus:border-amber-300 resize-none"
+                          />
+                          <div className="flex justify-between items-center">
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => setTeamCommentInput(prev => prev + ' @Gonzalo Fernández')}
+                                className="px-2 py-1 bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 rounded text-[10px] font-medium transition-colors"
+                              >
+                                @Gonzalo
+                              </button>
+                              <button
+                                onClick={() => setTeamCommentInput(prev => prev + ' @Lucía Gómez')}
+                                className="px-2 py-1 bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 rounded text-[10px] font-medium transition-colors"
+                              >
+                                @Lucía
+                              </button>
+                            </div>
+                            <button
+                              onClick={handleAddTeamComment}
+                              disabled={!teamCommentInput.trim()}
+                              className="px-3 py-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 text-white font-medium rounded text-[11px] transition-colors flex items-center gap-1 cursor-pointer border-none"
+                            >
+                              <MessageSquare className="w-3 h-3" />
+                              <span>Dejar Comentario</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
