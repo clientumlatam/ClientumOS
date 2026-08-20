@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   UserPlus,
@@ -27,13 +27,17 @@ import {
   Calendar,
   Paperclip,
   Clock,
-  Briefcase
+  Briefcase,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { collection, query, where, onSnapshot, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ClientsTab } from './ClientsTab';
 import { ListsTab } from './ListsTab';
 import { PdfExportButton } from './common/PdfExportButton';
 import { BulkWhatsAppModal } from './BulkWhatsAppModal';
+import { auth, db, signInWithGoogle } from '../lib/firebase';
+import { GoogleAuthProvider } from 'firebase/auth';
 
 export interface B2BContact {
   id: string;
@@ -44,12 +48,15 @@ export interface B2BContact {
   phone: string;
   country: string;
   city: string;
-  personaTag: 'CRO / Ventas' | 'CEO PyME' | 'CTO / Sistemas' | 'CMO / Marketing' | 'CFO / Finanzas';
-  leadScore: number; // 0-100
+  personaTag?: 'CRO / Ventas' | 'CEO PyME' | 'CTO / Sistemas' | 'CMO / Marketing' | 'CFO / Finanzas';
+  leadScore?: number; // 0-100
   status: 'Lead Calificado' | 'Contactado' | 'Oportunidad' | 'Cliente' | 'Sin Contactar';
-  whatsappVerified: boolean;
-  lists: string[];
+  whatsappVerified?: boolean;
+  lists?: string[];
   addedDate: string;
+  photoURL?: string;
+  googleId?: string;
+  syncedFromGoogle?: boolean;
 }
 
 const INITIAL_B2B_CONTACTS: B2BContact[] = [
@@ -167,6 +174,83 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
   const [panelTab, setPanelTab] = useState<'timeline' | 'tasks' | 'notes' | 'files' | 'emails'>('timeline');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [showBulkWAModal, setShowBulkWAModal] = useState<boolean>(false);
+  const [syncing, setSyncing] = useState(false);
+
+  // Firestore sync logic
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const q = query(collection(db, 'contacts'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fbContacts = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as B2BContact[];
+      
+      if (fbContacts.length > 0) {
+        setContacts(fbContacts);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleSyncContacts = async () => {
+    try {
+      setSyncing(true);
+      const result = await signInWithGoogle();
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const accessToken = credential?.accessToken;
+      const user = result.user;
+
+      if (!accessToken) {
+        throw new Error('No se pudo obtener el token de acceso de Google.');
+      }
+
+      const res = await fetch('/api/contacts/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Error al sincronizar contactos.');
+      }
+
+      const data = await res.json();
+      const fetchedContacts = data.contacts || [];
+
+      // Save to Firestore
+      for (const contact of fetchedContacts) {
+        const contactId = contact.googleId.replace(/\//g, '_'); // Replace slashes for doc ID
+        await setDoc(doc(db, 'contacts', contactId), {
+          id: contactId,
+          name: contact.name,
+          role: contact.jobTitle || 'Contacto Google',
+          company: contact.company || 'Sin Empresa',
+          email: contact.email || '',
+          phone: contact.phone || '',
+          photoURL: contact.photoURL,
+          googleId: contact.googleId,
+          syncedFromGoogle: true,
+          status: 'Sin Contactar',
+          country: 'Google Sync',
+          city: '',
+          addedDate: new Date().toISOString(),
+          userId: user.uid,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+
+      alert(`Sincronización exitosa: ${fetchedContacts.length} contactos procesados.`);
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // New Contact Form
   const [formData, setFormData] = useState({
@@ -302,6 +386,14 @@ export function ContactsTab({ initialTab }: ContactsTabProps) {
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                onClick={handleSyncContacts}
+                disabled={syncing}
+                className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-md text-[13px] font-medium transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                <span>Sincronizar Google</span>
+              </button>
               <button
                 onClick={() => setShowBulkWAModal(true)}
                 className="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-md text-[13px] font-medium transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"

@@ -357,6 +357,7 @@ export function CrmKanbanTab() {
   const [isCustomFieldsModalOpen, setIsCustomFieldsModalOpen] = useState(false);
   const [newFieldLabel, setNewFieldLabel] = useState('');
   const [newFieldType, setNewFieldType] = useState<'text' | 'number'>('text');
+  const [customFieldError, setCustomFieldError] = useState('');
 
   // Active View & Filters State
   const [selectedViewId, setSelectedViewId] = useState<string>('all');
@@ -595,6 +596,32 @@ export function CrmKanbanTab() {
       setFilterMinValue(0);
       setFilterMinScore(0);
     }
+  };
+
+  const handleAddCustomField = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCustomFieldError('');
+    if (!newFieldLabel.trim()) return;
+    const cleanId = 'cf-' + newFieldLabel.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
+    if (customFields.some(f => f.id === cleanId)) {
+      setCustomFieldError('Ya existe un campo con este identificador o nombre.');
+      return;
+    }
+    const newField = {
+      id: cleanId,
+      label: newFieldLabel.trim(),
+      type: newFieldType
+    };
+    const updated = [...customFields, newField];
+    setCustomFields(updated);
+    localStorage.setItem('clientum_crm_custom_fields', JSON.stringify(updated));
+    setNewFieldLabel('');
+  };
+
+  const handleDeleteCustomField = (fieldId: string) => {
+    const updated = customFields.filter(f => f.id !== fieldId);
+    setCustomFields(updated);
+    localStorage.setItem('clientum_crm_custom_fields', JSON.stringify(updated));
   };
 
   // Add Deal Form state
@@ -857,36 +884,6 @@ export function CrmKanbanTab() {
     saveActivities([newAct, ...crmActivities]);
   };
 
-  const handleSendSimulatedEmail = () => {
-    if (!activeDealModal) return;
-    const newAct: CrmActivity = {
-      id: `act-${Date.now()}`,
-      dealId: activeDealModal.id,
-      type: 'email',
-      title: `Correo enviado: ${emailSubject}`,
-      text: emailBody,
-      createdAt: new Date().toISOString()
-    };
-    saveActivities([newAct, ...crmActivities]);
-    setPanelTab('timeline');
-  };
-
-  const handleAddTeamComment = () => {
-    if (!activeDealModal || !teamCommentInput.trim()) return;
-    const newNote: CrmNote = {
-      id: `note-${Date.now()}`,
-      dealId: activeDealModal.id,
-      text: teamCommentInput,
-      createdAt: new Date().toISOString(),
-      author: 'Usuario Sistema (Tú)'
-    };
-    const nextNotes = [newNote, ...crmNotes];
-    setCrmNotes(nextNotes);
-    localStorage.setItem('clientum_crm_notes_persistent', JSON.stringify(nextNotes));
-    setTeamCommentInput('');
-    setPanelTab('notes');
-  };
-
   // Filter Logic Applied
   const filteredDeals = deals.filter(deal => {
     // Search filter
@@ -963,6 +960,14 @@ export function CrmKanbanTab() {
               ARS ($)
             </button>
           </div>
+
+          <button
+            onClick={() => setIsCustomFieldsModalOpen(true)}
+            className="p-1.5 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-md transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+            title="Campos Personalizados"
+          >
+            <Settings className="w-4.5 h-4.5 text-gray-600" />
+          </button>
 
           <button
             onClick={() => setIsAddModalOpen(true)}
@@ -2123,6 +2128,97 @@ export function CrmKanbanTab() {
           whatsappVerified: true
         }))}
       />
+
+      {isCustomFieldsModalOpen && (
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border border-gray-200 flex flex-col">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+              <h3 className="font-semibold text-[15px] text-gray-900 flex items-center gap-2">
+                <Settings className="w-4 h-4 text-gray-700" /> Configurar Campos Personalizados
+              </h3>
+              <button 
+                onClick={() => {
+                  setIsCustomFieldsModalOpen(false);
+                  setCustomFieldError('');
+                }} 
+                className="text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 p-1.5 rounded-md transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-xs text-gray-400 uppercase tracking-wider">Campos Activos</h4>
+                {customFields.length === 0 ? (
+                  <p className="text-xs text-gray-500 italic">No hay campos personalizados activos.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {customFields.map(field => (
+                      <div key={field.id} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md border border-gray-150">
+                        <div className="text-xs">
+                          <span className="font-semibold text-gray-800">{field.label}</span>
+                          <span className="ml-1 text-[10px] text-gray-400 font-mono">({field.type === 'number' ? 'Número' : 'Texto'})</span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteCustomField(field.id)}
+                          className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded transition-colors border-none bg-transparent cursor-pointer flex items-center justify-center"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleAddCustomField} className="border-t border-gray-150 pt-4 space-y-3">
+                <h4 className="font-semibold text-xs text-gray-400 uppercase tracking-wider">Agregar Nuevo Campo</h4>
+                
+                {customFieldError && (
+                  <div className="p-2.5 bg-red-50 border border-red-100 text-red-700 rounded-md text-xs font-medium flex items-center gap-1.5">
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>{customFieldError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Nombre del Campo</label>
+                  <input
+                    type="text"
+                    required
+                    value={newFieldLabel}
+                    onChange={(e) => setNewFieldLabel(e.target.value)}
+                    placeholder="Ej: Sector de Negocio, CUIT, SLA"
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-950 text-xs focus:outline-hidden focus:border-gray-400 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Tipo de Dato</label>
+                  <select
+                    value={newFieldType}
+                    onChange={(e) => setNewFieldType(e.target.value as 'text' | 'number')}
+                    className="w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-950 text-xs focus:outline-hidden focus:border-gray-400 transition-colors"
+                  >
+                    <option value="text">Texto</option>
+                    <option value="number">Número</option>
+                  </select>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-md shadow-xs transition-colors cursor-pointer"
+                  >
+                    Agregar Campo
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

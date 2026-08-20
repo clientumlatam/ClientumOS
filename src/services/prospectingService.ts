@@ -1,3 +1,187 @@
+/* ═════════════════════════════════════════════════════════════════
+   OpenStreetMap (Nominatim + Overpass) — Fuente 100% GRATIS, sin API key
+   Reemplaza/precede a Google Maps Platform + Apify para descubrimiento
+   de negocios por zona. Se usa como PRIMER intento en searchGeolocatedProspects.
+═════════════════════════════════════════════════════════════════ */
+
+// Mapeo de rubros en español (PyMEs LatAm) → tags de OpenStreetMap
+// Referencia de tags: https://wiki.openstreetmap.org/wiki/Map_features
+const CATEGORY_OSM_MAP: Record<string, { key: string; value: string }[]> = {
+  'ferreteria': [{ key: 'shop', value: 'hardware' }],
+  'corralon': [{ key: 'shop', value: 'trade' }, { key: 'shop', value: 'doityourself' }],
+  'materiales de construccion': [{ key: 'shop', value: 'trade' }, { key: 'shop', value: 'doityourself' }],
+  'restaurante': [{ key: 'amenity', value: 'restaurant' }],
+  'gastronomia': [{ key: 'amenity', value: 'restaurant' }, { key: 'amenity', value: 'cafe' }],
+  'cafeteria': [{ key: 'amenity', value: 'cafe' }],
+  'panaderia': [{ key: 'shop', value: 'bakery' }],
+  'farmacia': [{ key: 'amenity', value: 'pharmacy' }],
+  'supermercado': [{ key: 'shop', value: 'supermarket' }],
+  'almacen': [{ key: 'shop', value: 'convenience' }],
+  'indumentaria': [{ key: 'shop', value: 'clothes' }],
+  'ropa': [{ key: 'shop', value: 'clothes' }],
+  'calzado': [{ key: 'shop', value: 'shoes' }],
+  'inmobiliaria': [{ key: 'office', value: 'estate_agent' }],
+  'gimnasio': [{ key: 'leisure', value: 'fitness_centre' }],
+  'peluqueria': [{ key: 'shop', value: 'hairdresser' }],
+  'estetica': [{ key: 'shop', value: 'beauty' }],
+  'veterinaria': [{ key: 'amenity', value: 'veterinary' }],
+  'taller mecanico': [{ key: 'shop', value: 'car_repair' }],
+  'concesionaria': [{ key: 'shop', value: 'car' }],
+  'hotel': [{ key: 'tourism', value: 'hotel' }],
+  'alojamiento': [{ key: 'tourism', value: 'hotel' }, { key: 'tourism', value: 'guest_house' }],
+  'clinica': [{ key: 'amenity', value: 'clinic' }],
+  'consultorio medico': [{ key: 'amenity', value: 'doctors' }],
+  'estudio contable': [{ key: 'office', value: 'accountant' }],
+  'estudio juridico': [{ key: 'office', value: 'lawyer' }],
+  'abogados': [{ key: 'office', value: 'lawyer' }],
+  'electrodomesticos': [{ key: 'shop', value: 'appliance' }],
+  'muebleria': [{ key: 'shop', value: 'furniture' }],
+  'libreria': [{ key: 'shop', value: 'books' }, { key: 'shop', value: 'stationery' }],
+  'panificadora': [{ key: 'shop', value: 'bakery' }],
+  'vivero': [{ key: 'shop', value: 'garden_centre' }],
+};
+
+function normalizeText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function resolveOsmTags(category: string): { key: string; value: string }[] {
+  const norm = normalizeText(category);
+  for (const [key, tags] of Object.entries(CATEGORY_OSM_MAP)) {
+    if (norm.includes(key) || key.includes(norm)) {
+      return tags;
+    }
+  }
+  return []; // sin match directo → se usará búsqueda genérica por nombre
+}
+
+/**
+ * Geocodifica una ciudad a lat/lng usando Nominatim (OpenStreetMap). Gratis, sin API key.
+ * Límite público: 1 req/seg — para volumen alto, self-hostear Nominatim en el server propio.
+ */
+async function geocodeCityOSM(city: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/search');
+    url.searchParams.set('q', `${city}, Argentina`);
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('limit', '1');
+
+    const res = await fetch(url.toString(), {
+      headers: { 'Accept-Language': 'es-AR' }
+    });
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+    return null;
+  } catch (err) {
+    console.warn('[prospectingService/OSM] Nominatim geocoding falló:', err);
+    return null;
+  }
+}
+
+/**
+ * Busca negocios reales por zona y rubro usando Overpass API (OpenStreetMap). Gratis, sin API key.
+ * Reemplaza al scraper de Apify + Google Maps Places API para descubrimiento territorial.
+ */
+export async function searchOverpassProspects(
+  city: string,
+  category: string,
+  radiusKm: string = '25',
+  onLog?: (msg: string) => void
+): Promise<ScrapedProspect[]> {
+  onLog?.(`[OSM 1/3] Geocodificando "${city}" con Nominatim (OpenStreetMap, gratis)...`);
+
+  const coords = await geocodeCityOSM(city);
+  if (!coords) {
+    onLog?.(`[OSM] No se pudo geocodificar "${city}" — se omite fuente OpenStreetMap.`);
+    return [];
+  }
+
+  const radiusMeters = Math.min(parseInt(radiusKm, 10) || 25, 50) * 1000;
+  const osmTags = resolveOsmTags(category);
+
+  // Construye la query Overpass QL: si hay tags mapeados, filtra por tag; si no, busca por nombre genérico
+  let filters: string;
+  if (osmTags.length > 0) {
+    filters = osmTags
+      .map(t => `
+        node["${t.key}"="${t.value}"](around:${radiusMeters},${coords.lat},${coords.lng});
+        way["${t.key}"="${t.value}"](around:${radiusMeters},${coords.lat},${coords.lng});`)
+      .join('');
+  } else {
+    const nameRegex = category.replace(/"/g, '');
+    filters = `
+      node["shop"]["name"~"${nameRegex}",i](around:${radiusMeters},${coords.lat},${coords.lng});
+      node["amenity"]["name"~"${nameRegex}",i](around:${radiusMeters},${coords.lat},${coords.lng});
+      way["shop"]["name"~"${nameRegex}",i](around:${radiusMeters},${coords.lat},${coords.lng});`;
+  }
+
+  const query = `[out:json][timeout:25];(${filters});out center 60;`;
+
+  onLog?.(`[OSM 2/3] Consultando Overpass API — radio ${radiusKm}km alrededor de ${city}...`);
+
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: query
+    });
+
+    if (!res.ok) {
+      onLog?.(`[OSM] Overpass devolvió error ${res.status} — se omite fuente OpenStreetMap.`);
+      return [];
+    }
+
+    const data = await res.json();
+    const elements: any[] = data.elements || [];
+
+    const parsed: ScrapedProspect[] = elements
+      .filter(el => el.tags?.name) // descarta POIs sin nombre (ruido)
+      .map((el, index) => {
+        const tags = el.tags || {};
+        const lat = el.lat ?? el.center?.lat;
+        const lng = el.lon ?? el.center?.lon;
+        const street = tags['addr:street'];
+        const num = tags['addr:housenumber'];
+        const address = street
+          ? `${street}${num ? ' ' + num : ''}`
+          : `${city} (ubicación aproximada OSM)`;
+
+        return {
+          id: `p_osm_${el.type}_${el.id}`,
+          name: tags.name,
+          category: tags.shop || tags.amenity || tags.office || tags.tourism || category,
+          address,
+          city: tags['addr:city'] || city,
+          phone: tags.phone || tags['contact:phone'] || '',
+          website: tags.website || tags['contact:website'] || '',
+          rating: 0, // OSM no provee ratings — queda en 0 hasta enriquecer o cruzar con otra fuente
+          reviewsCount: 0,
+          lat,
+          lng,
+          enriched: false,
+          createdAt: new Date().toISOString(),
+          source: 'osm'
+        } as ScrapedProspect;
+      })
+      .filter(p => typeof p.lat === 'number' && typeof p.lng === 'number');
+
+    onLog?.(`[OSM 3/3] ${parsed.length} negocios reales encontrados en OpenStreetMap (fuente gratuita).`);
+    return parsed;
+  } catch (err) {
+    console.warn('[prospectingService/OSM] Overpass query falló:', err);
+    onLog?.(`[OSM] Error consultando Overpass — se omite fuente OpenStreetMap.`);
+    return [];
+  }
+}
+
 /**
  * Saves or updates a prospect in LocalStorage.
  */
@@ -56,6 +240,8 @@ export interface ScrapedProspect {
   outreachSent?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  /** Origen del dato: 'osm' (gratis) | 'google_maps' (pago) | 'gemini_ai' | 'fallback' */
+  source?: 'osm' | 'google_maps' | 'gemini_ai' | 'fallback';
 }
 
 // Map center coordinates for popular business hubs in Argentina / Patagonia
@@ -96,6 +282,23 @@ export async function searchGeolocatedProspects(
   radiusKm: string = '25',
   onLog?: (msg: string) => void
 ): Promise<ScrapedProspect[]> {
+  // ── PASO 0 (gratis): OpenStreetMap vía Overpass + Nominatim ──
+  // Sin API key, sin costo por request. Cubre la mayoría de las búsquedas
+  // de rubros comerciales comunes. Si no encuentra nada relevante, cae
+  // en cascada al backend pago (Apify/Google Maps) más abajo.
+  try {
+    const osmResults = await searchOverpassProspects(city, category, radiusKm, onLog);
+    if (osmResults.length >= 3) {
+      // Suficientes resultados reales y gratis — no hace falta gastar cuota de Apify/Maps
+      return osmResults;
+    }
+    if (osmResults.length > 0) {
+      onLog?.(`[OSM] Solo ${osmResults.length} resultados en OpenStreetMap — completando con fuente paga...`);
+    }
+  } catch (err) {
+    console.warn('[prospectingService] Paso OSM falló por completo, continuando con fallback pago:', err);
+  }
+
   onLog?.(`[1/3] Conectando con Google Maps Places API y scraping de zona (${city}, ${radiusKm}km)...`);
 
   try {
@@ -135,7 +338,8 @@ export async function searchGeolocatedProspects(
             lat: baseCoords.lat + (Math.sin(index) * 0.025),
             lng: baseCoords.lng + (Math.cos(index) * 0.025),
             enriched: false,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            source: 'google_maps' as const
           }));
 
           if (parsedProspects.length > 0) {
@@ -181,7 +385,8 @@ export async function searchGeolocatedProspects(
           lng: baseCoords.lng + ((i - 2) * 0.015),
           enriched: false,
           painPoint: item.painPoint,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          source: 'gemini_ai' as const
         }));
       }
     }

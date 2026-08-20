@@ -3,7 +3,7 @@ import {
   Settings, CheckCircle2, Key, Globe, Users, Plus, Trash2, Mail, Lock, Zap,
   Sparkles, Bot, Shield, MapPin, Search, Send, Database, KeyRound,
   ExternalLink, Eye, EyeOff, ChevronDown, ChevronRight, AlertCircle,
-  Layers, Server, Webhook, CreditCard, Building, BarChart2, ArrowLeftRight
+  Layers, Server, Webhook, CreditCard, Building, BarChart2, ArrowLeftRight, Map
 } from 'lucide-react';
 import { SmtpTab } from './SmtpTab';
 import { ImportExportTab } from './ImportExportTab';
@@ -73,6 +73,15 @@ const ALL_INTEGRATIONS: Integration[] = [
     color: 'text-amber-500 bg-amber-50', required: false,
     docsUrl: 'https://hunter.io/api-keys',
     placeholder: 'hun_...',
+  },
+  {
+    id: 'osm', name: 'OpenStreetMap (Nominatim + Overpass)', nameEs: 'OpenStreetMap (Nominatim + Overpass)',
+    desc: 'Free geocoding & business discovery fallback — no API key required, no per-request cost.',
+    descEs: 'Descubrimiento geolocalizado y geocoding gratuito — primer intento antes de Apify/Google Maps, sin key ni costo por request.',
+    envVar: 'SIN API KEY', category: 'prospeccion', icon: Map,
+    color: 'text-lime-600 bg-lime-50', required: false,
+    docsUrl: 'https://wiki.openstreetmap.org/wiki/Overpass_API',
+    placeholder: 'No requiere configuración',
   },
 
   // ─── Email & Comunicación ───
@@ -186,6 +195,7 @@ export function SettingsTab({ defaultSubTab }: SettingsTabProps) {
     apify:    'Global Clientum Server Key (Free Scraper)',
     google_maps: 'Global Clientum Server Key (Places API)',
     hunter:   'Global Clientum Server Key (Enrichment API)',
+    osm:      'Nominatim + Overpass (Público, Gratis — Sin Key)',
     smtp_user:'smtp.clientum.com.ar',
     smtp_pass:'Global Clientum SMTP Service',
     sendgrid: 'Global Clientum SendGrid Service',
@@ -372,7 +382,7 @@ export function SettingsTab({ defaultSubTab }: SettingsTabProps) {
                 <div>
                   <h4 className="text-sm font-bold text-emerald-900">APIs Centralizadas & Precargadas en Servidor Clientum</h4>
                   <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
-                    Todas las funciones avanzadas (IA con Google Gemini Free, Google Maps Places API, Base de Datos PostgreSQL Neon, Agente Santi SDR, Búsquedas y SMTP) están integradas y precargadas centralmente a nivel de servidor. Ningún usuario necesita ingresar ni contratar claves individuales de API.
+                    Todas las funciones avanzadas (IA con Google Gemini Free, prospección geolocalizada con OpenStreetMap + Google Maps Places API, Base de Datos PostgreSQL Neon, Agente Santi SDR, Búsquedas y SMTP) están integradas y precargadas centralmente a nivel de servidor. Ningún usuario necesita ingresar ni contratar claves individuales de API.
                   </p>
                 </div>
               </div>

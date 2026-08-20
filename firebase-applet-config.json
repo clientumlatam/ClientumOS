@@ -1,12 +1,12 @@
 {
-  "projectId": "applied-nation-gmvz5",
-  "appId": "1:316487915762:web:c5bd11dc90da8a04ac986b",
-  "apiKey": "AIzaSyCKnJbv8XaLFICeTSyol10_sTNOGQakxyQ",
-  "authDomain": "applied-nation-gmvz5.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-remixremixclient-6c8a3d3b-dff0-486d-95d4-3f579bfd87be",
-  "storageBucket": "applied-nation-gmvz5.firebasestorage.app",
-  "messagingSenderId": "316487915762",
+  "projectId": "gothic-presence-nds98",
+  "appId": "1:960057091990:web:3a0d91bd4ec49dbaa3dfb7",
+  "apiKey": "AIzaSyCRajIMl2Nk2ZBdLl76gy2FL8NRdUeMj9Y",
+  "authDomain": "gothic-presence-nds98.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-remixclientumos-36af7b49-d773-4b61-867c-9cd9dc79364e",
+  "storageBucket": "gothic-presence-nds98.firebasestorage.app",
+  "messagingSenderId": "960057091990",
   "measurementId": "",
-  "oAuthClientId": "316487915762-6upl4gjranhtcv886js6q4otad9crpm1.apps.googleusercontent.com",
+  "oAuthClientId": "960057091990-3u63r4fs37coaqmtjc0rquoonnj5v3tu.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }

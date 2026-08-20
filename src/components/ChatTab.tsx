@@ -68,13 +68,12 @@ export function ChatTab() {
   ];
 
   const models = [
-    { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro', speed: 'Complejidad Alta / Razonamiento Profundo', icon: <Brain className="w-4 h-4 text-purple-600" /> },
-    { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', speed: 'Velocidad Media / General', icon: <Zap className="w-4 h-4 text-amber-500" /> },
-    { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash Lite', speed: 'Baja Latencia / Respuestas Ultra-Rápidas', icon: <Zap className="w-4 h-4 text-emerald-500" /> }
+    { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', speed: 'Complejidad Alta / Razonamiento Profundo', icon: <Brain className="w-4 h-4 text-purple-600" /> },
+    { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', speed: 'Baja Latencia / Respuestas Ultra-Rápidas', icon: <Zap className="w-4 h-4 text-emerald-500" /> }
   ];
 
   const [activePersona, setActivePersona] = useState<Persona>(personas[0]);
-  const [selectedModel, setSelectedModel] = useState(models[1]); // gemini-3.5-flash as default
+  const [selectedModel, setSelectedModel] = useState(models[1]); // gemini-2.0-flash-lite as default
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

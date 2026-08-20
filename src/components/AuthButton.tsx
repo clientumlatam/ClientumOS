@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { LogIn, LogOut, Shield, X, Loader2, KeyRound, Mail, UserPlus, CheckCircle2, Sparkles, User } from 'lucide-react';
+import { signInWithGoogle } from '../lib/firebase';
 
 interface SessionUser {
   id: number;
@@ -97,6 +98,43 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
       setLoading(false);
       onLoginSuccess?.(finalUser);
       window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: finalUser } }));
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await signInWithGoogle();
+      const user = result.user;
+      const idToken = await user.getIdToken();
+      
+      // Enviar el token al servidor para crear la sesión
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          token: idToken,
+          email: user.email,
+          name: user.displayName,
+          picture: user.photoURL
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Error al iniciar sesión con Google.');
+      }
+
+      const data = await res.json();
+      setUser(data.user);
+      setShowModal(false);
+      onLoginSuccess?.(data.user);
+      window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: data.user } }));
+    } catch (err: any) {
+      setError(err.message || 'Error en la autenticación con Google.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -328,8 +366,10 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
         </div>
 
         <div className="mb-4">
-          <a
-            href="/api/auth/google/login"
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
             className="w-full bg-slate-950 hover:bg-slate-800 text-white border border-slate-700/80 text-xs font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center space-x-2.5 cursor-pointer shadow-sm hover:border-slate-500 no-underline"
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -339,7 +379,7 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
             </svg>
             <span>Continuar con Google</span>
-          </a>
+          </button>
           <div className="relative flex py-2.5 items-center">
             <div className="flex-grow border-t border-slate-800"></div>
             <span className="flex-shrink mx-2 text-[10px] uppercase font-bold text-slate-500 tracking-wider">o ingresar con usuario</span>
