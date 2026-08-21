@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ActiveTab } from '../types';
 import { 
   LayoutDashboard, 
@@ -53,6 +54,7 @@ interface NavGroup {
 }
 
 export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+  const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [flyoutGroup, setFlyoutGroup] = useState<string | null>(null);
@@ -214,18 +216,16 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         </button>
         <button
           onClick={() => {
-            setActiveTab('public_website');
+            navigate('/');
             setIsMobileOpen(false);
           }}
-          className={`w-full flex items-center gap-2.5 py-2 px-3 rounded-xl transition-all cursor-pointer ${
-            activeTab === 'public_website'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-              : 'bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300'
-          } ${isCollapsed ? 'justify-center' : ''}`}
-          title="Ver Sitio Web Público & LMS Academia"
+          className={`w-full flex items-center gap-2.5 py-2 px-3 rounded-xl transition-all cursor-pointer bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 ${
+            isCollapsed ? 'justify-center' : ''
+          }`}
+          title="Ver Sitio Web Corporativo Público & LMS Academia"
         >
-          <Globe2 className={`w-4 h-4 ${activeTab === 'public_website' ? 'text-white' : 'text-indigo-400 animate-pulse'}`} />
-          {!isCollapsed && <span className="text-xs font-bold font-sans">Sitio Web & LMS</span>}
+          <Globe2 className="w-4 h-4 text-indigo-400" />
+          {!isCollapsed && <span className="text-xs font-bold font-sans">Sitio Web Público</span>}
         </button>
       </div>
 
@@ -439,13 +439,25 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
 
       <div className="p-3 border-t border-slate-800 flex flex-col gap-2 bg-slate-900/90 shrink-0">
         {!isCollapsed && (
-          <div className="bg-slate-800/70 rounded-xl p-2.5 border border-slate-700/50 flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-[11px] text-emerald-400 font-semibold">
-              <ShieldCheck className="w-4 h-4 shrink-0" />
-              <span className="truncate">Motor Gemini 2.5 Activo</span>
+          <>
+            <div className="bg-slate-800/70 rounded-xl p-2.5 border border-slate-700/50 flex items-center justify-between">
+              <div className="flex items-center space-x-2 text-[11px] text-emerald-400 font-semibold">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span className="truncate">Motor Gemini 3.6 & OSM Activo</span>
+              </div>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             </div>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          </div>
+            <div className="px-2 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80 text-[10px] text-slate-400 flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-300">🇦🇷 Roca: J. Ledantes</span>
+                <span className="text-[9px] text-emerald-400 font-mono">Central</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-300">🇧🇷 Brasil: M. Rotili</span>
+                <span className="text-[9px] text-amber-400 font-mono">Inter</span>
+              </div>
+            </div>
+          </>
         )}
 
         <button 

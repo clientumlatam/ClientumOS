@@ -77,6 +77,8 @@ import OrganigramaClientum from "./OrganigramaClientum";
 import AcademiaLMS from "./Academia/AcademiaLMS";
 import BrochurePreview from "./BrochurePreview";
 import { PdfExportButton } from "./PdfExportButton";
+import { LanguageSelector } from "./LanguageSelector";
+import { useLanguage } from "../lib/i18n";
 import serviciosCatalogo from "../data/servicios-catalogo.json";
 import categoriasServicios from "../data/categorias-servicios.json";
 import cursosLms from "../data/cursos-lms.json";
@@ -199,6 +201,7 @@ export default function PublicWebsite({
   onLogout,
   onLoginSuccess,
 }: PublicWebsiteProps) {
+  const { language, isPortuguese, t, offices: contextOffices } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>("inicio");
   useEffect(() => {
     (window as any).__setActiveTab = setActiveTab;
@@ -584,13 +587,34 @@ export default function PublicWebsite({
   // Content Data structures
   const OFFICES = useMemo(() => ({
     roca: {
-      name: "Sede — Arraial do Cabo",
-      address: "Matias Andres Rotili Poinsof - Arraial do Cabo",
+      id: "roca",
+      name: isPortuguese ? "Sede Principal — Patagônia Argentina" : "Sede Principal — Patagonia Argentina",
+      leader: "Jonathan Ledantes (CEO & Co-Fundador)",
+      address: "General Roca, Río Negro — Patagonia Argentina",
+      phone: "+54 298 451-0883",
+      email: "info@clientum.com.ar",
+      desc: isPortuguese
+        ? "Matriz e centro de desenvolvimento tecnológico, engenharia de software, arquitetura de IA e operações centrais."
+        : "Casa Matriz y centro de desarrollo tecnológico, ingeniería de software, arquitectura de IA y operaciones centrales.",
+      badge: isPortuguese ? "Sede Principal" : "Sede Principal",
+      countryBadge: "Patagonia, Argentina",
+      flag: "🇦🇷"
+    },
+    brasil: {
+      id: "brasil",
+      name: isPortuguese ? "Sede Internacional — Brasil" : "Sede Internacional — Brasil",
+      leader: isPortuguese ? "Matias Rotili (Diretor Internacional & Co-Fundador)" : "Matias Rotili (Director Internacional & Co-Fundador)",
+      address: "Matias Andres Rotili Poinsof - Arraial do Cabo, Rio de Janeiro, Brasil",
       phone: "+54 9 291 440-9805",
-      email: contact.email,
-      desc: "Operando de manera global y digital desde nuestras instalaciones en Brasil. Atendemos a clientes de todo el continente de manera 100% remota."
+      email: "brasil@clientum.com.ar",
+      desc: isPortuguese
+        ? "Operando de forma global e digital para expansão B2B, parcerias corporativas e conectividade no Brasil e Mercosul."
+        : "Operando de manera global y digital para expansión B2B, alianzas corporativas y conectividad en Brasil y Mercosur.",
+      badge: isPortuguese ? "Sede Brasil" : "Sede Brasil",
+      countryBadge: "Arraial do Cabo, Brasil",
+      flag: "🇧🇷"
     }
-  }), [contact]);
+  }), [isPortuguese]);
 
   const COURSES = [
     {
@@ -878,113 +902,109 @@ export default function PublicWebsite({
   // Desarrollo Web e Integraciones dejaron de ser productos de primer nivel
   // y ahora se explican como características DENTRO de estas 8 soluciones.
   const SOLUTIONS_ITEMS = useMemo(() => [
-    { id: "chatbot", label: "Chatbot WhatsApp", desc: "Tu negocio atiende solo, las 24 horas", icon: Bot, color: "text-green-500 bg-green-50" },
-    { id: "crm_inteligente", label: "CRM Inteligente", desc: "Nunca más perdas una venta", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
-    { id: "asistente_ia", label: "Asistente IA", desc: "Tu analista de negocio, siempre disponible", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
-    { id: "automatizacion", label: "Broadcast & Automatización", desc: "Campañas masivas de WhatsApp y flujos sin código", icon: Radio, color: "text-amber-500 bg-amber-50" },
-    { id: "portal_cliente", label: "Portal del Cliente", desc: "Tus clientes se autoatienden", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
-    { id: "desarrollo_web", label: "Desarrollo Web", desc: "Tu presencia web, conectada al CRM", icon: Code2, color: "text-slate-600 bg-slate-100" },
-    { id: "integraciones", label: "Integraciones", desc: "WhatsApp, AFIP, MercadoPago y más de 60 servicios", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
-    { id: "afip", label: "Facturación AFIP", desc: "Facturá electrónicamente sin salir del CRM", icon: FileText, color: "text-blue-700 bg-blue-50" },
-    { id: "mercadopago", label: "Suscripciones Mercado Pago", desc: "Cobros recurrentes y links de pago automáticos", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
-    { id: "leads", label: "Prospección de Leads", desc: "Encontrá y calificá clientes potenciales con IA", icon: Rocket, color: "text-violet-500 bg-violet-50" },
-    { id: "reportes", label: "Business Intelligence", desc: "Métricas y reportes accionables de tu negocio", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
-    { id: "ecommerce", label: "E-Commerce", desc: "Vendé online, integrado a tu CRM y stock", icon: ShoppingCart, color: "text-orange-500 bg-orange-50", query: "ecommerce" },
-  ], []);
+    { id: "chatbot", label: "Chatbot WhatsApp", desc: isPortuguese ? "Seu negócio atende sozinho, 24 horas por dia" : "Tu negocio atiende solo, las 24 horas", icon: Bot, color: "text-green-500 bg-green-50" },
+    { id: "crm_inteligente", label: "CRM Inteligente", desc: isPortuguese ? "Nunca mais perca uma venda" : "Nunca más perdas una venta", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
+    { id: "asistente_ia", label: isPortuguese ? "Assistente IA" : "Asistente IA", desc: isPortuguese ? "Seu analista de negócios, sempre disponível" : "Tu analista de negocio, siempre disponible", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
+    { id: "automatizacion", label: isPortuguese ? "Broadcast & Automação" : "Broadcast & Automatización", desc: isPortuguese ? "Campanhas em massa no WhatsApp e fluxos sem código" : "Campañas masivas de WhatsApp y flujos sin código", icon: Radio, color: "text-amber-500 bg-amber-50" },
+    { id: "portal_cliente", label: isPortuguese ? "Portal do Cliente" : "Portal del Cliente", desc: isPortuguese ? "Seus clientes com autoatendimento online" : "Tus clientes se autoatienden", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
+    { id: "desarrollo_web", label: isPortuguese ? "Desenvolvimento Web" : "Desarrollo Web", desc: isPortuguese ? "Sua presença web, conectada ao CRM" : "Tu presencia web, conectada al CRM", icon: Code2, color: "text-slate-600 bg-slate-100" },
+    { id: "integraciones", label: isPortuguese ? "Integrações" : "Integraciones", desc: isPortuguese ? "WhatsApp, ERPs, Mercado Pago e mais de 60 serviços" : "WhatsApp, AFIP, MercadoPago y más de 60 servicios", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
+    { id: "afip", label: isPortuguese ? "Faturamento Eletrônico" : "Facturación AFIP", desc: isPortuguese ? "Fature sem sair do CRM com emissão rápida" : "Facturá electrónicamente sin salir del CRM", icon: FileText, color: "text-blue-700 bg-blue-50" },
+    { id: "mercadopago", label: isPortuguese ? "Assinaturas Mercado Pago" : "Suscripciones Mercado Pago", desc: isPortuguese ? "Cobranças recorrentes e links de pagamento automáticos" : "Cobros recurrentes y links de pago automáticos", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
+    { id: "leads", label: isPortuguese ? "Prospecção de Leads" : "Prospección de Leads", desc: isPortuguese ? "Encontre e qualifique clientes potenciais com IA" : "Encontrá y calificá clientes potenciales con IA", icon: Rocket, color: "text-violet-500 bg-violet-50" },
+    { id: "reportes", label: "Business Intelligence", desc: isPortuguese ? "Métricas e relatórios acionáveis do seu negócio" : "Métricas y reportes accionables de tu negocio", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
+    { id: "ecommerce", label: "E-Commerce", desc: isPortuguese ? "Venda online, integrado ao seu CRM e estoque" : "Vendé online, integrado a tu CRM y stock", icon: ShoppingCart, color: "text-orange-500 bg-orange-50", query: "ecommerce" },
+  ], [isPortuguese]);
 
   /* ─── Mega-menu groups (desktop only) ─── */
   const SOLUTIONS_GROUPS = useMemo(() => [
     {
       key: "crm",
-      title: "CRM & Pipeline",
+      title: isPortuguese ? "CRM & Funil de Vendas" : "CRM & Pipeline",
       accent: "border-blue-500",
       headerColor: "text-blue-700",
       items: [
-        { id: "crm_inteligente", label: "CRM Inteligente", desc: "Kanban de oportunidades y gestión de deals", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
-        { id: "leads",           label: "Prospección Maps IA", desc: "Descubrí negocios por zona con Gemini AI", icon: Compass, color: "text-violet-500 bg-violet-50" },
-        { id: "leads",           label: "Lead Scoring MEDDIC", desc: "Calificá leads con metodología empresarial B2B", icon: Target, color: "text-indigo-500 bg-indigo-50" },
-        { id: "reportes",        label: "Business Intelligence", desc: "CAC, LTV y métricas de conversión en tiempo real", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
+        { id: "crm_inteligente", label: "CRM Inteligente", desc: isPortuguese ? "Kanban de oportunidades e gestão de negócios" : "Kanban de oportunidades y gestión de deals", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
+        { id: "leads",           label: isPortuguese ? "Prospecção Maps IA" : "Prospección Maps IA", desc: isPortuguese ? "Descubra empresas por região com Gemini AI" : "Descubrí negocios por zona con Gemini AI", icon: Compass, color: "text-violet-500 bg-violet-50" },
+        { id: "leads",           label: "Lead Scoring MEDDIC", desc: isPortuguese ? "Qualifique leads com metodologia B2B" : "Calificá leads con metodología empresarial B2B", icon: Target, color: "text-indigo-500 bg-indigo-50" },
+        { id: "reportes",        label: "Business Intelligence", desc: isPortuguese ? "CAC, LTV e taxas de conversão em tempo real" : "CAC, LTV y métricas de conversión en tiempo real", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
       ],
     },
     {
       key: "email",
-      title: "Email & Outreach",
+      title: isPortuguese ? "E-mail & Outreach" : "Email & Outreach",
       accent: "border-amber-500",
       headerColor: "text-amber-700",
       items: [
-        { id: "automatizacion", label: "Campañas & Automatización", desc: "Drip email, broadcast masivo y nurturing", icon: Radio, color: "text-amber-500 bg-amber-50" },
-        { id: "chatbot",        label: "Chatbot WhatsApp 24/7", desc: "Atención automática, sin código ni IT", icon: Bot, color: "text-green-500 bg-green-50" },
-        { id: "automatizacion", label: "Agente Outreach Automático", desc: "SDR IA que prospecta y hace seguimiento solo", icon: Zap, color: "text-orange-500 bg-orange-50" },
-        { id: "portal_cliente", label: "Portal del Cliente", desc: "Autoatención, tickets y seguimiento en línea", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
+        { id: "automatizacion", label: isPortuguese ? "Campanhas & Automação" : "Campañas & Automatización", desc: isPortuguese ? "Drip email, broadcast em massa e nutrição" : "Drip email, broadcast masivo y nurturing", icon: Radio, color: "text-amber-500 bg-amber-50" },
+        { id: "chatbot",        label: "Chatbot WhatsApp 24/7", desc: isPortuguese ? "Atendimento automático, sem código nem TI" : "Atención automática, sin código ni IT", icon: Bot, color: "text-green-500 bg-green-50" },
+        { id: "automatizacion", label: isPortuguese ? "Agente Outreach Automático" : "Agente Outreach Automático", desc: isPortuguese ? "SDR com IA que prospecta e faz follow-up sozinho" : "SDR IA que prospecta y hace seguimiento solo", icon: Zap, color: "text-orange-500 bg-orange-50" },
+        { id: "portal_cliente", label: isPortuguese ? "Portal do Cliente" : "Portal del Cliente", desc: isPortuguese ? "Autoatendimento, tickets e acompanhamento online" : "Autoatención, tickets y seguimiento en línea", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
       ],
     },
     {
       key: "ia",
-      title: "IA & Contenido",
+      title: isPortuguese ? "IA & Conteúdo" : "IA & Contenido",
       accent: "border-violet-500",
       headerColor: "text-violet-700",
       items: [
-        { id: "asistente_ia", label: "Asistente IA Gemini 2.5", desc: "Analista CMO disponible en todo momento", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
-        { id: "asistente_ia", label: "Generador de Estrategias", desc: "Planes go-to-market con IA en minutos", icon: Megaphone, color: "text-rose-500 bg-rose-50" },
-        { id: "asistente_ia", label: "AI Ad Copy Studio", desc: "Copys para LinkedIn, anuncios y email", icon: FileText, color: "text-blue-500 bg-blue-50" },
-        { id: "reportes",     label: "Suite SEO Completa", desc: "Keywords, auditoría, rank tracker y calendario", icon: TrendingUp, color: "text-emerald-500 bg-emerald-50" },
+        { id: "asistente_ia", label: "Asistente IA Gemini 2.5", desc: isPortuguese ? "Analista executivo disponível em tempo integral" : "Analista CMO disponible en todo momento", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
+        { id: "asistente_ia", label: isPortuguese ? "Gerador de Estratégias" : "Generador de Estrategias", desc: isPortuguese ? "Planos go-to-market com IA em minutos" : "Planes go-to-market con IA en minutos", icon: Megaphone, color: "text-rose-500 bg-rose-50" },
+        { id: "asistente_ia", label: "AI Ad Copy Studio", desc: isPortuguese ? "Cópias de alta conversão para LinkedIn, anúncios e e-mail" : "Copys para LinkedIn, anuncios y email", icon: FileText, color: "text-blue-500 bg-blue-50" },
+        { id: "reportes",     label: isPortuguese ? "Suíte SEO Completa" : "Suite SEO Completa", desc: isPortuguese ? "Palavras-chave, auditoria, ranking e calendário" : "Keywords, auditoría, rank tracker y calendario", icon: TrendingUp, color: "text-emerald-500 bg-emerald-50" },
       ],
     },
     {
       key: "platform",
-      title: "Plataforma & Tech",
+      title: isPortuguese ? "Plataforma & Tecnologia" : "Plataforma & Tech",
       accent: "border-slate-400",
       headerColor: "text-slate-700",
       items: [
-        { id: "integraciones", label: "60+ Integraciones", desc: "WhatsApp, ERP, APIs, webhooks y más", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
-        { id: "afip",          label: "Facturación AFIP", desc: "Facturá electrónicamente sin salir del CRM", icon: FileText, color: "text-blue-700 bg-blue-50" },
-        { id: "mercadopago",   label: "Cobros MercadoPago", desc: "Suscripciones y links de pago automáticos", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
-        { id: "desarrollo_web",label: "Desarrollo Web", desc: "Tu sitio conectado al CRM desde el día 1", icon: Code2, color: "text-slate-600 bg-slate-100" },
+        { id: "integraciones", label: isPortuguese ? "60+ Integrações" : "60+ Integraciones", desc: isPortuguese ? "WhatsApp, ERP, APIs, webhooks e mais" : "WhatsApp, ERP, APIs, webhooks y más", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
+        { id: "afip",          label: isPortuguese ? "Faturamento Eletrônico" : "Facturación AFIP", desc: isPortuguese ? "Emissão e controle fiscal integrado ao CRM" : "Facturá electrónicamente sin salir del CRM", icon: FileText, color: "text-blue-700 bg-blue-50" },
+        { id: "mercadopago",   label: isPortuguese ? "Cobranças Mercado Pago" : "Cobros MercadoPago", desc: isPortuguese ? "Assinaturas e links de pagamento automáticos" : "Suscripciones y links de pago automáticos", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
+        { id: "desarrollo_web",label: isPortuguese ? "Desenvolvimento Web" : "Desarrollo Web", desc: isPortuguese ? "Seu site conectado ao CRM desde o primeiro dia" : "Tu sitio conectado al CRM desde el día 1", icon: Code2, color: "text-slate-600 bg-slate-100" },
       ],
     },
-  ], []);
-  // Directorio de industrias — reutiliza los mismos 9 sectores con casos de
-  // éxito reales (PROJECTS) para no inventar contenido sin respaldo.
+  ], [isPortuguese]);
+
   const INDUSTRIES_ITEMS = useMemo(() => [
-    { id: "retail", label: "Comercios y Retail", icon: ShoppingCart, color: "text-orange-500 bg-orange-50" },
-    { id: "salud", label: "Salud", icon: Stethoscope, color: "text-rose-500 bg-rose-50" },
-    { id: "agroindustria", label: "Agroindustria", icon: Package, color: "text-lime-600 bg-lime-50" },
-    { id: "inmobiliaria", label: "Inmobiliaria", icon: Home, color: "text-teal-500 bg-teal-50" },
-    { id: "logística", label: "Logística y Distribución", icon: Truck, color: "text-slate-600 bg-slate-100" },
-    { id: "industrial", label: "Industrial y Manufactura", icon: Building, color: "text-amber-600 bg-amber-50" },
-    { id: "automotriz", label: "Automotriz", icon: Compass, color: "text-blue-600 bg-blue-50" },
-    { id: "medios", label: "Medios", icon: Monitor, color: "text-fuchsia-600 bg-fuchsia-50" },
-    { id: "institucional", label: "Institucional", icon: Building, color: "text-indigo-600 bg-indigo-50" },
-  ], []);
-  // Empresa = solo institucional. Casos de Éxito pasa a ser su propio ítem
-  // de primer nivel (no vive "adentro" de Empresa). Contacto y Partners
-  // viven acá y en ningún otro dropdown (antes se repetían en "Soporte").
+    { id: "retail", label: isPortuguese ? "Comércio e Varejo" : "Comercios y Retail", icon: ShoppingCart, color: "text-orange-500 bg-orange-50" },
+    { id: "salud", label: isPortuguese ? "Saúde e Clínicas" : "Salud", icon: Stethoscope, color: "text-rose-500 bg-rose-50" },
+    { id: "agroindustria", label: isPortuguese ? "Agronegócio & Agroindústria" : "Agroindustria", icon: Package, color: "text-lime-600 bg-lime-50" },
+    { id: "inmobiliaria", label: isPortuguese ? "Imobiliário & Construtoras" : "Inmobiliaria", icon: Home, color: "text-teal-500 bg-teal-50" },
+    { id: "logística", label: isPortuguese ? "Logística e Distribuição" : "Logística y Distribución", icon: Truck, color: "text-slate-600 bg-slate-100" },
+    { id: "industrial", label: isPortuguese ? "Indústria e Manufatura" : "Industrial y Manufactura", icon: Building, color: "text-amber-600 bg-amber-50" },
+    { id: "automotriz", label: isPortuguese ? "Automotivo" : "Automotriz", icon: Compass, color: "text-blue-600 bg-blue-50" },
+    { id: "medios", label: isPortuguese ? "Mídia e Comunicação" : "Medios", icon: Monitor, color: "text-fuchsia-600 bg-fuchsia-50" },
+    { id: "institucional", label: isPortuguese ? "Institucional & Governo" : "Institucional", icon: Building, color: "text-indigo-600 bg-indigo-50" },
+  ], [isPortuguese]);
+
   const EMPRESA_ITEMS = useMemo(() => [
-    { id: "nosotros", label: "Sobre Clientum", desc: "Quiénes somos y nuestra misión", icon: Building, color: "text-[#1A3461] bg-slate-100" },
-    { id: "clientes", label: "Clientes", desc: "Empresas que ya confían en Clientum", icon: Users, color: "text-teal-500 bg-teal-50" },
-    { id: "asociacion", label: "Partners", desc: "Programa de Afiliados y Partners", icon: Handshake, color: "text-violet-500 bg-violet-50" },
-    { id: "carreras", label: "Trabajá con Nosotros", desc: "Sumate al equipo de Clientum", icon: Users, color: "text-emerald-500 bg-emerald-50" },
-    { id: "contacto", label: "Contacto", desc: "Escríbenos o visita nuestras oficinas", icon: MapPin, color: "text-teal-500 bg-teal-50" },
-  ], []);
-  // Recursos = solo contenido/ayuda. Partners y Casos de Éxito se sacaron de
-  // aquí porque ya viven en Empresa / nivel superior — un solo lugar cada uno.
+    { id: "nosotros", label: isPortuguese ? "Sobre a Clientum" : "Sobre Clientum", desc: isPortuguese ? "Quem somos e nossa missão" : "Quiénes somos y nuestra misión", icon: Building, color: "text-[#1A3461] bg-slate-100" },
+    { id: "clientes", label: isPortuguese ? "Clientes" : "Clientes", desc: isPortuguese ? "Empresas que já confiam na Clientum" : "Empresas que ya confían en Clientum", icon: Users, color: "text-teal-500 bg-teal-50" },
+    { id: "asociacion", label: isPortuguese ? "Parceiros" : "Partners", desc: isPortuguese ? "Programa de Afiliados e Parcerias" : "Programa de Afiliados y Partners", icon: Handshake, color: "text-violet-500 bg-violet-50" },
+    { id: "carreras", label: isPortuguese ? "Trabalhe Conosco" : "Trabajá con Nosotros", desc: isPortuguese ? "Junte-se à equipe Clientum" : "Sumate al equipo de Clientum", icon: Users, color: "text-emerald-500 bg-emerald-50" },
+    { id: "contacto", label: isPortuguese ? "Contato" : "Contacto", desc: isPortuguese ? "Fale conosco ou visite nossas sedes" : "Escríbenos o visita nuestras oficinas", icon: MapPin, color: "text-teal-500 bg-teal-50" },
+  ], [isPortuguese]);
+
   const RECURSOS_ITEMS = useMemo(() => [
-    { id: "blog", label: "Blog", desc: "Aprende tácticas de ventas y marketing", icon: BookOpen, color: "text-rose-500 bg-rose-50" },
-    { id: "academia", label: "Academia Clientum", desc: "Cursos gratis de CRM y automatizaciones", icon: GraduationCap, color: "text-indigo-600 bg-indigo-50" },
-    { id: "ayuda", label: "Centro de Ayuda", desc: "Preguntas frecuentes y soporte técnico", icon: HelpCircle, color: "text-slate-800 bg-slate-100" },
-    { id: "documentacion", label: "Documentación API", desc: "Referencia técnica para integrar tu CRM", icon: Terminal, color: "text-slate-700 bg-slate-100" },
-    ...(authUser ? [{ id: "catalogo", label: "Catálogo de Servicios", desc: "425 servicios en 14 categorías con precios", icon: LayoutGrid, color: "text-indigo-500 bg-indigo-50" }] : []),
-  ], [authUser]);
+    { id: "blog", label: "Blog", desc: isPortuguese ? "Aprenda táticas de vendas e marketing" : "Aprende tácticas de ventas y marketing", icon: BookOpen, color: "text-rose-500 bg-rose-50" },
+    { id: "academia", label: isPortuguese ? "Academia Clientum" : "Academia Clientum", desc: isPortuguese ? "Cursos gratuitos de CRM e automações" : "Cursos gratis de CRM y automatizaciones", icon: GraduationCap, color: "text-indigo-600 bg-indigo-50" },
+    { id: "ayuda", label: isPortuguese ? "Central de Ajuda" : "Centro de Ayuda", desc: isPortuguese ? "Perguntas frequentes e suporte técnico" : "Preguntas frecuentes y soporte técnico", icon: HelpCircle, color: "text-slate-800 bg-slate-100" },
+    { id: "documentacion", label: isPortuguese ? "Documentação API" : "Documentación API", desc: isPortuguese ? "Referência técnica para integrar seu CRM" : "Referencia técnica para integrar tu CRM", icon: Terminal, color: "text-slate-700 bg-slate-100" },
+    ...(authUser ? [{ id: "catalogo", label: isPortuguese ? "Catálogo de Serviços" : "Catálogo de Servicios", desc: isPortuguese ? "425 serviços em 14 categorias com preços" : "425 servicios en 14 categorías con precios", icon: LayoutGrid, color: "text-indigo-500 bg-indigo-50" }] : []),
+  ], [authUser, isPortuguese]);
 
   const menuConfig = useMemo(() => [
-    { id: "inicio",     label: "Inicio",        type: "link"     as const },
-    { id: "soluciones", label: "Soluciones",     type: "megamenu" as const, children: SOLUTIONS_ITEMS, groups: SOLUTIONS_GROUPS },
-    { id: "industrias", label: "Industrias",     type: "link"     as const },
-    { id: "casos",      label: "Casos de Éxito", type: "link"     as const },
-    { id: "recursos",   label: "Recursos",       type: "dropdown" as const, children: RECURSOS_ITEMS },
-    { id: "planes",     label: "Precios",        type: "link"     as const },
-    { id: "empresa",    label: "Empresa",        type: "dropdown" as const, children: EMPRESA_ITEMS },
-  ], [SOLUTIONS_ITEMS, SOLUTIONS_GROUPS, RECURSOS_ITEMS, EMPRESA_ITEMS]);
+    { id: "inicio",     label: isPortuguese ? "Início" : "Inicio",        type: "link"     as const },
+    { id: "soluciones", label: isPortuguese ? "Soluções" : "Soluciones",     type: "megamenu" as const, children: SOLUTIONS_ITEMS, groups: SOLUTIONS_GROUPS },
+    { id: "industrias", label: isPortuguese ? "Indústrias" : "Industrias",     type: "link"     as const },
+    { id: "casos",      label: isPortuguese ? "Casos de Sucesso" : "Casos de Éxito", type: "link"     as const },
+    { id: "recursos",   label: isPortuguese ? "Recursos" : "Recursos",       type: "dropdown" as const, children: RECURSOS_ITEMS },
+    { id: "planes",     label: isPortuguese ? "Preços" : "Precios",        type: "link"     as const },
+    { id: "empresa",    label: isPortuguese ? "Empresa" : "Empresa",        type: "dropdown" as const, children: EMPRESA_ITEMS },
+  ], [SOLUTIONS_ITEMS, SOLUTIONS_GROUPS, RECURSOS_ITEMS, EMPRESA_ITEMS, isPortuguese]);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800 selection:bg-[#1A3461] selection:text-white relative">
@@ -1213,8 +1233,10 @@ export default function PublicWebsite({
           })}
         </nav>
  
-        {/* Right CTA — Standalone Iniciar sesión + Demo CTA + Brochure PDF */}
+        {/* Right CTA — Standalone Iniciar sesión + Demo CTA + Brochure PDF + LanguageSelector */}
         <div className="hidden lg:flex items-center gap-2">
+          <LanguageSelector variant="public" />
+
           <button
             onClick={() => setIsBrochureModalOpen(true)}
             className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 font-extrabold text-xs uppercase px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-emerald-500/30"
@@ -1342,6 +1364,11 @@ export default function PublicWebsite({
                 );
               }
             })}
+            <div className="flex items-center justify-between py-2 border-b border-slate-100">
+              <span className="text-xs font-bold text-slate-500">Idioma / Idioma:</span>
+              <LanguageSelector variant="pill" />
+            </div>
+
             <button
               onClick={() => {
                 setIsBrochureModalOpen(true);
@@ -1352,6 +1379,19 @@ export default function PublicWebsite({
               <FileText className="w-4 h-4 text-emerald-600" />
               <span>Brochure Corporativo PDF</span>
             </button>
+
+            {authUser && (
+              <button
+                onClick={() => {
+                  onBackToEditor?.();
+                  setMobileMenuOpen(false);
+                }}
+                className="mt-2 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase py-2.5 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 shadow-md shadow-emerald-900/20"
+              >
+                <span>Ir al Dashboard CRM</span>
+                <ArrowUpRight className="w-4 h-4 text-white" />
+              </button>
+            )}
 
             <div className="flex justify-center w-full mt-2">
               <AuthButton onLoginSuccess={onLoginSuccess} />
@@ -1398,30 +1438,33 @@ export default function PublicWebsite({
                     <div className="lg:col-span-7 flex flex-col items-start gap-6">
                       <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 text-[10px] font-extrabold uppercase px-4 py-1.5 rounded-full tracking-widest flex items-center gap-2 font-mono">
                         <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                        Plataforma All-in-One para PyMEs
+                        {isPortuguese ? "Plataforma All-in-One para PMEs" : "Plataforma All-in-One para PyMEs"}
                       </span>
                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tight leading-[1.05]">
                         {brochureData?.cover?.slogan ? (
                           <span>{brochureData.cover.slogan}</span>
                         ) : (
                           <>
-                            Todo lo que tu empresa<br />
-                            necesita,{" "}
+                            {isPortuguese ? "Tudo o que sua empresa" : "Todo lo que tu empresa"}<br />
+                            {isPortuguese ? "precisa, " : "necesita, "}
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400">
-                              en una sola plataforma.
+                              {isPortuguese ? "em uma única plataforma." : "en una sola plataforma."}
                             </span>
                           </>
                         )}
                       </h1>
                       <p className="text-slate-300 text-sm md:text-base max-w-xl leading-relaxed">
-                        {brochureData?.cover?.sub || "CRM, Chatbot WhatsApp con IA, E-Commerce, ERP, Business Intelligence, Marketing Digital, Ciberseguridad, Cloud, Apps Móviles y Capacitación — el ecosistema completo de Clientum para hacer crecer tu PyME."}
+                        {brochureData?.cover?.sub || (isPortuguese
+                          ? "CRM, Chatbot WhatsApp com IA, E-Commerce, ERP, Business Intelligence, Marketing Digital, Cibersegurança, Cloud e Capacitação — o ecossistema completo da Clientum para expandir sua PME."
+                          : "CRM, Chatbot WhatsApp con IA, E-Commerce, ERP, Business Intelligence, Marketing Digital, Ciberseguridad, Cloud, Apps Móviles y Capacitación — el ecosistema completo de Clientum para hacer crecer tu PyME."
+                        )}
                       </p>
                       <div className="flex flex-wrap gap-3 w-full sm:w-auto">
                         <button
                           onClick={() => setActiveTab("servicios")}
                           className={`bg-gradient-to-r ${theme.btnGradient} text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl cursor-pointer transition-all shadow-md shadow-blue-900/30 flex items-center gap-2`}
                         >
-                          Ver Servicios <ArrowRight className="w-4 h-4 text-emerald-400" />
+                          {isPortuguese ? "Ver Soluções" : "Ver Servicios"} <ArrowRight className="w-4 h-4 text-emerald-400" />
                         </button>
                         <button
                           onClick={() => setIsBrochureModalOpen(true)}
@@ -1433,11 +1476,14 @@ export default function PublicWebsite({
                           onClick={() => setActiveTab("contacto")}
                           className="bg-white/10 hover:bg-white/15 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl border border-white/15 transition-all cursor-pointer flex items-center gap-2"
                         >
-                          <Play className="w-3.5 h-3.5 text-emerald-400" /> Solicitar Demo
+                          <Play className="w-3.5 h-3.5 text-emerald-400" /> {isPortuguese ? "Agendar Demo" : "Solicitar Demo"}
                         </button>
                       </div>
                       <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
-                        {["Sin contrato mínimo", "Implementado en 5 días", "Soporte en español 24/7"].map((t) => (
+                        {(isPortuguese
+                          ? ["Sem contrato de fidelidade", "Implementação em 5 dias", "Suporte em português 24/7"]
+                          : ["Sin contrato mínimo", "Implementado en 5 días", "Soporte en español 24/7"]
+                        ).map((t) => (
                           <span key={t} className="flex items-center gap-1.5 text-slate-400 text-xs">
                             <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />{t}
                           </span>
@@ -1447,32 +1493,34 @@ export default function PublicWebsite({
 
                     <div className="lg:col-span-5 bg-slate-950/80 border border-slate-800 p-8 rounded-2xl shadow-2xl relative">
                       <div className="absolute top-0 right-0 transform translate-x-3 -translate-y-3 bg-emerald-500 text-slate-950 text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-md shadow-md font-mono">
-                        En Vivo
+                        {isPortuguese ? "Ao Vivo" : "En Vivo"}
                       </div>
                       <h3 className="font-display font-bold text-lg text-white mb-1">
-                        Solicitá un Presupuesto Gratuito
+                        {isPortuguese ? "Solicite um Orçamento Gratuito" : "Solicitá un Presupuesto Gratuito"}
                       </h3>
                       <p className="text-slate-400 text-[11px] mb-6">
-                        Cargá tus datos y el equipo de Clientum te enviará una demo adaptada a tu escala.
+                        {isPortuguese
+                          ? "Preencha seus dados e a equipe da Clientum enviará uma demo personalizada para o seu negócio."
+                          : "Cargá tus datos y el equipo de Clientum te enviará una demo adaptada a tu escala."}
                       </p>
                       <form onSubmit={handleDemoSubmit} className="flex flex-col gap-3">
                         <div>
-                          <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Tu Nombre</label>
+                          <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{isPortuguese ? "Seu Nome" : "Tu Nombre"}</label>
                           <input
                             type="text"
                             required
-                            placeholder="Ej. Martín Rodríguez"
+                            placeholder={isPortuguese ? "Ex: Lucas Silva" : "Ej. Martín Rodríguez"}
                             className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg p-2.5 text-xs focus:border-emerald-500 focus:outline-none"
                             value={demoForm.nombre}
                             onChange={(e) => setDemoForm({ ...demoForm, nombre: e.target.value })}
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Correo Electrónico</label>
+                          <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{isPortuguese ? "E-mail Corporativo" : "Correo Electrónico"}</label>
                           <input
                             type="email"
                             required
-                            placeholder="Ej. martin@empresa.com"
+                            placeholder="exemplo@empresa.com"
                             className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg p-2.5 text-xs focus:border-blue-600 focus:outline-none"
                             value={demoForm.email}
                             onChange={(e) => setDemoForm({ ...demoForm, email: e.target.value })}
@@ -1480,26 +1528,26 @@ export default function PublicWebsite({
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Empresa</label>
+                            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{isPortuguese ? "Empresa" : "Empresa"}</label>
                             <input
                               type="text"
-                              placeholder="Ej. Distribuidora Sur"
+                              placeholder={isPortuguese ? "Ex: Comercial Silva" : "Ej. Distribuidora Sur"}
                               className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg p-2.5 text-xs focus:border-blue-600 focus:outline-none"
                               value={demoForm.empresa}
                               onChange={(e) => setDemoForm({ ...demoForm, empresa: e.target.value })}
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Servicio de Interés</label>
+                            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{isPortuguese ? "Solução de Interesse" : "Servicio de Interés"}</label>
                             <select
                               className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg p-2.5 text-xs focus:border-blue-600 focus:outline-none"
                               value={demoForm.rubro}
                               onChange={(e) => setDemoForm({ ...demoForm, rubro: e.target.value })}
                             >
-                              <option value="E-Commerce">E-Commerce Web</option>
-                              <option value="ERP-CRM">ERP &amp; CRM Integrado</option>
-                              <option value="Consultoria">Consultoría General</option>
-                              <option value="Ciberseguridad">Ciberseguridad</option>
+                              <option value="E-Commerce">{isPortuguese ? "E-Commerce Web" : "E-Commerce Web"}</option>
+                              <option value="ERP-CRM">{isPortuguese ? "ERP & CRM Integrado" : "ERP & CRM Integrado"}</option>
+                              <option value="Consultoria">{isPortuguese ? "Consultoria Estratégica" : "Consultoría General"}</option>
+                              <option value="Ciberseguridad">{isPortuguese ? "Cibersegurança & Nuvem" : "Ciberseguridad"}</option>
                             </select>
                           </div>
                         </div>
@@ -1507,7 +1555,7 @@ export default function PublicWebsite({
                           type="submit"
                           className="mt-2 w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all cursor-pointer"
                         >
-                          Enviar Solicitud
+                          {isPortuguese ? "Enviar Solicitação" : "Enviar Solicitud"}
                         </button>
                       </form>
                     </div>
@@ -3858,50 +3906,94 @@ export default function PublicWebsite({
                   {/* Office locations interactive map widget */}
                   <div className="lg:col-span-5 flex flex-col gap-6">
                     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                      <h3 className="font-display font-bold text-sm text-slate-950 mb-4">Nuestras Oficinas Oficiales</h3>
-                      
-                      {/* Office badge */}
-                      <div className="flex gap-2 border-b border-slate-100 pb-3 mb-4">
-                        <span className="px-3 py-1 rounded text-[11px] font-bold bg-slate-900 text-white">
-                          Patagonia, Argentina
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-display font-bold text-sm text-slate-950">Nuestras Sedes Oficiales</h3>
+                        <span className="text-[10px] font-mono text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                          Binacional
                         </span>
+                      </div>
+                      
+                      {/* Office selector tabs */}
+                      <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl mb-4">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOffice('roca')}
+                          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            selectedOffice === 'roca'
+                              ? 'bg-white text-slate-900 shadow-xs'
+                              : 'text-slate-500 hover:text-slate-900'
+                          }`}
+                        >
+                          <span>🇦🇷</span>
+                          <span>General Roca</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOffice('brasil')}
+                          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            selectedOffice === 'brasil'
+                              ? 'bg-white text-slate-900 shadow-xs'
+                              : 'text-slate-500 hover:text-slate-900'
+                          }`}
+                        >
+                          <span>🇧🇷</span>
+                          <span>Brasil (Arraial)</span>
+                        </button>
                       </div>
 
                       {/* Display Office Card */}
                       <div className="flex flex-col gap-3">
-                        <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                          <Building className="w-3.5 h-3.5 text-blue-600" />
-                          {(OFFICES as any)[selectedOffice].name}
-                        </h4>
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                            <Building className="w-3.5 h-3.5 text-blue-600" />
+                            {(OFFICES as any)[selectedOffice]?.name || OFFICES.roca.name}
+                          </h4>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            {(OFFICES as any)[selectedOffice]?.badge || 'Sede'}
+                          </span>
+                        </div>
+
+                        {/* Leader Highlight */}
+                        <div className="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-center gap-2.5 text-xs">
+                          <Users className="w-4 h-4 text-indigo-600 shrink-0" />
+                          <div>
+                            <span className="text-[10px] font-bold text-indigo-500 uppercase block">Liderazgo & Dirección:</span>
+                            <span className="font-bold text-indigo-950">{(OFFICES as any)[selectedOffice]?.leader || 'Jonathan Ledantes'}</span>
+                          </div>
+                        </div>
+
                         <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-                          {(OFFICES as any)[selectedOffice].desc}
+                          {(OFFICES as any)[selectedOffice]?.desc}
                         </p>
-                        <div className="text-[11px] text-slate-600 flex flex-col gap-1.5 mt-2 bg-slate-50 p-3 rounded-lg border border-slate-100 font-mono">
+                        <div className="text-[11px] text-slate-600 flex flex-col gap-1.5 mt-1 bg-slate-50 p-3 rounded-lg border border-slate-100 font-mono">
                           <span className="flex items-center gap-2">
                             <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            {(OFFICES as any)[selectedOffice].address}
+                            {(OFFICES as any)[selectedOffice]?.address}
                           </span>
                           <span className="flex items-center gap-2">
                             <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            {(OFFICES as any)[selectedOffice].phone}
+                            {(OFFICES as any)[selectedOffice]?.phone}
                           </span>
                           <span className="flex items-center gap-2">
                             <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            {(OFFICES as any)[selectedOffice].email}
+                            {(OFFICES as any)[selectedOffice]?.email}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 text-xs">
-                      <h4 className="font-bold mb-2">Clientum S.R.L.</h4>
-                      <p className="text-slate-400 leading-relaxed text-[11px]">
-                        Empresa con base en General Roca, Río Negro, Argentina. Antes Viaweb (2016–2026). Atendemos clientes en todo el país en modalidad 100% remota.
+                    <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 text-xs space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-emerald-400">Clientum B2B Intelligence</h4>
+                        <span className="text-[10px] text-slate-400 font-mono">2016 – 2026</span>
+                      </div>
+                      <p className="text-slate-300 leading-relaxed text-[11px]">
+                        Nacidos en General Roca, Río Negro (Patagonia Argentina, antes Viaweb) y con sede de expansión en Arraial do Cabo (Brasil). Liderados por <strong>Jonathan Ledantes</strong> y <strong>Matias Rotili</strong>.
                       </p>
-                      <div className="mt-4 flex gap-3 text-slate-300 font-bold uppercase tracking-wider text-[9px]">
-                        <span>General Roca, Río Negro</span>
+                      <div className="pt-2 border-t border-slate-800 flex flex-wrap gap-2 text-[10px] font-mono text-slate-400">
+                        <span className="flex items-center gap-1">🇦🇷 Sede Roca (Jonathan Ledantes)</span>
                         <span>•</span>
-                        <span>Argentina</span>
+                        <span className="flex items-center gap-1">🇧🇷 Sede Brasil (Matias Rotili)</span>
                       </div>
                     </div>
                   </div>
@@ -5355,31 +5447,31 @@ export default function PublicWebsite({
             {[
               {
                 // Mismos 9 sectores que la página "Industrias" y "Casos de Éxito" — casos reales, no inventados.
-                title: "Industrias",
+                title: isPortuguese ? "Indústrias" : "Industrias",
                 items: [
                   ...INDUSTRIES_ITEMS.map((i) => ({ label: i.label, industry: i.id })),
-                  { label: "Ver todas", industry: "todos" },
+                  { label: isPortuguese ? "Ver todas" : "Ver todas", industry: "todos" },
                 ],
               },
               {
                 // Misma taxonomía que el dropdown "Soluciones" del menú — una sola fuente de verdad.
-                title: "Soluciones",
+                title: isPortuguese ? "Soluções" : "Soluciones",
                 items: SOLUTIONS_ITEMS.map((s) => ({ label: s.label, tab: s.query ? undefined : s.id, query: s.query })),
               },
               {
                 // Misma taxonomía que el dropdown "Recursos" del menú.
-                title: "Recursos",
+                title: isPortuguese ? "Recursos" : "Recursos",
                 items: [
                   ...RECURSOS_ITEMS.filter((r) => r.id !== "catalogo").map((r) => ({ label: r.label, tab: r.id })),
-                  { label: "Casos de Éxito", tab: "casos" },
+                  { label: isPortuguese ? "Casos de Sucesso" : "Casos de Éxito", tab: "casos" },
                 ],
               },
               {
                 // Misma taxonomía que el dropdown "Empresa" del menú.
-                title: "Empresa",
+                title: isPortuguese ? "Empresa" : "Empresa",
                 items: [
                   ...EMPRESA_ITEMS.filter((e) => e.id !== "carreras").map((e) => ({ label: e.label, tab: e.id })),
-                  { label: "Planes & Precios", tab: "planes" },
+                  { label: isPortuguese ? "Planos & Preços" : "Planes & Precios", tab: "planes" },
                 ],
               },
             ].map((col) => (
@@ -5419,14 +5511,28 @@ export default function PublicWebsite({
         <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-12 gap-10">
 
           {/* Brand col — 3 cols */}
-          <div className="md:col-span-3 flex flex-col gap-4">
+          <div className="md:col-span-3 flex flex-col gap-3">
             <span className="font-display font-black text-white text-lg tracking-tight">CLIENTUM</span>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Consultoría integrada de marketing digital e ingeniería de software omnicanal para PyMEs.
+              {isPortuguese
+                ? "Ecossistema comercial e engenharia de software para PMEs e empresas em expansão na Argentina e no Brasil."
+                : "Ecosistema comercial e ingeniería de software para PyMEs y empresas en expansión en Argentina y Brasil."}
             </p>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-              <MapPin className="w-3.5 h-3.5 shrink-0" />
-              <span>General Roca, Río Negro, Argentina</span>
+            <div className="space-y-1.5 text-xs text-slate-400 pt-1">
+              <div className="flex items-start gap-1.5">
+                <span className="text-sm shrink-0">🇦🇷</span>
+                <div>
+                  <strong className="text-slate-200 block text-[11px]">{isPortuguese ? "Sede Principal (Patagônia):" : "Sede Principal (Patagonia):"}</strong>
+                  <span className="text-[10px] text-slate-400">General Roca, Río Negro · Jonathan Ledantes</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-1.5 pt-1">
+                <span className="text-sm shrink-0">🇧🇷</span>
+                <div>
+                  <strong className="text-slate-200 block text-[11px]">{isPortuguese ? "Sede Brasil (Internacional):" : "Sede Brasil (Internacional):"}</strong>
+                  <span className="text-[10px] text-slate-400">Arraial do Cabo, RJ · Matias Rotili</span>
+                </div>
+              </div>
             </div>
             {/* Social links */}
             <div className="flex gap-3 mt-1">
@@ -5451,11 +5557,11 @@ export default function PublicWebsite({
 
           {/* Soluciones — 2 cols — misma taxonomía que el menú (SOLUTIONS_ITEMS) */}
           <div className="md:col-span-2">
-            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">Soluciones</h4>
+            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">{isPortuguese ? "Soluções" : "Soluciones"}</h4>
             <ul className="flex flex-col gap-2.5">
               {[
                 ...SOLUTIONS_ITEMS.map((s) => ({ id: s.id, label: s.label, query: s.query })),
-                { id: "planes", label: "Planes & Precios" },
+                { id: "planes", label: isPortuguese ? "Planos & Preços" : "Planes & Precios" },
               ].map((item) => (
                 <li key={item.id}>
                   <button
@@ -5481,11 +5587,11 @@ export default function PublicWebsite({
 
           {/* Empresa — 2 cols — misma taxonomía que el menú (EMPRESA_ITEMS) */}
           <div className="md:col-span-2">
-            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">Empresa</h4>
+            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">{isPortuguese ? "Empresa" : "Empresa"}</h4>
             <ul className="flex flex-col gap-2.5">
               {[
                 ...EMPRESA_ITEMS.map((e) => ({ id: e.id, label: e.label })),
-                { id: "privacidad", label: "Política de Privacidad" },
+                { id: "privacidad", label: isPortuguese ? "Política de Privacidade" : "Política de Privacidad" },
               ].map((item) => (
                 <li key={item.id}>
                   <button
@@ -5501,13 +5607,13 @@ export default function PublicWebsite({
 
           {/* Soporte — 2 cols */}
           <div className="md:col-span-2">
-            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">Soporte</h4>
+            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">{isPortuguese ? "Suporte" : "Soporte"}</h4>
             <ul className="flex flex-col gap-2.5">
               {[
-                { id: "ayuda", label: "Centro de Ayuda" },
-                { id: "academia", label: "Academia" },
-                { id: "asociacion", label: "Partners & Afiliados" },
-                { id: "contacto", label: "Contacto" },
+                { id: "ayuda", label: isPortuguese ? "Central de Ajuda" : "Centro de Ayuda" },
+                { id: "academia", label: isPortuguese ? "Academia" : "Academia" },
+                { id: "asociacion", label: isPortuguese ? "Parceiros & Afiliados" : "Partners & Afiliados" },
+                { id: "contacto", label: isPortuguese ? "Contato" : "Contacto" },
               ].map((item) => (
                 <li key={item.id}>
                   <button
@@ -5527,7 +5633,7 @@ export default function PublicWebsite({
                   className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors text-xs cursor-pointer flex items-center gap-1 mt-1"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>Brochure PDF (8 Págs)</span>
+                  <span>{isPortuguese ? "Brochure PDF (8 Págs)" : "Brochure PDF (8 Págs)"}</span>
                 </button>
               </li>
             </ul>
@@ -5536,12 +5642,16 @@ export default function PublicWebsite({
           {/* Newsletter — 3 cols */}
           <div className="md:col-span-3 flex flex-col gap-3">
             <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-1">Newsletter</h4>
-            <p className="text-slate-400 text-xs leading-relaxed">Novedades, lanzamientos y recursos para hacer crecer tu empresa.</p>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              {isPortuguese
+                ? "Novidades, lançamentos e recursos para fazer sua empresa crescer."
+                : "Novedades, lanzamientos y recursos para hacer crecer tu empresa."}
+            </p>
             <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-2 mt-1">
               <input
                 type="email"
                 required
-                placeholder="tu@empresa.com"
+                placeholder="seu@email.com"
                 className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 w-full placeholder:text-slate-600 transition-all"
                 value={newsletterEmail}
                 onChange={(e) => setNewsletterEmail(e.target.value)}
@@ -5550,11 +5660,13 @@ export default function PublicWebsite({
                 type="submit"
                 className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs cursor-pointer transition-colors"
               >
-                Suscribirme →
+                {isPortuguese ? "Inscrever-se →" : "Suscribirme →"}
               </button>
             </form>
             {newsletterSubscribed && (
-              <span className="text-emerald-400 text-xs flex items-center gap-1.5">✓ ¡Suscripción registrada!</span>
+              <span className="text-emerald-400 text-xs flex items-center gap-1.5">
+                {isPortuguese ? "✓ Inscrição confirmada!" : "✓ ¡Suscripción registrada!"}
+              </span>
             )}
           </div>
         </div>
@@ -5562,9 +5674,15 @@ export default function PublicWebsite({
         {/* ── BOTTOM BAR ── */}
         <div className="border-t border-slate-800/60">
           <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-            <span>© {new Date().getFullYear()} Clientum S.R.L. — Todos los derechos reservados.</span>
+            <span>
+              © {new Date().getFullYear()} Clientum S.R.L. — {isPortuguese ? "Todos os direitos reservados." : "Todos los derechos reservados."}
+            </span>
             <div className="flex items-center gap-5 flex-wrap justify-center sm:justify-end">
-              <span>Antes: Viaweb (2016–2026) · General Roca, Río Negro</span>
+              <span>
+                {isPortuguese
+                  ? "Sede Principal: General Roca, Río Negro 🇦🇷 · Sede Brasil: Arraial do Cabo 🇧🇷"
+                  : "Sede Central: General Roca, Río Negro 🇦🇷 · Sede Brasil: Arraial do Cabo 🇧🇷"}
+              </span>
               <a
                 href="https://github.com/clientumlatam/clientum"
                 target="_blank"
@@ -5577,13 +5695,13 @@ export default function PublicWebsite({
                 onClick={() => { setActiveTab("privacidad"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 className="hover:text-slate-300 transition-colors"
               >
-                Privacidad
+                {isPortuguese ? "Privacidade" : "Privacidad"}
               </button>
               <button
                 onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 className="hover:text-slate-300 transition-colors"
               >
-                Contacto
+                {isPortuguese ? "Contato" : "Contacto"}
               </button>
             </div>
           </div>

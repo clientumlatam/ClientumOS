@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Globe,
@@ -34,6 +35,8 @@ import { PrintReportButton } from './PrintReportButton';
 import { DASHBOARD_CATEGORIES, HubNavCategory } from './navigationData';
 import { PublicFeatureModal } from './PublicFeatureModal';
 import { SyncStatus } from './SyncStatus';
+import { LanguageSelector } from './LanguageSelector';
+import { useLanguage } from '../lib/i18n';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -54,6 +57,7 @@ export function Header({
   setRegion,
   onOpenCommandPalette,
 }: HeaderProps) {
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isPublicModalOpen, setIsPublicModalOpen] = useState(false);
@@ -243,9 +247,9 @@ export function Header({
           {/* Public Website Gateway Button with Modal Trigger */}
           <div className="flex items-center gap-1 bg-indigo-50 border border-indigo-200 rounded-lg p-0.5">
             <button
-              onClick={() => setActiveTab('public_website')}
+              onClick={() => navigate('/')}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 text-indigo-700 hover:text-indigo-900 rounded-md text-xs font-bold transition-colors cursor-pointer hover:bg-indigo-100/60"
-              title="Abrir Sitio Web Corporativo Completo"
+              title="Ir al Sitio Web Corporativo Público"
             >
               <Globe className="w-3.5 h-3.5 text-indigo-600" />
               <span className="hidden sm:inline">Sitio Público</span>
@@ -258,6 +262,9 @@ export function Header({
               <Sparkles className="w-3.5 h-3.5" />
             </button>
           </div>
+
+          {/* Language Selector (ES-AR / PT-BR) */}
+          <LanguageSelector variant="header" />
 
           <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700">
             <Coins className="w-3.5 h-3.5 text-slate-400" />

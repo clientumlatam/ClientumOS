@@ -1,11 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { Card } from '../../packages/ui/src/components/card';
-import { DashboardGrid } from '../../packages/ui/src/components/dashboard';
-import { StatCard } from '../../packages/ui/src/components/stat-card';
-import { SimpleTable, SimpleTableRow } from '../../packages/ui/src/components/simple-table';
-import { TableCell } from '../../packages/ui/src/components/table';
-import { Spinner } from '../../packages/ui/src/components/spinner';
 import { AdminStatsDashboard } from './AdminStatsDashboard';
+
+// Inline UI components replacing the deleted packages
+const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>{children}</div>
+);
+
+const DashboardGrid: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">{children}</div>
+);
+
+const StatCard: React.FC<{ label: string; value: string | number }> = ({ label, value }) => (
+  <Card className="flex flex-col">
+    <span className="text-sm font-medium text-gray-500">{label}</span>
+    <span className="text-2xl font-bold mt-2">{value}</span>
+  </Card>
+);
+
+const SimpleTable: React.FC<{ columns: { header: React.ReactNode; width?: string }[]; children: React.ReactNode }> = ({ columns, children }) => (
+  <div className="overflow-x-auto">
+    <table className="w-full text-sm text-left">
+      <thead className="bg-gray-50 text-gray-700">
+        <tr>
+          {columns.map((col, i) => (
+            <th key={i} className={`px-4 py-3 font-medium ${col.width || ''}`}>{col.header}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-200">{children}</tbody>
+    </table>
+  </div>
+);
+
+const SimpleTableRow: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <tr className="hover:bg-gray-50">{children}</tr>
+);
+
+const TableCell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <td className="px-4 py-3">{children}</td>
+);
+
+const Spinner: React.FC = () => (
+  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+);
 
 export const AdminConsole: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);

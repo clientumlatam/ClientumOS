@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { LogIn, LogOut, Shield, X, Loader2, KeyRound, Mail, UserPlus, CheckCircle2, Sparkles, User } from 'lucide-react';
 import { signInWithGoogle } from '../lib/firebase';
+import { useLanguage } from '../lib/i18n';
 
 interface SessionUser {
   id: number;
@@ -15,6 +16,7 @@ interface AuthButtonProps {
 }
 
 export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps) {
+  const { isPortuguese, t } = useLanguage();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -577,7 +579,7 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer border-0"
         >
           <LogIn className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Iniciar sesión</span>
+          <span>{isPortuguese ? 'Entrar' : 'Iniciar sesión'}</span>
         </button>
         {showModal && renderModal()}
       </div>
@@ -589,7 +591,7 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
     return (
       <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs text-slate-400">
         <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
-        <span>Verificando...</span>
+        <span>{isPortuguese ? 'Verificando...' : 'Verificando...'}</span>
       </div>
     );
   }
@@ -610,13 +612,13 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
             )}
           </div>
           <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-            <Shield className="w-3 h-3 text-emerald-500" /> Sesión Activa
+            <Shield className="w-3 h-3 text-emerald-500" /> {isPortuguese ? 'Sessão Ativa' : 'Sesión Activa'}
           </div>
         </div>
         <button
           onClick={handleSignOut}
           disabled={loading}
-          title="Cerrar sesión"
+          title={isPortuguese ? 'Sair da conta' : 'Cerrar sesión'}
           className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
         >
           <LogOut className="w-4 h-4" />
@@ -646,7 +648,7 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
         className="inline-flex items-center space-x-2 bg-[#1A3461] hover:bg-[#0A2558] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer border-0"
       >
         <LogIn className="w-3.5 h-3.5 text-emerald-400" />
-        <span>Iniciar sesión</span>
+        <span>{isPortuguese ? 'Entrar' : 'Iniciar sesión'}</span>
       </button>
       {showModal && createPortal(renderModal(), document.body)}
     </div>

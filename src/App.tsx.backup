@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { ActiveTab } from './types';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -59,28 +58,119 @@ import PublicWebsite from './components/PublicWebsite';
 import { AuthButton } from './components/AuthButton';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LanguageProvider } from './lib/i18n';
 
-function DashboardApp({ currentUser, handleLogout, resetModalElement }: { currentUser: string | null, handleLogout: () => void, resetModalElement: React.ReactNode }) {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
+export default function App() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('public_website');
   const [currency, setCurrency] = useState('USD');
   const [region, setRegion] = useState('LATAM (All)');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [resetToken, setResetToken] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('reset_token');
+  });
+
+  const fetchSession = async (autoRedirect = false) => {
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.user) {
+          setCurrentUser(data.user.username);
+          if (autoRedirect || window.location.search.includes('login=success')) {
+            setActiveTab('overview');
+            if (window.location.search.includes('login=success')) {
+              window.history.replaceState({}, '', '/');
+            }
+          }
+          return;
+        }
+      }
+      setCurrentUser(null);
+    } catch (err) {
+      console.warn('[App] Session check failed:', err);
+      setCurrentUser(null);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setCurrentUser(null);
+      window.dispatchEvent(new Event('auth-changed'));
+      setActiveTab('public_website');
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
+    fetchSession(window.location.search.includes('login=success'));
+    const handleAuthChange = (e?: Event) => {
+      const customDetail = (e as CustomEvent)?.detail;
+      if (customDetail?.user) {
+        setCurrentUser(customDetail.user.username);
+        setActiveTab('overview');
+      } else {
+        fetchSession(true);
+      }
+    };
+    window.addEventListener('auth-changed', handleAuthChange as EventListener);
     const handleNavigateTab = (e: Event) => {
       const target = (e as CustomEvent)?.detail?.tab;
-      if (target === 'public_website') {
-        navigate('/');
-      } else if (target) {
+      if (target) {
         setActiveTab(target);
       }
     };
     window.addEventListener('navigate-tab', handleNavigateTab as EventListener);
     return () => {
+      window.removeEventListener('auth-changed', handleAuthChange as EventListener);
       window.removeEventListener('navigate-tab', handleNavigateTab as EventListener);
     };
-  }, [navigate]);
+  }, []);
+
+  const resetModalElement = (
+    <ResetPasswordModal
+      isOpen={Boolean(resetToken)}
+      token={resetToken || ''}
+      onClose={() => {
+        setResetToken(null);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('reset_token');
+        window.history.replaceState({}, '', url.toString());
+      }}
+      onSuccess={() => {
+        setResetToken(null);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('reset_token');
+        window.history.replaceState({}, '', url.toString());
+        window.dispatchEvent(new CustomEvent('open-login-modal'));
+      }}
+    />
+  );
+
+  if (activeTab === 'public_website') {
+    return (
+      <div className="w-screen min-h-screen bg-slate-900 overflow-y-auto">
+        <PublicWebsite 
+          onBackToEditor={() => setActiveTab('overview')}
+          authUser={currentUser}
+          onOpenLogin={() => {
+            window.dispatchEvent(new CustomEvent('open-login-modal'));
+          }}
+          onLogout={handleLogout}
+          onLoginSuccess={() => setActiveTab('overview')}
+        />
+        <div className="hidden">
+          <AuthButton onLoginSuccess={() => setActiveTab('overview')} />
+        </div>
+        {resetModalElement}
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-slate-100 font-sans overflow-hidden">
@@ -158,7 +248,11 @@ function DashboardApp({ currentUser, handleLogout, resetModalElement }: { curren
                 <AccountView
                   username={currentUser || 'admin'}
                   role="admin"
-                  onLogout={handleLogout}
+                  onLogout={async () => {
+                    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+                    window.dispatchEvent(new Event('auth-changed'));
+                    setActiveTab('overview');
+                  }}
                   onBack={() => setActiveTab('overview')}
                 />
               )}
@@ -177,122 +271,3 @@ function DashboardApp({ currentUser, handleLogout, resetModalElement }: { curren
   );
 }
 
-export default function App() {
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
-  const [resetToken, setResetToken] = useState<string | null>(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('reset_token');
-  });
-  
-  const navigate = useNavigate();
-
-  const fetchSession = async (autoRedirect = false) => {
-    try {
-      const res = await fetch('/api/auth/me', {
-        headers: { 'Cache-Control': 'no-cache' }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.user) {
-          setCurrentUser(data.user.username);
-          if (autoRedirect || window.location.search.includes('login=success')) {
-            navigate('/app');
-            if (window.location.search.includes('login=success')) {
-              window.history.replaceState({}, '', window.location.pathname);
-            }
-          }
-          return;
-        }
-      }
-      setCurrentUser(null);
-    } catch (err) {
-      console.warn('[App] Session check failed:', err);
-      setCurrentUser(null);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setCurrentUser(null);
-      window.dispatchEvent(new Event('auth-changed'));
-      navigate('/');
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchSession(window.location.search.includes('login=success'));
-    const handleAuthChange = (e?: Event) => {
-      const customDetail = (e as CustomEvent)?.detail;
-      if (customDetail?.user) {
-        setCurrentUser(customDetail.user.username);
-        navigate('/app');
-      } else {
-        fetchSession(true);
-      }
-    };
-    window.addEventListener('auth-changed', handleAuthChange as EventListener);
-    return () => {
-      window.removeEventListener('auth-changed', handleAuthChange as EventListener);
-    };
-  }, [navigate]);
-
-  const resetModalElement = (
-    <ResetPasswordModal
-      isOpen={Boolean(resetToken)}
-      token={resetToken || ''}
-      onClose={() => {
-        setResetToken(null);
-        const url = new URL(window.location.href);
-        url.searchParams.delete('reset_token');
-        window.history.replaceState({}, '', url.toString());
-      }}
-      onSuccess={() => {
-        setResetToken(null);
-        const url = new URL(window.location.href);
-        url.searchParams.delete('reset_token');
-        window.history.replaceState({}, '', url.toString());
-        window.dispatchEvent(new CustomEvent('open-login-modal'));
-      }}
-    />
-  );
-
-  return (
-    <Routes>
-      <Route path="/" element={
-        <div className="w-screen min-h-screen bg-slate-900 overflow-y-auto">
-          <PublicWebsite 
-            onBackToEditor={() => navigate('/app')}
-            authUser={currentUser}
-            onOpenLogin={() => {
-              window.dispatchEvent(new CustomEvent('open-login-modal'));
-            }}
-            onLogout={handleLogout}
-            onLoginSuccess={() => navigate('/app')}
-          />
-          <div className="hidden">
-            <AuthButton onLoginSuccess={() => navigate('/app')} />
-          </div>
-          {resetModalElement}
-        </div>
-      } />
-      <Route path="/sitio/*" element={<Navigate to="/" replace />} />
-      <Route path="/web/*" element={<Navigate to="/" replace />} />
-      <Route path="/portal/*" element={<Navigate to="/" replace />} />
-      <Route path="/lms/*" element={<Navigate to="/" replace />} />
-      <Route path="/dashboard/*" element={<Navigate to="/app" replace />} />
-      <Route path="/crm/*" element={<Navigate to="/app" replace />} />
-      <Route path="/erp/*" element={<Navigate to="/app" replace />} />
-      <Route path="/app/*" element={
-        <DashboardApp 
-          currentUser={currentUser} 
-          handleLogout={handleLogout} 
-          resetModalElement={resetModalElement} 
-        />
-      } />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
-  );
-}

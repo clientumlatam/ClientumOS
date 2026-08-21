@@ -696,32 +696,32 @@ export function GeolocatedProspectingTab() {
       }
 
       if (discoveredResults.length > 0) {
-        const newProspects: GeolocatedProspect[] = discoveredResults.slice(0, 4).map((p, idx) => ({
-          id: `geo-${Date.now()}-${idx}`,
+        const newProspects: GeolocatedProspect[] = discoveredResults.slice(0, 10).map((p, idx) => ({
+          id: p.id || `geo-${Date.now()}-${idx}`,
           name: p.name,
-          category: scanSector,
-          city: scanZone,
-          country: scanCountry,
+          category: p.category || scanSector,
+          city: p.city || scanZone,
+          country: p.country || scanCountry,
           address: p.address || `${scanZone}, Sector Industrial`,
-          lat: -34.4500 + idx * 0.015,
-          lng: -58.9100 + idx * 0.015,
+          lat: p.lat || -34.4500 + idx * 0.015,
+          lng: p.lng || -58.9100 + idx * 0.015,
           rating: p.rating || 4.7,
           reviewsCount: p.review_count || 18 + idx * 5,
-          phone: p.phone || `+54 11 ${4800 + idx * 100}-9900`,
-          website: p.website || `https://${p.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
-          estimatedEmployees: `${30 + idx * 25}-${100 + idx * 50} empleados`,
-          estimatedRevenueUsd: 1800000 + idx * 950000,
+          phone: p.phone || "",
+          website: p.website || "",
+          estimatedEmployees: p.estimatedEmployees || `${30 + idx * 25}-${100 + idx * 50} empleados`,
+          estimatedRevenueUsd: p.estimatedRevenueUsd || 1800000 + idx * 950000,
           crmStatus: 'No Contactado',
           geminiAnalysis: {
-            summary: `Empresa industrial detectada en ${scanZone} con alta demanda de automatización de ventas B2B.`,
-            painPoint: `Optimización de respuesta comercial y control de ventas mayoristas en ${scanZone}.`,
-            suggestedDecisionMaker: `Lic. Coordinador de Operaciones (${scanZone})`,
-            openingPitch: `Hola, detectamos alta demanda en ${scanZone}. Integramos el CRM y bot de WhatsApp de Clientum para agilizar cotizaciones B2B.`,
+            summary: `Empresa de ${p.category || scanSector} detectada en ${p.city || scanZone} con alta demanda de automatización de ventas B2B.`,
+            painPoint: `Optimización de respuesta comercial y control de ventas mayoristas en ${p.city || scanZone}.`,
+            suggestedDecisionMaker: `Coordinador de Operaciones`,
+            openingPitch: `Hola, detectamos alta demanda en su sector. Integramos el CRM y bot de WhatsApp de Clientum para agilizar cotizaciones B2B.`,
             recommendedProduct: 'Clientum CRM Suite + WhatsApp IA',
-            fitScore: 88 + (idx % 8),
+            fitScore: 85 + (idx % 12),
             urgency: 'Alta',
             swot: {
-              strengths: [`Ubicación estratégica en ${scanZone}`],
+              strengths: [`Ubicación estratégica`],
               weaknesses: ['Falta de pipeline digital unificado'],
               opportunities: ['Captura de clientes con agentes IA 24/7'],
               threats: ['Competencia regional en crecimiento']
@@ -731,7 +731,7 @@ export function GeolocatedProspectingTab() {
               openingPitch: `Hola, detectamos oportunidad para acelerar presupuestos en ${p.name}.`,
               emailSubject: `Solución B2B para ${p.name}`,
               emailBody: `Estimado equipo directivo de ${p.name},\n\nNos comunicamos para presentarles nuestra plataforma de cotizaciones automáticas.\n\nSaludos.`,
-              whatsappMessage: `Hola! Desde Clientum queremos compartirles una demo para automatizar cotizaciones en ${scanZone}.`,
+              whatsappMessage: `Hola! Desde Clientum queremos compartirles una demo para automatizar cotizaciones en su sucursal de ${p.city || scanZone}.`,
               keyTalkingPoints: ['Atención 24/7', 'Facturación AFIP integrada']
             }
           }
@@ -740,49 +740,7 @@ export function GeolocatedProspectingTab() {
         updateAndSaveProspects((prev) => [...newProspects, ...prev]);
         setSelectedProspect(newProspects[0]);
       } else {
-        const generated: GeolocatedProspect = {
-          id: `geo-${Date.now()}`,
-          name: `Corporación Industrial ${scanZone.split(' ')[0]} ${scanCountry}`,
-          category: scanSector,
-          city: scanZone,
-          country: scanCountry,
-          address: `${scanZone}, Parque Industrial Lote ${Math.floor(Math.random() * 80) + 1}`,
-          lat: -34.4500,
-          lng: -58.9100,
-          rating: 4.8,
-          reviewsCount: 32,
-          phone: '+54 11 4780-9900',
-          website: 'https://grupoindustrial-latam.com',
-          estimatedEmployees: '80-250 empleados',
-          estimatedRevenueUsd: 4200000,
-          crmStatus: 'No Contactado',
-          geminiAnalysis: {
-            summary: `Fabricante y proveedor de servicios industriales en el polo de ${scanZone}.`,
-            painPoint: 'Cuello de botella en la respuesta de presupuestos técnicos a distribuidores de la región.',
-            suggestedDecisionMaker: 'Lic. Fernando Gómez (Gerente de Nuevos Negocios)',
-            openingPitch: `Hola Fernando, sincronizamos tus listas de precios con cotizadores IA en WhatsApp para cerrar deals en minutos.`,
-            recommendedProduct: 'Clientum CRM Suite + IA WhatsApp',
-            fitScore: 93,
-            urgency: 'Alta',
-            swot: {
-              strengths: ['Ubicación en polo industrial neurálgico', 'Capacidad técnica comprobada'],
-              weaknesses: ['Respuestas comerciales lentas fuera de horario'],
-              opportunities: ['Implementación de bot WhatsApp cotizador 24/7'],
-              threats: ['Mayor competencia en licitaciones privadas']
-            },
-            outreachStrategy: {
-              recommendedChannel: 'WhatsApp Directo + Email',
-              openingPitch: 'Fernando, aceleramos la entrega de presupuestos industriales con agentes IA en WhatsApp.',
-              emailSubject: `Cotizador automático para ${scanZone}`,
-              emailBody: `Estimado Fernando,\n\nCon Clientum las industrias de ${scanZone} automatizan cotizaciones en minutos.\n\n¿Coordinamos una llamada?\n\nSaludos.`,
-              whatsappMessage: `Hola Fernando! Te comparto cómo automatizamos cotizaciones en industrias de ${scanZone} con IA. ¿Tenés 5 min?`,
-              keyTalkingPoints: ['Respuesta en &lt;10 seg', 'Integración CRM & AFIP']
-            }
-          }
-        };
-
-        updateAndSaveProspects((prev) => [generated, ...prev]);
-        setSelectedProspect(generated);
+        alert("No se obtuvieron resultados en esa zona (ni en Google Maps ni en OpenStreetMap). Intenta con una zona más grande o verifica que tu API Key de Google Maps (GOOGLE_MAPS_API_KEY) esté configurada para resultados más precisos.");
       }
 
       setExportSuccessMsg(`¡Se han descubierto nuevas empresas en "${scanZone}" con análisis de Gemini IA!`);

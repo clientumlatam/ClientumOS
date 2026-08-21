@@ -189,19 +189,17 @@ export default function CrmFullConfig() {
           Servicios y Claves Integradas Servidor Clientum
         </h2>
         <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-          Todas las claves de API (Google Gemini Free, Google Maps, Neon DB, Santi SDR, Hunter, SMTP) están precargadas y gestionadas a nivel de servidor. Los usuarios operan 100% libre de configuraciones manuales de API.
+          Todas las integraciones (Google Gemini Free, OpenStreetMap Overpass/Nominatim, Neon DB, Santi SDR, SMTP) están precargadas y gestionadas de forma 100% gratuita.
         </p>
         <div className="grid md:grid-cols-3 gap-2 text-xs">
           {[
-            { key: 'NEON_DATABASE_URL', label: 'PostgreSQL (Neon)', required: true },
+            { key: 'DATABASE_URL', label: 'PostgreSQL (Neon)', required: true },
             { key: 'GEMINI_API_KEY', label: 'Google Gemini (Nativo & Free)', required: true },
             { key: 'SESSION_SECRET', label: 'Auth sessions', required: true },
-            { key: 'APIFY_API_TOKEN', label: 'Apify Scraping', required: false },
-            { key: 'GOOGLE_MAPS_PLATFORM_KEY', label: 'Google Maps', required: false },
-            { key: 'HUNTER_API_KEY', label: 'Hunter.io Enrichment', required: false },
+            { key: 'OSM_NOMINATIM_OVERPASS', label: 'OpenStreetMap (Gratis - Sin Key)', required: false },
             { key: 'SMTP_USER / SMTP_PASS', label: 'Email SMTP', required: false },
             { key: 'SANTI_API_KEY', label: 'Hermes Agent auth', required: false },
-            { key: 'VERCEL_TOKEN', label: 'Deploy Vercel', required: false },
+            { key: 'APP_URL', label: 'URL del CRM', required: false },
             { key: 'CRM_INTERNAL_TOKEN', label: 'Token interno CRM', required: false },
           ].map(v => (
             <div key={v.key} className="flex items-center gap-2 p-2 bg-[#0A101F]/80 rounded-lg border border-[#1E293B]">
