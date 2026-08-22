@@ -36,6 +36,29 @@ export default defineConfig(() => {
                 return 'vendor-ai';
               }
             }
+            if (id.includes('src/components/')) {
+              if (id.includes('/crm-full/')) {
+                return 'components-crm-full';
+              }
+              if (id.includes('/vscrm/')) {
+                return 'components-vscrm';
+              }
+              if (id.includes('PublicWebsite') || id.includes('PublicFeatureModal') || id.includes('PublicLeadFormModal')) {
+                return 'components-public';
+              }
+              if (id.includes('Seo') || id.includes('Keyword') || id.includes('Topic') || id.includes('OnPage') || id.includes('LinkBuilding') || id.includes('RankTracker')) {
+                return 'components-seo';
+              }
+              if (id.includes('Email') || id.includes('TemplatesTab') || id.includes('Smtp')) {
+                return 'components-email';
+              }
+              if (id.includes('Brochure') || id.includes('IcpBuilder') || id.includes('Meddic') || id.includes('Workflow')) {
+                return 'components-marketing-sales';
+              }
+              if (id.includes('Sidebar') || id.includes('Header') || id.includes('NavigationRail') || id.includes('CommandPalette')) {
+                return 'components-navigation';
+              }
+            }
           },
         },
       },

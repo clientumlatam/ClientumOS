@@ -4958,19 +4958,53 @@ app.post("/api/webhooks/chatbot-lead", requireCrmToken, async (req, res) => {
 });
 
 // PATCH /api/chatbot-leads/:id
-// Body: { status: "nuevo"|"contactado"|"calificado"|"descartado" }
+// Body: { status, name, email, phone, company, notes }
 app.patch("/api/chatbot-leads/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body ?? {};
-    const VALID = ["nuevo", "contactado", "calificado", "descartado"];
-    if (!VALID.includes(status)) return res.status(400).json({ error: "status inválido" });
-    const result = await pgPool.query(
-      `UPDATE chatbot_leads SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
-      [status, id],
-    );
+    const { status, name, email, phone, company, notes } = req.body ?? {};
+    
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramCounter = 1;
+
+    if (status !== undefined) {
+      const VALID = ["nuevo", "contactado", "calificado", "descartado"];
+      if (!VALID.includes(status)) return res.status(400).json({ error: "status inválido" });
+      fields.push(`status = $${paramCounter++}`);
+      values.push(status);
+    }
+    if (name !== undefined) {
+      fields.push(`name = $${paramCounter++}`);
+      values.push(name);
+    }
+    if (email !== undefined) {
+      fields.push(`email = $${paramCounter++}`);
+      values.push(email);
+    }
+    if (phone !== undefined) {
+      fields.push(`phone = $${paramCounter++}`);
+      values.push(phone);
+    }
+    if (company !== undefined) {
+      fields.push(`company = $${paramCounter++}`);
+      values.push(company);
+    }
+    if (notes !== undefined) {
+      fields.push(`notes = $${paramCounter++}`);
+      values.push(notes);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: "Nada que actualizar" });
+    }
+
+    fields.push(`updated_at = NOW()`);
+    values.push(id);
+    const query = `UPDATE chatbot_leads SET ${fields.join(', ')} WHERE id = $${paramCounter} RETURNING *`;
+    const result = await pgPool.query(query, values);
     if (!result.rows[0]) return res.status(404).json({ error: "lead not found" });
-    res.json({ ok: true, id, status });
+    res.json({ ok: true, lead: result.rows[0] });
   } catch (error: any) {
     console.error("[Chatbot Leads PATCH Error]:", error);
     res.status(500).json({ error: "Error al actualizar el lead." });

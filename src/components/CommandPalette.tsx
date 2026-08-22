@@ -143,32 +143,32 @@ export function CommandPalette({ isOpen, onClose, setActiveTab }: CommandPalette
   }, [searchTerm, deals, activities]);
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-start justify-center pt-16 sm:pt-20 px-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden space-y-0 flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-start justify-center pt-16 sm:pt-20 px-4">
+      <div className="bg-[#050B14] rounded-2xl shadow-2xl max-w-2xl w-full border border-[#1E293B] overflow-hidden space-y-0 flex flex-col max-h-[85vh]">
         
         {/* Header / Input */}
-        <div className="flex items-center px-4 py-3 border-b border-slate-200 bg-slate-50/50 shrink-0">
-          <Search className="w-5 h-5 text-indigo-600 mr-3 shrink-0" />
+        <div className="flex items-center px-4 py-3 border-b border-[#1E293B] bg-[#0A101F]/50 shrink-0">
+          <Search className="w-5 h-5 text-emerald-400 mr-3 shrink-0" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar módulos, clientes, negocios o actividades..."
-            className="w-full bg-transparent border-none focus:outline-none text-sm font-semibold text-slate-800"
+            className="w-full bg-transparent border-none focus:outline-none text-xs font-bold text-slate-100 placeholder-slate-500"
             autoFocus
           />
-          <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-lg text-slate-400 cursor-pointer transition-colors">
+          <button onClick={onClose} className="p-1 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-slate-300 cursor-pointer transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Results */}
-        <div className="p-2 overflow-y-auto space-y-1 custom-scrollbar flex-1 bg-white">
+        <div className="p-2 overflow-y-auto space-y-1 custom-scrollbar flex-1 bg-[#050B14]">
           {searchResults.length === 0 ? (
-            <div className="p-8 flex flex-col items-center justify-center text-center text-slate-400">
+            <div className="p-8 flex flex-col items-center justify-center text-center text-slate-500">
               <Search className="w-10 h-10 mb-3 opacity-20" />
-              <div className="text-sm font-semibold text-slate-600">No se encontraron resultados</div>
-              <div className="text-xs mt-1">Prueba con otro término de búsqueda.</div>
+              <div className="text-sm font-semibold text-slate-400">No se encontraron resultados</div>
+              <div className="text-xs mt-1 text-slate-600">Prueba con otro término de búsqueda.</div>
             </div>
           ) : (
             searchResults.map((item) => {
@@ -182,20 +182,22 @@ export function CommandPalette({ isOpen, onClose, setActiveTab }: CommandPalette
                     setActiveTab(item.tab);
                     onClose();
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors text-left cursor-pointer group ${
-                    isData ? 'hover:bg-emerald-50' : 'hover:bg-indigo-50/70'
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors text-left cursor-pointer group ${
+                    isData 
+                      ? 'hover:bg-emerald-500/10 hover:border-emerald-500/20' 
+                      : 'hover:bg-[#1E293B]/60'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                       isData 
-                        ? 'bg-emerald-100/50 text-emerald-600 group-hover:bg-emerald-200/50 group-hover:text-emerald-700' 
-                        : 'bg-slate-100 text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-700'
+                        ? 'bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20' 
+                        : 'bg-slate-900 text-slate-400 group-hover:bg-[#15203A] group-hover:text-sky-400 border border-slate-800'
                     }`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 truncate">
-                      <div className={`text-xs font-bold truncate ${isData ? 'text-emerald-900' : 'text-slate-700'} group-hover:text-indigo-900`}>
+                      <div className={`text-xs font-bold truncate ${isData ? 'text-emerald-300 font-semibold' : 'text-slate-300'} group-hover:text-white`}>
                         {item.label}
                       </div>
                       {item.subtitle && (
@@ -205,10 +207,10 @@ export function CommandPalette({ isOpen, onClose, setActiveTab }: CommandPalette
                       )}
                     </div>
                   </div>
-                  <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded whitespace-nowrap ml-2 shrink-0 ${
+                  <span className={`text-[9px] font-mono font-medium px-2 py-0.5 rounded whitespace-nowrap ml-2 shrink-0 ${
                     isData 
-                      ? 'text-emerald-600 bg-emerald-50 border border-emerald-100 group-hover:bg-emerald-100'
-                      : 'text-slate-400 bg-slate-100 group-hover:text-indigo-600 group-hover:bg-indigo-100/50'
+                      ? 'text-emerald-400 bg-emerald-500/15 border border-emerald-500/20'
+                      : 'text-slate-400 bg-slate-900 border border-slate-800 group-hover:text-sky-400 group-hover:bg-[#0A101F]'
                   }`}>
                     {item.category}
                   </span>
@@ -219,24 +221,24 @@ export function CommandPalette({ isOpen, onClose, setActiveTab }: CommandPalette
         </div>
         
         {/* Footer */}
-        <div className="bg-slate-50 border-t border-slate-200 px-4 py-2 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-4 text-[10px] text-slate-500 font-medium">
+        <div className="bg-[#0A101F] border-t border-[#1E293B] px-4 py-2 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-4 text-[9px] text-slate-500 font-medium">
             <span className="flex items-center gap-1">
-              <kbd className="bg-white border border-slate-300 rounded px-1 shadow-sm">↑</kbd>
-              <kbd className="bg-white border border-slate-300 rounded px-1 shadow-sm">↓</kbd>
+              <kbd className="bg-slate-900 border border-slate-800 text-[10px] text-slate-400 rounded px-1 shadow-sm">↑</kbd>
+              <kbd className="bg-slate-900 border border-slate-800 text-[10px] text-slate-400 rounded px-1 shadow-sm">↓</kbd>
               Navegar
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="bg-white border border-slate-300 rounded px-1.5 shadow-sm">↵</kbd>
+              <kbd className="bg-slate-900 border border-slate-800 text-[10px] text-slate-400 rounded px-1.5 shadow-sm">↵</kbd>
               Seleccionar
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="bg-white border border-slate-300 rounded px-1.5 shadow-sm">ESC</kbd>
+              <kbd className="bg-slate-900 border border-slate-800 text-[10px] text-slate-400 rounded px-1.5 shadow-sm">ESC</kbd>
               Cerrar
             </span>
           </div>
-          <div className="text-[10px] font-bold text-slate-400">
-            CLIENTUM <span className="text-indigo-400">OS</span>
+          <div className="text-[10px] font-extrabold text-slate-500 tracking-wider">
+            CLIENTUM <span className="text-emerald-400">OS</span>
           </div>
         </div>
 

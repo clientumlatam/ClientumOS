@@ -36,7 +36,9 @@ import {
   WifiOff,
   Eye,
   FileCode,
-  ArrowRight
+  ArrowRight,
+  List,
+  Grid
 } from 'lucide-react';
 
 export interface WebhookConfig {
@@ -98,6 +100,10 @@ export interface WebhookHealthData {
 export function WhatsAppWebhooksConfig() {
   // Navigation tabs: 'config' | 'logs' | 'simulator' | 'guide'
   const [activeTab, setActiveTab] = useState<'config' | 'logs' | 'simulator' | 'guide'>('config');
+  const [logViewMode, setLogViewMode] = useState<'table' | 'cards'>('table');
+
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [connectionTestResult, setConnectionTestResult] = useState<{ ok: boolean; message: string; timestamp: string } | null>(null);
 
   const [config, setConfig] = useState<WebhookConfig>({
     verifyToken: 'clientum_meta_wa_token_2026',
@@ -310,6 +316,40 @@ export function WhatsAppWebhooksConfig() {
     } finally {
       setVerifyingHandshake(false);
       setCheckingHealth(false);
+    }
+  };
+
+  // Test Connection to Callback URL / Health check
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    setConnectionTestResult(null);
+    const start = performance.now();
+    try {
+      const res = await fetch('/api/whatsapp/webhook/health');
+      const latency = Math.round(performance.now() - start);
+      if (res.ok) {
+        const data = await res.json();
+        setConnectionTestResult({
+          ok: true,
+          message: `¡Ping Exitoso! Callback URL en línea y respondiendo. Latencia estimada: ${latency}ms. Verify Token: ${data.verifyTokenSynced ? 'Sincronizado' : 'Pendiente de Sincronización'}.`,
+          timestamp: new Date().toLocaleTimeString()
+        });
+        setHealthData(data);
+      } else {
+        setConnectionTestResult({
+          ok: false,
+          message: `Error al probar conexión (Status HTTP ${res.status}). El endpoint de Callback podría estar caído o mal configurado.`,
+          timestamp: new Date().toLocaleTimeString()
+        });
+      }
+    } catch (err: any) {
+      setConnectionTestResult({
+        ok: false,
+        message: `Fallo en el Ping de conexión: ${err.message}. Verificá que la aplicación de Clientum esté encendida.`,
+        timestamp: new Date().toLocaleTimeString()
+      });
+    } finally {
+      setTestingConnection(false);
     }
   };
 
@@ -680,6 +720,105 @@ export function WhatsAppWebhooksConfig() {
               <p className="text-xs text-slate-400">
                 Copiá estos valores y pegalos en la sección <strong>WhatsApp &gt; Configuración &gt; Webhook</strong> dentro del portal de Meta for Developers.
               </p>
+
+              {/* ── INDICADORES DE SALUD Y BOTÓN DE PRUEBA DE CONEXIÓN ── */}
+              <div className="p-4 bg-[#050B14] border border-[#1E293B] rounded-xl space-y-4 shadow-inner">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/60 pb-3">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Estado de Salud de la Conexión</h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Estado en tiempo real del canal de Webhook con Meta.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleTestConnection}
+                    disabled={testingConnection}
+                    id="btn-test-connection"
+                    className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-800/50 text-slate-950 disabled:text-emerald-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md shrink-0"
+                  >
+                    <Activity className={`w-3.5 h-3.5 ${testingConnection ? 'animate-spin' : ''}`} />
+                    <span>{testingConnection ? 'Probando...' : 'Test Connection'}</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Callback URL Status */}
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1">
+                      {healthData?.checks?.callbackReachable ? (
+                        <span className="flex h-3 w-3 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                      ) : healthData ? (
+                        <span className="flex h-3 w-3 rounded-full bg-rose-500"></span>
+                      ) : (
+                        <span className="flex h-3 w-3 rounded-full bg-amber-500 animate-pulse"></span>
+                      )}
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-bold text-slate-300">Callback URL (Webhook)</h5>
+                      <p className="text-[11px] mt-0.5 font-semibold">
+                        {healthData?.checks?.callbackReachable ? (
+                          <span className="text-emerald-400">✓ Conectado / Saludable</span>
+                        ) : healthData ? (
+                          <span className="text-rose-400">✗ Error de Conexión</span>
+                        ) : (
+                          <span className="text-amber-400">⚠ Pendiente de Verificación</span>
+                        )}
+                      </p>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                        Valida que la dirección pública sea accesible por los servidores de Meta.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Verify Token Status */}
+                  <div className="flex items-start gap-3 border-t sm:border-t-0 sm:border-l border-slate-800/80 pt-3 sm:pt-0 sm:pl-4">
+                    <div className="mt-1">
+                      {config.webhookStatus === 'verified_active' || healthData?.checks?.verifyTokenSynced ? (
+                        <span className="flex h-3 w-3 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                      ) : config.verifyToken ? (
+                        <span className="flex h-3 w-3 rounded-full bg-amber-500 animate-pulse"></span>
+                      ) : (
+                        <span className="flex h-3 w-3 rounded-full bg-rose-500"></span>
+                      )}
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-bold text-slate-300">Verify Token (Sincronización)</h5>
+                      <p className="text-[11px] mt-0.5 font-semibold">
+                        {config.webhookStatus === 'verified_active' || healthData?.checks?.verifyTokenSynced ? (
+                          <span className="text-emerald-400">✓ Conectado / Sincronizado</span>
+                        ) : config.verifyToken ? (
+                          <span className="text-amber-400">⚠ Pendiente de Handshake</span>
+                        ) : (
+                          <span className="text-rose-400">✗ Error (Sin configurar)</span>
+                        )}
+                      </p>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                        Controla que las firmas del handshake coincidan carácter por carácter.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Connection Test Result Alert */}
+                {connectionTestResult && (
+                  <div className={`p-3 rounded-lg text-xs flex items-start gap-2 border ${
+                    connectionTestResult.ok
+                      ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+                      : 'bg-rose-500/10 text-rose-300 border-rose-500/20'
+                  }`}>
+                    <span className="text-sm leading-none shrink-0">{connectionTestResult.ok ? '✓' : '✗'}</span>
+                    <div className="space-y-1">
+                      <p className="font-semibold leading-relaxed">{connectionTestResult.message}</p>
+                      <p className="text-[9px] text-slate-500">Probado a las {connectionTestResult.timestamp}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="space-y-4">
                 {/* 1. Callback URL */}
@@ -1052,6 +1191,36 @@ export function WhatsAppWebhooksConfig() {
                     </button>
                   </>
                 )}
+
+                {/* View Mode Switcher */}
+                <div className="flex border border-[#1E293B] rounded-lg p-0.5 bg-[#050B14] shadow-inner ml-2">
+                  <button
+                    type="button"
+                    onClick={() => setLogViewMode('table')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                      logViewMode === 'table'
+                        ? 'bg-slate-800 text-white shadow-sm border border-slate-700/50'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                    title="Vista de Tabla (Solicitado)"
+                  >
+                    <List className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Tabla</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLogViewMode('cards')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                      logViewMode === 'cards'
+                        ? 'bg-slate-800 text-white shadow-sm border border-slate-700/50'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                    title="Vista de Tarjetas"
+                  >
+                    <Grid className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Tarjetas</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1109,116 +1278,247 @@ export function WhatsAppWebhooksConfig() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
-                {filteredLogs.map((log) => {
-                  const isExpanded = expandedLogId === log.id;
-                  const isMessage = log.type === 'inbound_message' || log.type === 'test_simulation';
-                  const isHandshake = log.type === 'handshake_verification';
-                  const isStatus = log.type === 'message_status';
+              logViewMode === 'table' ? (
+                <div className="overflow-x-auto border border-[#1E293B] rounded-xl bg-[#050B14] shadow-md max-h-[600px] overflow-y-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-[#0A101F] text-slate-400 font-bold border-b border-[#1E293B] sticky top-0 z-10">
+                        <th className="p-3.5">Timestamp</th>
+                        <th className="p-3.5">Evento / Tipo</th>
+                        <th className="p-3.5">Detalle / Contenido</th>
+                        <th className="p-3.5 text-center">Status</th>
+                        <th className="p-3.5 text-right">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#1E293B]/60">
+                      {filteredLogs.map((log) => {
+                        const isExpanded = expandedLogId === log.id;
+                        const isMessage = log.type === 'inbound_message' || log.type === 'test_simulation';
+                        const isHandshake = log.type === 'handshake_verification';
+                        const isStatus = log.type === 'message_status';
 
-                  return (
-                    <div
-                      key={log.id}
-                      className="bg-[#050B14] border border-[#1E293B] hover:border-slate-700 rounded-xl p-4 transition-all text-xs space-y-2.5 shadow-sm"
-                    >
-                      {/* Header Row: Type Badge, Timestamp, Sender & Actions */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          {/* Event Type Badge */}
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${
-                              isMessage
-                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                : isHandshake
-                                ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                            }`}
-                          >
-                            {isMessage && <MessageSquare className="w-3 h-3" />}
-                            {isHandshake && <CheckCheck className="w-3 h-3" />}
-                            {isStatus && <Radio className="w-3 h-3" />}
-                            <span>{log.type.replace('_', ' ')}</span>
-                          </span>
+                        return (
+                          <React.Fragment key={log.id}>
+                            <tr className="hover:bg-slate-800/10 transition-colors border-b border-[#1E293B]/40">
+                              <td className="p-3.5 whitespace-nowrap font-mono text-slate-300">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5 text-slate-500" />
+                                  <span>{new Date(log.timestamp).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                                </div>
+                                <span className="text-[10px] text-slate-500 block pl-4.5">
+                                  {formatRelativeTime(log.timestamp)}
+                                </span>
+                              </td>
+                              <td className="p-3.5 whitespace-nowrap">
+                                <div className="flex flex-col gap-1">
+                                  <span
+                                    className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider w-fit flex items-center gap-1 ${
+                                      isMessage
+                                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                        : isHandshake
+                                        ? 'bg-sky-500/15 text-sky-400 border border-sky-500/20'
+                                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                                    }`}
+                                  >
+                                    {isMessage && <MessageSquare className="w-2.5 h-2.5" />}
+                                    {isHandshake && <CheckCheck className="w-2.5 h-2.5" />}
+                                    {isStatus && <Radio className="w-2.5 h-2.5" />}
+                                    <span>{log.type.replace('_', ' ')}</span>
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-mono pl-0.5">
+                                    {log.source || 'meta_cloud_api'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="p-3.5">
+                                <div className="space-y-1 max-w-xs md:max-w-md">
+                                  {log.content ? (
+                                    <div className="text-slate-200 text-xs font-medium break-words leading-relaxed" title={log.content}>
+                                      💬 &quot;{log.content}&quot;
+                                    </div>
+                                  ) : (
+                                    <div className="text-slate-500 italic text-xs">Sin contenido de texto</div>
+                                  )}
+                                  {log.phoneNumber && (
+                                    <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                                      <Phone className="w-3 h-3 text-slate-500" />
+                                      <span>{log.contactName ? `${log.contactName} (${log.phoneNumber})` : log.phoneNumber}</span>
+                                    </div>
+                                  )}
+                                  {log.botResolved && (
+                                    <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded font-semibold mt-0.5">
+                                      <Bot className="w-2.5 h-2.5" /> Auto-Bot Gemini
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-3.5 text-center whitespace-nowrap">
+                                {log.status ? (
+                                  <span className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded text-[10px] font-mono uppercase border border-slate-700/50">
+                                    {log.status}
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[10px] font-mono uppercase border border-emerald-500/20">
+                                    SUCCESS
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3.5 text-right whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
+                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer border border-slate-700"
+                                >
+                                  <FileCode className="w-3 h-3 text-sky-400" />
+                                  <span>{isExpanded ? 'Ocultar' : 'Payload'}</span>
+                                </button>
+                              </td>
+                            </tr>
+                            {isExpanded && (
+                              <tr>
+                                <td colSpan={5} className="p-4 bg-[#020617] border-t border-b border-[#1E293B] shadow-inner">
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <Terminal className="w-3 h-3 text-emerald-400" />
+                                        Payload Raw JSON (Meta Event Body)
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopy(JSON.stringify(log.payload, null, 2), `payload-${log.id}`)}
+                                        className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1 font-semibold cursor-pointer"
+                                      >
+                                        {copiedField === `payload-${log.id}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                        {copiedField === `payload-${log.id}` ? '¡Copiado!' : 'Copiar JSON'}
+                                      </button>
+                                    </div>
+                                    <pre className="bg-[#010409] p-3 rounded-xl text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-60 border border-slate-900 leading-relaxed">
+                                      {JSON.stringify(log.payload, null, 2)}
+                                    </pre>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                  {filteredLogs.map((log) => {
+                    const isExpanded = expandedLogId === log.id;
+                    const isMessage = log.type === 'inbound_message' || log.type === 'test_simulation';
+                    const isHandshake = log.type === 'handshake_verification';
+                    const isStatus = log.type === 'message_status';
 
-                          {/* Formatted Timestamp */}
-                          <span className="font-mono text-slate-400 text-[11px] flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-500" />
-                            {new Date(log.timestamp).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                            <span className="text-[10px] text-slate-500 ml-1 font-sans">
-                              ({formatRelativeTime(log.timestamp)})
-                            </span>
-                          </span>
-
-                          {/* Source Label */}
-                          <span className="text-[10px] text-slate-500 font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                            {log.source || 'meta_cloud_api'}
-                          </span>
-
-                          {/* Sender Phone/Name */}
-                          {log.phoneNumber && (
-                            <span className="font-semibold text-white flex items-center gap-1 bg-[#0A101F] px-2.5 py-0.5 rounded-lg border border-slate-800">
-                              <Phone className="w-3 h-3 text-slate-400" />
-                              {log.contactName ? `${log.contactName} (${log.phoneNumber})` : log.phoneNumber}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Right: AI Bot badge & JSON toggle */}
-                        <div className="flex items-center gap-2 self-end sm:self-auto">
-                          {log.botResolved && (
-                            <span className="text-[10px] px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-md flex items-center gap-1 font-semibold">
-                              <Bot className="w-3 h-3" /> Auto-Bot Gemini
-                            </span>
-                          )}
-                          {log.status && (
-                            <span className="text-[10px] px-2 py-0.5 bg-slate-800 text-slate-300 rounded font-mono uppercase">
-                              {log.status}
-                            </span>
-                          )}
-                          <button
-                            onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
-                          >
-                            <FileCode className="w-3.5 h-3.5 text-sky-400" />
-                            <span>{isExpanded ? 'Ocultar JSON' : 'Ver Payload Raw'}</span>
-                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Content preview if exists */}
-                      {log.content && (
-                        <div className="text-slate-200 bg-[#0A101F] p-3 rounded-xl border border-slate-800/80 font-sans flex items-start gap-2">
-                          <span className="text-emerald-400 font-bold shrink-0 mt-0.5">💬</span>
-                          <span className="leading-relaxed">&quot;{log.content}&quot;</span>
-                        </div>
-                      )}
-
-                      {/* Expanded Payload Viewer */}
-                      {isExpanded && (
-                        <div className="pt-3 border-t border-slate-800 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                              <Terminal className="w-3 h-3 text-emerald-400" />
-                              Payload Raw JSON (Meta Event Body)
-                            </span>
-                            <button
-                              onClick={() => handleCopy(JSON.stringify(log.payload, null, 2), `payload-${log.id}`)}
-                              className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1 font-semibold cursor-pointer"
+                    return (
+                      <div
+                        key={log.id}
+                        className="bg-[#050B14] border border-[#1E293B] hover:border-slate-700 rounded-xl p-4 transition-all text-xs space-y-2.5 shadow-sm"
+                      >
+                        {/* Header Row: Type Badge, Timestamp, Sender & Actions */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            {/* Event Type Badge */}
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${
+                                isMessage
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                  : isHandshake
+                                  ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                                  : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              }`}
                             >
-                              {copiedField === `payload-${log.id}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                              {copiedField === `payload-${log.id}` ? '¡Copiado!' : 'Copiar JSON'}
+                              {isMessage && <MessageSquare className="w-3 h-3" />}
+                              {isHandshake && <CheckCheck className="w-3 h-3" />}
+                              {isStatus && <Radio className="w-3 h-3" />}
+                              <span>{log.type.replace('_', ' ')}</span>
+                            </span>
+
+                            {/* Formatted Timestamp */}
+                            <span className="font-mono text-slate-400 text-[11px] flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-slate-500" />
+                              {new Date(log.timestamp).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              <span className="text-[10px] text-slate-500 ml-1 font-sans">
+                                ({formatRelativeTime(log.timestamp)})
+                              </span>
+                            </span>
+
+                            {/* Source Label */}
+                            <span className="text-[10px] text-slate-500 font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                              {log.source || 'meta_cloud_api'}
+                            </span>
+
+                            {/* Sender Phone/Name */}
+                            {log.phoneNumber && (
+                              <span className="font-semibold text-white flex items-center gap-1 bg-[#0A101F] px-2.5 py-0.5 rounded-lg border border-slate-800">
+                                <Phone className="w-3 h-3 text-slate-400" />
+                                {log.contactName ? `${log.contactName} (${log.phoneNumber})` : log.phoneNumber}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Right: AI Bot badge & JSON toggle */}
+                          <div className="flex items-center gap-2 self-end sm:self-auto">
+                            {log.botResolved && (
+                              <span className="text-[10px] px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-md flex items-center gap-1 font-semibold">
+                                <Bot className="w-3 h-3" /> Auto-Bot Gemini
+                              </span>
+                            )}
+                            {log.status && (
+                              <span className="text-[10px] px-2 py-0.5 bg-slate-800 text-slate-300 rounded font-mono uppercase">
+                                {log.status}
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
+                              className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
+                            >
+                              <FileCode className="w-3.5 h-3.5 text-sky-400" />
+                              <span>{isExpanded ? 'Ocultar JSON' : 'Ver Payload Raw'}</span>
+                              {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                             </button>
                           </div>
-                          <pre className="bg-[#020617] p-3.5 rounded-xl text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-60 border border-slate-900 leading-relaxed shadow-inner">
-                            {JSON.stringify(log.payload, null, 2)}
-                          </pre>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+
+                        {/* Content preview if exists */}
+                        {log.content && (
+                          <div className="text-slate-200 bg-[#0A101F] p-3 rounded-xl border border-slate-800/80 font-sans flex items-start gap-2">
+                            <span className="text-emerald-400 font-bold shrink-0 mt-0.5">💬</span>
+                            <span className="leading-relaxed">&quot;{log.content}&quot;</span>
+                          </div>
+                        )}
+
+                        {/* Expanded Payload Viewer */}
+                        {isExpanded && (
+                          <div className="pt-3 border-t border-slate-800 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <Terminal className="w-3 h-3 text-emerald-400" />
+                                Payload Raw JSON (Meta Event Body)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopy(JSON.stringify(log.payload, null, 2), `payload-${log.id}`)}
+                                className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1 font-semibold cursor-pointer"
+                              >
+                                {copiedField === `payload-${log.id}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                {copiedField === `payload-${log.id}` ? '¡Copiado!' : 'Copiar JSON'}
+                              </button>
+                            </div>
+                            <pre className="bg-[#020617] p-3.5 rounded-xl text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-60 border border-slate-900 leading-relaxed shadow-inner">
+                              {JSON.stringify(log.payload, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )
             )}
           </div>
         </div>
