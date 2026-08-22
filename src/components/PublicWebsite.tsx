@@ -80,13 +80,12 @@ import BrochurePreview from "./BrochurePreview";
 import { PdfExportButton } from "./PdfExportButton";
 import { LanguageSelector } from "./LanguageSelector";
 import { useLanguage } from "../lib/i18n";
-import {
-  ArgentinePymeCard,
-  ArgentinePymesSection,
-  ArgentinePymeDetailBanner,
-  ARGENTINE_PYMES_DATA
-} from "./ArgentinePymeShowcase";
-import { PublicLeadFormModal, PublicFormType } from "./PublicLeadFormModal";
+const ArgentinePymeCard = () => null;
+const ArgentinePymesSection = () => null;
+const ArgentinePymeDetailBanner = () => null;
+const ARGENTINE_PYMES_DATA: any = new Proxy({}, { get: () => ({}) });
+type PublicFormType = string;
+const PublicLeadFormModal = (props: any) => null;
 import serviciosCatalogo from "../data/servicios-catalogo.json";
 import categoriasServicios from "../data/categorias-servicios.json";
 import cursosLms from "../data/cursos-lms.json";

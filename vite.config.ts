@@ -1,7 +1,11 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import {defineConfig} from 'vite';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig(() => {
   return {
@@ -11,7 +15,6 @@ export default defineConfig(() => {
       emptyOutDir: true,
       chunkSizeWarningLimit: 2500,
       rollupOptions: {
-        external: ['jspdf'],
         cache: false,
         maxParallelFileOps: 10,
         output: {
@@ -34,29 +37,6 @@ export default defineConfig(() => {
               }
               if (id.includes('@google/genai')) {
                 return 'vendor-ai';
-              }
-            }
-            if (id.includes('src/components/')) {
-              if (id.includes('/crm-full/')) {
-                return 'components-crm-full';
-              }
-              if (id.includes('/vscrm/')) {
-                return 'components-vscrm';
-              }
-              if (id.includes('PublicWebsite') || id.includes('PublicFeatureModal') || id.includes('PublicLeadFormModal')) {
-                return 'components-public';
-              }
-              if (id.includes('Seo') || id.includes('Keyword') || id.includes('Topic') || id.includes('OnPage') || id.includes('LinkBuilding') || id.includes('RankTracker')) {
-                return 'components-seo';
-              }
-              if (id.includes('Email') || id.includes('TemplatesTab') || id.includes('Smtp')) {
-                return 'components-email';
-              }
-              if (id.includes('Brochure') || id.includes('IcpBuilder') || id.includes('Meddic') || id.includes('Workflow')) {
-                return 'components-marketing-sales';
-              }
-              if (id.includes('Sidebar') || id.includes('Header') || id.includes('NavigationRail') || id.includes('CommandPalette')) {
-                return 'components-navigation';
               }
             }
           },
