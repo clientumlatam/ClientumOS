@@ -1,8 +1,0 @@
-{
-  "name": "Remix Twenty CRM",
-  "description": "Modern open-source CRM featuring pipeline Kanban boards, customizable record tables, activity timeline, contact intelligence, and AI deal copilot.",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}

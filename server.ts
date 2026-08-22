@@ -26,275 +26,43 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = 3000;
 const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL);
-let pgPool: any;
+
+if (!databaseUrl ) {
+  console.error("FATAL: DATABASE_URL is not configured or invalid. ClientumOS requires a valid PostgreSQL database to start.");
+  process.exit(1);
+}
+
+const pgPool = new Pool({
+  connectionString: databaseUrl,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 5000,
+});
+
+pgPool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+// Ensure connection is valid
+pgPool.query('SELECT 1').catch((err) => {
+  console.error("FATAL: Failed to connect to PostgreSQL:", err.message);
+  process.exit(1);
+});
+
 let sessionStore: any;
-
-// In-memory state for resilient fallback when Postgres is unreachable or unconfigured
-const memoryUsers: Map<number, any> = new Map();
-let nextUserId = 1;
-
-// Default admin account (password: 'password')
-const defaultAdminHash = "$2b$12$4RjO.24eGz/UuT/x5Z./o.lTfG6/B467nQ153Q.P08g5M0vX/m1Hq";
-memoryUsers.set(1, {
-  id: 1,
-  username: "admin",
-  email: "admin@clientum.com.ar",
-  password_hash: defaultAdminHash,
-  role: "admin",
-  neon_auth_id: null,
-  created_at: new Date(),
-});
-memoryUsers.set(2, {
-  id: 2,
-  username: "info",
-  email: "info@clientum.com.ar",
-  password_hash: defaultAdminHash,
-  role: "admin",
-  neon_auth_id: null,
-  created_at: new Date(),
-});
-memoryUsers.set(3, {
-  id: 3,
-  username: "demo",
-  email: "demo@clientum.com.ar",
-  password_hash: defaultAdminHash,
-  role: "user",
-  neon_auth_id: null,
-  created_at: new Date(),
-});
-nextUserId = 4;
-
-const memoryResetTokens: Map<string, any> = new Map();
-
-function isUrlValid(str?: string): boolean {
-  if (!str) return false;
-  const trimmed = str.trim();
-  if (trimmed === "" || trimmed === "base" || trimmed.includes("ENOTFOUND")) return false;
-  try {
-    const parsed = new URL(trimmed);
-    if (!["postgres:", "postgresql:"].includes(parsed.protocol)) return false;
-    if (parsed.hostname === "base" || !parsed.hostname) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-const inMemoryPgPool = {
-  query: async (queryText: string, values?: any[]) => {
-    const text = (queryText || "").trim();
-    const textLower = text.toLowerCase();
-
-    // DDL queries (CREATE TABLE, ALTER TABLE, CREATE INDEX, LOCK TABLE, BEGIN, COMMIT, ROLLBACK)
-    if (
-      textLower.startsWith("create table") ||
-      textLower.startsWith("alter table") ||
-      textLower.startsWith("create index") ||
-      textLower.includes("lock table") ||
-      textLower === "begin" ||
-      textLower === "commit" ||
-      textLower === "rollback"
-    ) {
-      return { rows: [], rowCount: 0 };
-    }
-
-    // 1. SELECT COUNT(*)::int AS count FROM users
-    if (textLower.includes("select count(*)::int") && textLower.includes("from users")) {
-      return { rows: [{ count: memoryUsers.size }], rowCount: memoryUsers.size };
-    }
-
-    // 2. SELECT ... FROM users
-    if (textLower.includes("from users")) {
-      const allUsers = Array.from(memoryUsers.values());
-
-      if (textLower.includes("where id = $1")) {
-        const found = allUsers.filter((u) => u.id === values?.[0]);
-        return { rows: found, rowCount: found.length };
-      }
-
-      if (textLower.includes("where email = $1") || textLower.includes("lower(email) = lower($1")) {
-        const searchEmail = (values?.[0] || "").toString().trim().toLowerCase();
-        const found = allUsers.filter((u) => u.email && u.email.toLowerCase() === searchEmail);
-        return { rows: found, rowCount: found.length };
-      }
-
-      if (
-        textLower.includes("username = $1") ||
-        textLower.includes("neon_auth_id = $1") ||
-        textLower.includes("lower(email)")
-      ) {
-        const val1 = (values?.[0] || "").toString().trim().toLowerCase();
-        const val2 = (values?.[1] || "").toString().trim().toLowerCase();
-        const found = allUsers.filter((u) => {
-          const uName = (u.username || "").toLowerCase();
-          const uEmail = (u.email || "").toLowerCase();
-          const uNeon = u.neon_auth_id || "";
-          return uName === val1 || uEmail === val1 || (val2 && uEmail === val2) || uNeon === val1;
-        });
-        return { rows: found, rowCount: found.length };
-      }
-
-      return { rows: allUsers, rowCount: allUsers.length };
-    }
-
-    // 3. INSERT INTO users
-    if (textLower.includes("insert into users")) {
-      let username = values?.[0] || "user";
-      let passwordHash = values?.[1] || "";
-      let role = values?.[2] || "user";
-      let email = values?.[3] || null;
-      let neonAuthId = values?.[4] || null;
-
-      if (typeof username === "string" && username.includes("@") && !email) {
-        email = username;
-      }
-
-      const id = nextUserId++;
-      const newUser = {
-        id,
-        username: String(username),
-        password_hash: String(passwordHash),
-        role: String(role),
-        email: email ? String(email) : null,
-        neon_auth_id: neonAuthId ? String(neonAuthId) : null,
-        created_at: new Date(),
-      };
-      memoryUsers.set(id, newUser);
-      return { rows: [{ id: newUser.id, username: newUser.username, role: newUser.role }], rowCount: 1 };
-    }
-
-    // 4. UPDATE users
-    if (textLower.includes("update users")) {
-      if (textLower.includes("password_hash = $1 where id = $2")) {
-        const [hash, id] = values || [];
-        const u = memoryUsers.get(Number(id));
-        if (u) u.password_hash = hash;
-        return { rows: [], rowCount: u ? 1 : 0 };
-      }
-      if (textLower.includes("neon_auth_id")) {
-        const [neonId, email, hash, id] = values || [];
-        const targetId = id ?? values?.[3] ?? values?.[2];
-        const u = memoryUsers.get(Number(targetId));
-        if (u) {
-          u.neon_auth_id = neonId;
-          u.email = email;
-          if (hash) u.password_hash = hash;
-        }
-        return { rows: [], rowCount: u ? 1 : 0 };
-      }
-    }
-
-    // 5. password_reset_tokens
-    if (textLower.includes("password_reset_tokens")) {
-      if (textLower.includes("insert into password_reset_tokens")) {
-        const [userId, tokenHash] = values || [];
-        memoryResetTokens.set(tokenHash, {
-          userId,
-          tokenHash,
-          usedAt: null,
-          expiresAt: Date.now() + 3600000,
-        });
-        return { rows: [], rowCount: 1 };
-      }
-      if (textLower.includes("token_hash = $1")) {
-        const hash = values?.[0];
-        const tokenData = memoryResetTokens.get(hash);
-        if (tokenData && !tokenData.usedAt && tokenData.expiresAt > Date.now()) {
-          return { rows: [{ user_id: tokenData.userId }], rowCount: 1 };
-        }
-        return { rows: [], rowCount: 0 };
-      }
-      if (textLower.includes("update password_reset_tokens")) {
-        return { rows: [], rowCount: 1 };
-      }
-    }
-
-    return { rows: [], rowCount: 0 };
-  },
-
-  connect: async () => {
-    return {
-      query: async (queryText: string, values?: any[]) => {
-        return inMemoryPgPool.query(queryText, values);
-      },
-      release: () => {},
-    };
-  },
-  on: () => {},
-};
-
-let realPgPool: Pool | null = null;
-let usePgPool = false;
-let pgUserIdType = "INTEGER";
-
-if (isUrlValid(databaseUrl)) {
-  try {
-    realPgPool = new Pool({
-      connectionString: databaseUrl,
-      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-      connectionTimeoutMillis: 5000,
-    });
-    usePgPool = true;
-  } catch (err: any) {
-    console.warn("[Database] Error inicializando pgPool, usando memoria:", err?.message || err);
-  }
-} else {
-  console.warn("[Database] DATABASE_URL no es válida o no está configurada — usando pgPool en memoria.");
-}
-
-pgPool = {
-  query: async (queryText: string, values?: any[]) => {
-    if (usePgPool && realPgPool) {
-      try {
-        return await realPgPool.query(queryText, values);
-      } catch (err: any) {
-        console.warn(`[Database] Query falló en PostgreSQL (${err.code || err.message}), usando fallback en memoria.`);
-        return await inMemoryPgPool.query(queryText, values);
-      }
-    }
-    return await inMemoryPgPool.query(queryText, values);
-  },
-
-  connect: async () => {
-    if (usePgPool && realPgPool) {
-      try {
-        return await realPgPool.connect();
-      } catch (err: any) {
-        console.warn(`[Database] Connect falló en PostgreSQL (${err.code || err.message}), usando fallback en memoria.`);
-        return await inMemoryPgPool.connect();
-      }
-    }
-    return await inMemoryPgPool.connect();
-  },
-
-  on: (event: any, listener: (...args: any[]) => void) => {
-    if (realPgPool) {
-      try {
-        realPgPool.on(event as any, listener);
-      } catch {
-        /* ignore */
-      }
-    }
-  },
-};
-
-if (usePgPool && realPgPool) {
-  try {
-    const PgSessionStore = connectPgSimple(session);
-    sessionStore = new PgSessionStore({
-      pool: realPgPool,
-      tableName: "session",
-      createTableIfMissing: true,
-      errorLog: (err: any) => {
-        console.warn("[SessionStore] PostgreSQL session store warning:", err?.message || err);
-      },
-    });
-  } catch (err: any) {
-    console.warn("[SessionStore] Fallback a MemoryStore de Express:", err?.message || err);
-    sessionStore = undefined;
-  }
-} else {
-  sessionStore = undefined;
+try {
+  const PgSessionStore = connectPgSimple(session);
+  sessionStore = new PgSessionStore({
+    pool: pgPool,
+    tableName: "session",
+    createTableIfMissing: true,
+    errorLog: (err: any) => {
+      console.error("[SessionStore] PostgreSQL session store warning:", err?.message || err);
+    },
+  });
+} catch (err: any) {
+  console.error("FATAL: Failed to initialize PostgreSQL session store:", err?.message || err);
+  process.exit(1);
 }
 
 app.use(express.json());
@@ -620,53 +388,6 @@ app.post("/api/auth/login", async (req: AuthRequest, res: AuthResponse) => {
   }
 });
 
-app.all(["/api/auth/demo-login", "/api/auth/demo"], async (req: AuthRequest, res: AuthResponse) => {
-  try {
-    let result = await pgPool.query(
-      "SELECT id, username, role FROM users WHERE username = $1 OR email = $2 LIMIT 1",
-      ["demo", "demo@clientum.com.ar"]
-    );
-    let user = result.rows[0];
-
-    if (!user) {
-      const insertResult = await pgPool.query(
-        "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING RETURNING id, username, role",
-        ["demo", defaultAdminHash, "user", "demo@clientum.com.ar"]
-      );
-      user = insertResult.rows[0];
-      if (!user) {
-        const fetchAgain = await pgPool.query(
-          "SELECT id, username, role FROM users WHERE username = $1 OR email = $2 LIMIT 1",
-          ["demo", "demo@clientum.com.ar"]
-        );
-        user = fetchAgain.rows[0] || { id: 3, username: "demo", role: "user" };
-      }
-    }
-
-    req.session.regenerate((err: Error | null) => {
-      if (err) {
-        console.error("Error regenerando sesión tras demo-login:", err);
-        return res.status(500).json({ error: "Error al iniciar sesión como demo." });
-      }
-      req.session.userId = user.id;
-      req.session.username = user.username;
-      req.session.role = user.role || "user";
-      req.session.save((saveErr: Error | null) => {
-        if (saveErr) {
-          console.error("Error guardando sesión tras demo-login:", saveErr);
-          return res.status(500).json({ error: "Error al iniciar sesión como demo." });
-        }
-        if (req.method === "GET" && req.query?.redirect) {
-          return res.redirect(String(req.query.redirect));
-        }
-        return res.json({ ok: true, user: { id: user.id, username: user.username, role: user.role } });
-      });
-    });
-  } catch (error: any) {
-    console.error("Error en /api/auth/demo-login:", error);
-    return res.status(500).json({ error: "Ocurrió un error al iniciar sesión demo." });
-  }
-});
 
 app.post("/api/auth/logout", (req: AuthRequest, res: AuthResponse) => {
   req.session.destroy((err: Error | null) => {
@@ -4628,8 +4349,17 @@ app.get("/api/lms/certificate/:id", async (req, res) => {
 // ---------------------------------------------------------------------------
 async function initUsersTable() {
   await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS organizations (
+      id            SERIAL PRIMARY KEY,
+      name          VARCHAR(255) NOT NULL,
+      domain        VARCHAR(255),
+      created_at    TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `);
+  await pgPool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id            SERIAL PRIMARY KEY,
+      organization_id INTEGER REFERENCES organizations(id),
       username      VARCHAR(255) NOT NULL UNIQUE,
       password_hash TEXT NOT NULL DEFAULT '',
       role          VARCHAR(20) NOT NULL DEFAULT 'user',
@@ -4662,24 +4392,7 @@ async function initUsersTable() {
   await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email        VARCHAR(255) UNIQUE`);
   await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS neon_auth_id TEXT        UNIQUE`);
 
-  try {
-    const existingAdmin = await pgPool.query("SELECT id FROM users WHERE email = $1", ["info@clientum.com.ar"]);
-    if ((existingAdmin.rowCount ?? 0) === 0) {
-      await pgPool.query(
-        "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING",
-        ["info", defaultAdminHash, "admin", "info@clientum.com.ar"]
-      );
-    }
-    const existingDemo = await pgPool.query("SELECT id FROM users WHERE username = $1 OR email = $2", ["demo", "demo@clientum.com.ar"]);
-    if ((existingDemo.rowCount ?? 0) === 0) {
-      await pgPool.query(
-        "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING",
-        ["demo", defaultAdminHash, "user", "demo@clientum.com.ar"]
-      );
-    }
-  } catch (err) {
-    console.warn("[Auth] No se pudo asegurar el admin/demo:", err);
-  }
+
 
   try {
     await initPasswordResetTokensTable();
@@ -5335,7 +5048,7 @@ function sqlWhere(filters: Record<string, unknown>): { where: string; params: un
 // ── Agent Tasks ──────────────────────────────────────────────────────────────
 
 // POST /api/agent/tasks — Create a new agent task
-app.post("/api/agent/tasks", async (req, res) => {
+app.post("/api/agent/tasks", requireAuth, async (req, res) => {
   try {
     const { id, type, agent_name, input, parent_task_id, max_retries = 2 } = req.body ?? {};
     if (!type || !agent_name) return res.status(400).json({ error: "type y agent_name son requeridos" });
@@ -5354,7 +5067,7 @@ app.post("/api/agent/tasks", async (req, res) => {
 });
 
 // GET /api/agent/tasks — List tasks with optional filters
-app.get("/api/agent/tasks", async (req, res) => {
+app.get("/api/agent/tasks", requireAuth, async (req, res) => {
   try {
     const { status, agent, limit = "50", offset = "0" } = req.query as Record<string, string>;
     const { where, params: fp } = sqlWhere({
@@ -5379,7 +5092,7 @@ app.get("/api/agent/tasks", async (req, res) => {
 });
 
 // GET /api/agent/tasks/:id — Get single task with its logs
-app.get("/api/agent/tasks/:id", async (req, res) => {
+app.get("/api/agent/tasks/:id", requireAuth, async (req, res) => {
   try {
     const task = await pgPool.query("SELECT * FROM agent_tasks WHERE id = $1", [req.params.id]);
     if (!task.rows.length) return res.status(404).json({ error: "Task not found" });
@@ -5395,7 +5108,7 @@ app.get("/api/agent/tasks/:id", async (req, res) => {
 });
 
 // PATCH /api/agent/tasks/:id/status
-app.patch("/api/agent/tasks/:id/status", async (req, res) => {
+app.patch("/api/agent/tasks/:id/status", requireAuth, async (req, res) => {
   try {
     const { status } = req.body ?? {};
     const updates: Record<string, unknown> = { status };
@@ -5412,7 +5125,7 @@ app.patch("/api/agent/tasks/:id/status", async (req, res) => {
 });
 
 // PATCH /api/agent/tasks/:id/complete
-app.patch("/api/agent/tasks/:id/complete", async (req, res) => {
+app.patch("/api/agent/tasks/:id/complete", requireAuth, async (req, res) => {
   try {
     const { output, tokens_used, cost_usd, duration_ms } = req.body ?? {};
     await pgPool.query(
@@ -5428,7 +5141,7 @@ app.patch("/api/agent/tasks/:id/complete", async (req, res) => {
 });
 
 // PATCH /api/agent/tasks/:id/fail
-app.patch("/api/agent/tasks/:id/fail", async (req, res) => {
+app.patch("/api/agent/tasks/:id/fail", requireAuth, async (req, res) => {
   try {
     const { error, duration_ms } = req.body ?? {};
     await pgPool.query(
@@ -5446,7 +5159,7 @@ app.patch("/api/agent/tasks/:id/fail", async (req, res) => {
 // ── Agent Logs ───────────────────────────────────────────────────────────────
 
 // POST /api/agent/logs
-app.post("/api/agent/logs", async (req, res) => {
+app.post("/api/agent/logs", requireAuth, async (req, res) => {
   try {
     const { task_id, agent_name, action, detail, tokens_in, tokens_out, api_used, cost_usd, duration_ms } = req.body ?? {};
     if (!agent_name || !action) return res.status(400).json({ error: "agent_name y action son requeridos" });
@@ -5463,7 +5176,7 @@ app.post("/api/agent/logs", async (req, res) => {
 });
 
 // GET /api/agent/logs — Recent logs (last 100)
-app.get("/api/agent/logs", async (req, res) => {
+app.get("/api/agent/logs", requireAuth, async (req, res) => {
   try {
     const { task_id, agent, limit = "100" } = req.query as Record<string, string>;
     const { where, params: fp } = sqlWhere({
@@ -5484,7 +5197,7 @@ app.get("/api/agent/logs", async (req, res) => {
 // ── API Usage ────────────────────────────────────────────────────────────────
 
 // POST /api/agent/api-usage
-app.post("/api/agent/api-usage", async (req, res) => {
+app.post("/api/agent/api-usage", requireAuth, async (req, res) => {
   try {
     const { apiName, api_name, endpoint, cost_usd, tokens_in, tokens_out } = req.body ?? {};
     const name = apiName ?? api_name;
@@ -5502,7 +5215,7 @@ app.post("/api/agent/api-usage", async (req, res) => {
 // ── Gemini proxy (so agents can call AI from client-side or server-side) ─────
 
 // POST /api/agent/ai/gemini — Proxy Gemini for agent backend calls
-app.post("/api/agent/ai/gemini", async (req, res) => {
+app.post("/api/agent/ai/gemini", requireAuth, async (req, res) => {
   try {
     const { prompt, model = "gemini-3.6-flash", system_prompt } = req.body ?? {};
     if (!prompt) return res.status(400).json({ error: "prompt requerido" });
@@ -5934,7 +5647,7 @@ app.get("/api/pipeline/funnel", async (req, res) => {
 
 // POST /api/agent/run/prospect
 // Runs the Prospector: Google Places → companies table
-app.post("/api/agent/run/prospect", async (req, res) => {
+app.post("/api/agent/run/prospect", requireAuth, async (req, res) => {
   try {
     const {
       industry,
@@ -6083,7 +5796,7 @@ app.post("/api/agent/run/prospect", async (req, res) => {
 
 // POST /api/agent/run/enrich
 // Runs the Enricher: Hunter.io → leads_enriched table + optional Firecrawl
-app.post("/api/agent/run/enrich", async (req, res) => {
+app.post("/api/agent/run/enrich", requireAuth, async (req, res) => {
   try {
     const { company_id, company_name, website, domain, city, industry } = req.body ?? {};
     if (!company_id) {
@@ -6217,7 +5930,7 @@ app.post("/api/agent/run/enrich", async (req, res) => {
 // ── Companies ─────────────────────────────────────────────────────────────────
 
 // GET /api/companies
-app.get("/api/companies", async (req, res) => {
+app.get("/api/companies", requireAuth, async (req, res) => {
   try {
     const { status, industry, city, limit = "50", offset = "0" } = req.query as Record<string, string>;
     const conditions: string[] = [];
@@ -6248,7 +5961,7 @@ app.get("/api/companies", async (req, res) => {
 });
 
 // POST /api/companies
-app.post("/api/companies", async (req, res) => {
+app.post("/api/companies", requireAuth, async (req, res) => {
   try {
     const { name, industry, city, country, address, phone, website, rating, source, metadata } = req.body ?? {};
     if (!name) return res.status(400).json({ error: "name requerido" });
@@ -6271,7 +5984,7 @@ app.post("/api/companies", async (req, res) => {
 });
 
 // GET /api/companies/:id
-app.get("/api/companies/:id", async (req, res) => {
+app.get("/api/companies/:id", requireAuth, async (req, res) => {
   try {
     const [company, leads] = await Promise.all([
       pgPool.query("SELECT * FROM companies WHERE id = $1", [req.params.id]),
@@ -6285,7 +5998,7 @@ app.get("/api/companies/:id", async (req, res) => {
 });
 
 // PATCH /api/companies/:id
-app.patch("/api/companies/:id", async (req, res) => {
+app.patch("/api/companies/:id", requireAuth, async (req, res) => {
   try {
     const fields = ["name","industry","city","country","address","phone","website","rating","status"];
     const updates: string[] = [];
@@ -6313,7 +6026,7 @@ app.patch("/api/companies/:id", async (req, res) => {
 // ── Leads Enriched ────────────────────────────────────────────────────────────
 
 // GET /api/leads-enriched
-app.get("/api/leads-enriched", async (req, res) => {
+app.get("/api/leads-enriched", requireAuth, async (req, res) => {
   try {
     const { company_id, limit = "50" } = req.query as Record<string, string>;
     const result = await pgPool.query(
@@ -6332,7 +6045,7 @@ app.get("/api/leads-enriched", async (req, res) => {
 });
 
 // PATCH /api/leads-enriched/:id
-app.patch("/api/leads-enriched/:id", async (req, res) => {
+app.patch("/api/leads-enriched/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { meddic, icp_fit, meddic_score, status } = req.body ?? {};
@@ -6364,7 +6077,7 @@ app.patch("/api/leads-enriched/:id", async (req, res) => {
 });
 
 // POST /api/leads-enriched
-app.post("/api/leads-enriched", async (req, res) => {
+app.post("/api/leads-enriched", requireAuth, async (req, res) => {
   try {
     const { company_id, name, email, phone, linkedin, whatsapp, role, source, icp_fit, meddic_score, metadata } = req.body ?? {};
     if (!company_id) return res.status(400).json({ error: "company_id requerido" });
@@ -6383,7 +6096,7 @@ app.post("/api/leads-enriched", async (req, res) => {
 // ── Proposals ─────────────────────────────────────────────────────────────────
 
 // GET /api/proposals
-app.get("/api/proposals", async (req, res) => {
+app.get("/api/proposals", requireAuth, async (req, res) => {
   try {
     const { company_id, status, limit = "20" } = req.query as Record<string, string>;
     const { where, params: fp } = sqlWhere({
@@ -6404,7 +6117,7 @@ app.get("/api/proposals", async (req, res) => {
 });
 
 // POST /api/proposals
-app.post("/api/proposals", async (req, res) => {
+app.post("/api/proposals", requireAuth, async (req, res) => {
   try {
     const { company_id, lead_id, content_md, pdf_url } = req.body ?? {};
     if (!company_id || !content_md) return res.status(400).json({ error: "company_id y content_md requeridos" });
@@ -6422,7 +6135,7 @@ app.post("/api/proposals", async (req, res) => {
 // ── Campaigns ─────────────────────────────────────────────────────────────────
 
 // GET /api/campaigns
-app.get("/api/campaigns", async (req, res) => {
+app.get("/api/campaigns", requireAuth, async (req, res) => {
   try {
     const result = await pgPool.query(
       `SELECT id, name, type, status, template, leads_count, sent_count, replies_count, created_at
@@ -6435,7 +6148,7 @@ app.get("/api/campaigns", async (req, res) => {
 });
 
 // POST /api/campaigns
-app.post("/api/campaigns", async (req, res) => {
+app.post("/api/campaigns", requireAuth, async (req, res) => {
   try {
     const { name, type = "email", status = "draft", template = "intro", icp_filter = {} } = req.body ?? {};
     if (!name) return res.status(400).json({ error: "name requerido" });

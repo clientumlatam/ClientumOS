@@ -59,6 +59,7 @@ import PublicWebsite from './components/PublicWebsite';
 import { AuthButton } from './components/AuthButton';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
+// removed import
 
 function DashboardApp({ currentUser, handleLogout, resetModalElement }: { currentUser: string | null, handleLogout: () => void, resetModalElement: React.ReactNode }) {
   const navigate = useNavigate();
@@ -285,6 +286,7 @@ export default function App() {
       <Route path="/dashboard/*" element={<Navigate to="/app" replace />} />
       <Route path="/crm/*" element={<Navigate to="/app" replace />} />
       <Route path="/erp/*" element={<Navigate to="/app" replace />} />
+
       <Route path="/app/*" element={
         <DashboardApp 
           currentUser={currentUser} 
