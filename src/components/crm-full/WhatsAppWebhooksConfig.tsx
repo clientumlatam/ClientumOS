@@ -53,6 +53,20 @@ export interface WebhookConfig {
   lastVerifiedAt: string;
   appUrl?: string;
   callbackUrl?: string;
+  alertEmailEnabled?: boolean;
+  alertPushEnabled?: boolean;
+  alertEmail?: string;
+  alertPhone?: string;
+  notifyOnRecovery?: boolean;
+  simulatedError?: boolean;
+  alertHistory?: Array<{
+    id: string;
+    timestamp: string;
+    type: 'email' | 'push';
+    recipient: string;
+    status: 'sent' | 'failed' | 'pending';
+    message: string;
+  }>;
 }
 
 export interface WebhookLog {
@@ -98,8 +112,8 @@ export interface WebhookHealthData {
 }
 
 export function WhatsAppWebhooksConfig() {
-  // Navigation tabs: 'config' | 'logs' | 'simulator' | 'guide'
-  const [activeTab, setActiveTab] = useState<'config' | 'logs' | 'simulator' | 'guide'>('config');
+  // Navigation tabs: 'config' | 'logs' | 'alerts' | 'simulator' | 'guide'
+  const [activeTab, setActiveTab] = useState<'config' | 'logs' | 'alerts' | 'simulator' | 'guide'>('config');
   const [logViewMode, setLogViewMode] = useState<'table' | 'cards'>('table');
 
   const [testingConnection, setTestingConnection] = useState(false);
@@ -115,7 +129,14 @@ export function WhatsAppWebhooksConfig() {
     subscribedEvents: ['messages', 'message_deliveries', 'message_reads', 'message_template_status_update', 'phone_number_quality_update'],
     webhookStatus: 'active',
     lastVerifiedAt: new Date().toISOString(),
-    callbackUrl: '/api/whatsapp/webhook'
+    callbackUrl: '/api/whatsapp/webhook',
+    alertEmailEnabled: false,
+    alertPushEnabled: false,
+    alertEmail: 'clientumlatam@gmail.com',
+    alertPhone: '',
+    notifyOnRecovery: true,
+    simulatedError: false,
+    alertHistory: []
   });
 
   const [logs, setLogs] = useState<WebhookLog[]>([]);
@@ -132,6 +153,9 @@ export function WhatsAppWebhooksConfig() {
   const [autoRefreshLogs, setAutoRefreshLogs] = useState(true);
   const [logFilter, setLogFilter] = useState<'all' | 'inbound' | 'handshake' | 'status' | 'template'>('all');
   const [searchLog, setSearchLog] = useState('');
+  
+  const [activeAlertToast, setActiveAlertToast] = useState<{ type: 'email' | 'push'; message: string; timestamp: string } | null>(null);
+  const [errorAlertTriggered, setErrorAlertTriggered] = useState(false);
   const [showSetupGuide, setShowSetupGuide] = useState(false);
 
   // Test form state
@@ -172,6 +196,133 @@ export function WhatsAppWebhooksConfig() {
         }
       });
     }
+  };
+
+  // Trigger alerts when healthData state transitions to error
+  useEffect(() => {
+    if (healthData && healthData.status === 'error') {
+      if (!errorAlertTriggered) {
+        // Trigger alert!
+        setErrorAlertTriggered(true);
+        const alertMsg = '🚨 ALERTA CRÍTICA: Se detectó pérdida de conectividad con el Webhook de Meta. Código de respuesta fallido.';
+        
+        // Show push notification on screen if push is enabled
+        if (config.alertPushEnabled) {
+          setActiveAlertToast({
+            type: 'push',
+            message: alertMsg,
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        // Save alert record to server if email or push is enabled
+        if (config.alertEmailEnabled || config.alertPushEnabled) {
+          const newAlertLog = {
+            id: `alert-auto-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            type: config.alertEmailEnabled ? ('email' as const) : ('push' as const),
+            recipient: config.alertEmailEnabled ? (config.alertEmail || 'clientumlatam@gmail.com') : 'Dispositivo Registrado',
+            status: 'sent' as const,
+            message: alertMsg
+          };
+          
+          const updatedHistory = [newAlertLog, ...(config.alertHistory || [])];
+          setConfig(prev => ({ ...prev, alertHistory: updatedHistory }));
+          
+          fetch('/api/whatsapp/webhook/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...config, alertHistory: updatedHistory })
+          }).catch(console.error);
+        }
+      }
+    } else if (healthData && healthData.status !== 'error') {
+      if (errorAlertTriggered) {
+        setErrorAlertTriggered(false);
+        // If notifyOnRecovery is enabled, send recovery alert
+        if (config.notifyOnRecovery && (config.alertEmailEnabled || config.alertPushEnabled)) {
+          const recoveryMsg = '✅ RECUPERACIÓN: El Webhook de Meta ha recuperado la conectividad saludable de forma automática.';
+          const recoveryAlertLog = {
+            id: `alert-rec-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            type: config.alertEmailEnabled ? ('email' as const) : ('push' as const),
+            recipient: config.alertEmailEnabled ? (config.alertEmail || 'clientumlatam@gmail.com') : 'Dispositivo Registrado',
+            status: 'sent' as const,
+            message: recoveryMsg
+          };
+          const updatedHistory = [recoveryAlertLog, ...(config.alertHistory || [])];
+          setConfig(prev => ({ ...prev, alertHistory: updatedHistory }));
+          fetch('/api/whatsapp/webhook/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...config, alertHistory: updatedHistory })
+          }).catch(console.error);
+          
+          setActiveAlertToast({
+            type: 'push',
+            message: recoveryMsg,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+    }
+  }, [healthData?.status]);
+
+  const handleToggleSimulatedError = async () => {
+    const nextVal = !config.simulatedError;
+    const updated = {
+      ...config,
+      simulatedError: nextVal,
+      webhookStatus: nextVal ? 'error' : 'configured'
+    };
+    setConfig(updated);
+    
+    try {
+      const res = await fetch('/api/whatsapp/webhook/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ simulatedError: nextVal })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.config) {
+          setConfig(prev => ({ ...prev, ...data.config }));
+        }
+      }
+      await loadHealthStatus();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleTriggerTestAlert = async () => {
+    const newAlert = {
+      id: `alert-test-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'email' as const,
+      recipient: config.alertEmail || 'clientumlatam@gmail.com',
+      status: 'sent' as const,
+      message: '🧪 Alerta de Prueba: Verificación manual de despacho de avisos de monitoreo.'
+    };
+    
+    const updatedHistory = [newAlert, ...(config.alertHistory || [])];
+    setConfig(prev => ({ ...prev, alertHistory: updatedHistory }));
+    
+    try {
+      await fetch('/api/whatsapp/webhook/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...config, alertHistory: updatedHistory })
+      });
+    } catch (e) {
+      console.error(e);
+    }
+    
+    setActiveAlertToast({
+      type: 'email',
+      message: '🧪 Alerta de Prueba Enviada: Verificación manual ejecutada.',
+      timestamp: new Date().toISOString()
+    });
   };
 
   const loadData = async (silent = false) => {
@@ -636,6 +787,49 @@ export function WhatsAppWebhooksConfig() {
         </div>
       )}
 
+      {activeAlertToast && (
+        <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-xs transition-all animate-bounce ${
+          activeAlertToast.message.includes('RECUPERACIÓN')
+            ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-200'
+            : 'bg-rose-500/15 border-rose-500/30 text-rose-200'
+        }`}>
+          <div className="flex items-center gap-2">
+            <ShieldAlert className={`w-4 h-4 ${activeAlertToast.message.includes('RECUPERACIÓN') ? 'text-emerald-400' : 'text-rose-400'} shrink-0`} />
+            <div>
+              <p className="font-bold">{activeAlertToast.message}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                Despachado vía: <strong>{activeAlertToast.type.toUpperCase()}</strong> · Receptor: <strong>{activeAlertToast.type === 'email' ? (config.alertEmail || 'clientumlatam@gmail.com') : 'Dispositivo Registrado (Push)'}</strong>
+              </p>
+            </div>
+          </div>
+          <button onClick={() => setActiveAlertToast(null)} className="text-slate-400 hover:text-white cursor-pointer">✕</button>
+        </div>
+      )}
+
+      {healthData && healthData.status === 'error' && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-rose-500/20 text-rose-400 animate-pulse">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-rose-300">Monitoreo de Webhook: Estado en Error</p>
+              <p className="text-[11px] text-slate-400">
+                {config.simulatedError 
+                  ? 'La simulación de Webhook Caído se encuentra ACTIVA. Las alertas automáticas están siendo disparadas.'
+                  : 'Se ha detectado un fallo real en la Callback URL del Webhook de Meta.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveTab('alerts')}
+            className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+          >
+            Gestionar Alertas
+          </button>
+        </div>
+      )}
+
       {/* ── TOP TAB NAVIGATION BAR ── */}
       <div className="flex items-center gap-2 border-b border-[#1E293B] pb-3 overflow-x-auto">
         <button
@@ -661,7 +855,7 @@ export function WhatsAppWebhooksConfig() {
           <Terminal className="w-3.5 h-3.5 text-emerald-400" />
           <span>Logs de Webhook en Tiempo Real</span>
           <span
-            className={`px-2 py-0.5 text-[10px] font-mono rounded-full font-extrabold ${
+             className={`px-2 py-0.5 text-[10px] font-mono rounded-full font-extrabold ${
               activeTab === 'logs'
                 ? 'bg-emerald-500 text-slate-950'
                 : 'bg-slate-800 text-emerald-400 border border-emerald-500/30'
@@ -669,6 +863,21 @@ export function WhatsAppWebhooksConfig() {
           >
             {logs.length}
           </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('alerts')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap relative ${
+            activeTab === 'alerts'
+              ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
+              : 'bg-[#0A101F] text-slate-400 hover:text-white border border-[#1E293B]'
+          }`}
+        >
+          <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+          <span>Alertas de Conectividad</span>
+          {config.alertEmailEnabled || config.alertPushEnabled ? (
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse ml-1 shrink-0" />
+          ) : null}
         </button>
 
         <button
@@ -1519,6 +1728,269 @@ export function WhatsAppWebhooksConfig() {
                   })}
                 </div>
               )
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════════════
+          TAB 5: ALERTAS DE CONECTIVIDAD (REQUESTED FEATURE)
+         ══════════════════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'alerts' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Left Col: Configuración de Canales y Alertas (2 Cols) */}
+            <div className="lg:col-span-2 space-y-5">
+              <div className="bg-[#0A101F]/80 border border-[#1E293B] p-6 rounded-2xl space-y-6 shadow-lg">
+                <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <ShieldAlert className="w-5 h-5 text-rose-400" />
+                      Canales de Alerta de Conectividad
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Configurá alertas automáticas cuando se detecte que el webhook de Meta se encuentra caído o reporta un estado de error (ej. Handshake fallido, tiempo de espera excedido, SSL inválido).
+                    </p>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold">
+                    Seguridad Activa
+                  </span>
+                </div>
+
+                <div className="space-y-5">
+                  {/* Canal 1: Email */}
+                  <div className="p-4 bg-[#050B14] border border-[#1E293B] rounded-xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-lg ${config.alertEmailEnabled ? 'bg-rose-500/10 text-rose-400' : 'bg-slate-800 text-slate-500'}`}>
+                          <Globe className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-white">Notificaciones por Correo Electrónico</p>
+                          <p className="text-[11px] text-slate-400">Enviaremos un correo de alerta crítico inmediatamente al ocurrir un error.</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setConfig(prev => ({ ...prev, alertEmailEnabled: !prev.alertEmailEnabled }))}
+                        className={`w-10 h-5 rounded-full transition-colors relative p-0.5 shrink-0 cursor-pointer ${
+                          config.alertEmailEnabled ? 'bg-rose-500' : 'bg-slate-700'
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                            config.alertEmailEnabled ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {config.alertEmailEnabled && (
+                      <div className="pt-2 animate-fadeIn">
+                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                          Destinatario del Correo de Alerta
+                        </label>
+                        <input
+                          type="email"
+                          value={config.alertEmail || ''}
+                          onChange={e => setConfig(prev => ({ ...prev, alertEmail: e.target.value }))}
+                          placeholder="alertas@clientum.latam"
+                          className="w-full max-w-md bg-[#0A101F] border border-[#1E293B] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-rose-500/50"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Canal 2: Push Notifications */}
+                  <div className="p-4 bg-[#050B14] border border-[#1E293B] rounded-xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-lg ${config.alertPushEnabled ? 'bg-rose-500/10 text-rose-400' : 'bg-slate-800 text-slate-500'}`}>
+                          <Radio className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-white">Notificaciones Push en Navegador</p>
+                          <p className="text-[11px] text-slate-400">Despacha alertas emergentes de alta prioridad directo al centro de control del CRM.</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setConfig(prev => ({ ...prev, alertPushEnabled: !prev.alertPushEnabled }))}
+                        className={`w-10 h-5 rounded-full transition-colors relative p-0.5 shrink-0 cursor-pointer ${
+                          config.alertPushEnabled ? 'bg-rose-500' : 'bg-slate-700'
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                            config.alertPushEnabled ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Aditional Preferences */}
+                  <div className="p-4 bg-[#050B14] border border-[#1E293B] rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-white">Notificar al Recuperar Conexión</p>
+                        <p className="text-[11px] text-slate-400">Enviar un segundo mensaje indicando que el Webhook ha retornado a su estado saludable.</p>
+                      </div>
+                      <button
+                        onClick={() => setConfig(prev => ({ ...prev, notifyOnRecovery: !prev.notifyOnRecovery }))}
+                        className={`w-10 h-5 rounded-full transition-colors relative p-0.5 shrink-0 cursor-pointer ${
+                          config.notifyOnRecovery ? 'bg-emerald-500' : 'bg-slate-700'
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                            config.notifyOnRecovery ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end gap-3 border-t border-[#1E293B]">
+                  <button
+                    onClick={handleSaveConfig}
+                    disabled={saving}
+                    className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-rose-600/20 flex items-center gap-2 cursor-pointer"
+                  >
+                    {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                    Guardar Configuración de Alertas
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Col: Simulador de Fallos & Diagnóstico (1 Col) */}
+            <div className="space-y-5">
+              
+              {/* Simulador de Caídas */}
+              <div className="bg-[#0A101F]/80 border border-rose-500/30 p-5 rounded-2xl space-y-4 shadow-lg relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-2xl pointer-events-none" />
+                
+                <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-rose-400" />
+                  Simulador de Incidencias
+                </h4>
+                
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Podés simular de forma segura una interrupción del servicio o falla de conectividad de tu Callback URL para verificar el despacho instantáneo de alertas sin romper tu entorno de producción.
+                </p>
+
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-rose-300">Simular Webhook Caído</p>
+                      <p className="text-[10px] text-slate-400">Retorna un código HTTP 502/503</p>
+                    </div>
+                    <button
+                      onClick={handleToggleSimulatedError}
+                      className={`w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0 cursor-pointer ${
+                        config.simulatedError ? 'bg-rose-500' : 'bg-slate-700'
+                      }`}
+                    >
+                      <div
+                        className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                          config.simulatedError ? 'translate-x-6' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  {config.simulatedError && (
+                    <div className="text-[10px] text-rose-400 font-medium animate-pulse">
+                      🚨 Webhook simulado como caído. La monitorización informará "error".
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <button
+                    onClick={handleTriggerTestAlert}
+                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                  >
+                    <Play className="w-3.5 h-3.5 text-rose-400" />
+                    Enviar Alerta de Prueba Ahora
+                  </button>
+                </div>
+              </div>
+
+              {/* Status indicator box */}
+              <div className="bg-[#0A101F]/80 border border-[#1E293B] p-5 rounded-2xl space-y-3">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Métricas de Alertas</h4>
+                <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                  <div className="p-3 bg-[#050B14] rounded-xl border border-[#1E293B]/60">
+                    <span className="text-slate-500 text-[10px] block uppercase font-semibold">Total Alertas</span>
+                    <span className="text-lg font-bold text-white font-mono">{config.alertHistory?.length || 0}</span>
+                  </div>
+                  <div className="p-3 bg-[#050B14] rounded-xl border border-[#1E293B]/60">
+                    <span className="text-slate-500 text-[10px] block uppercase font-semibold">Entregados</span>
+                    <span className="text-lg font-bold text-emerald-400 font-mono">
+                      {(config.alertHistory || []).filter(h => h.status === 'sent').length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Bottom Table: Alert logs history */}
+          <div className="bg-[#0A101F]/90 border border-[#1E293B] p-5 rounded-2xl space-y-4 shadow-xl">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-rose-400" />
+                Historial de Alertas de Conectividad Despachadas
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Bitácora de todos los avisos emitidos hacia canales externos por eventos de desconexión detectados en Meta.
+              </p>
+            </div>
+
+            {(!config.alertHistory || config.alertHistory.length === 0) ? (
+              <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-xl bg-[#050B14]/40">
+                No hay registros de alertas emitidas recientemente.
+              </div>
+            ) : (
+              <div className="overflow-x-auto border border-[#1E293B] rounded-xl bg-[#050B14]">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-[#0A101F] text-slate-400 font-bold border-b border-[#1E293B]">
+                      <th className="p-3">Fecha y Hora</th>
+                      <th className="p-3">Canal / Medio</th>
+                      <th className="p-3">Destinatario</th>
+                      <th className="p-3">Mensaje Despachado</th>
+                      <th className="p-3 text-right">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#1E293B]/40">
+                    {config.alertHistory.map((h, i) => (
+                      <tr key={h.id || i} className="hover:bg-slate-800/10 transition-colors">
+                        <td className="p-3 font-mono text-slate-300">
+                          {new Date(h.timestamp).toLocaleString('es-AR')}
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                            h.type === 'email' ? 'bg-[#0B1528] text-indigo-400 border border-indigo-500/20' : 'bg-[#1F1020] text-pink-400 border border-pink-500/20'
+                          }`}>
+                            {h.type}
+                          </span>
+                        </td>
+                        <td className="p-3 font-mono text-slate-300">{h.recipient}</td>
+                        <td className="p-3 text-slate-300">{h.message}</td>
+                        <td className="p-3 text-right">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            {h.status === 'sent' ? 'Enviado' : h.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

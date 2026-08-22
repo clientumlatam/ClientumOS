@@ -6927,7 +6927,23 @@ let metaWebhookConfig = {
     "message_template_status_update"
   ],
   webhookStatus: "active",
-  lastVerifiedAt: new Date().toISOString()
+  lastVerifiedAt: new Date().toISOString(),
+  alertEmailEnabled: false,
+  alertPushEnabled: false,
+  alertEmail: "clientumlatam@gmail.com",
+  alertPhone: "",
+  notifyOnRecovery: true,
+  simulatedError: false,
+  alertHistory: [
+    {
+      id: "alert-h-1",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      type: "email",
+      recipient: "clientumlatam@gmail.com",
+      status: "sent",
+      message: "⚠️ Alerta de Conectividad: La Callback URL ha reportado un código de estado 502 Bad Gateway."
+    }
+  ]
 };
 
 const metaWebhookLogs: MetaWebhookLog[] = [
@@ -7243,23 +7259,32 @@ app.get("/api/whatsapp/webhook/health", (req, res) => {
   const fullCallbackUrl = `${protocol}://${host}/api/whatsapp/webhook`;
   const tokenLength = metaWebhookConfig.verifyToken ? metaWebhookConfig.verifyToken.length : 0;
   const isTokenConfigured = Boolean(metaWebhookConfig.verifyToken && tokenLength >= 8);
+  const isError = (metaWebhookConfig as any).simulatedError === true;
 
   const inboundsCount = metaWebhookLogs.filter(l => l.type === "inbound_message" || l.type === "test_simulation").length;
   const handshakeCount = metaWebhookLogs.filter(l => l.type === "handshake_verification").length;
   const statusCount = metaWebhookLogs.filter(l => l.type === "message_status").length;
 
   res.json({
-    ok: true,
-    status: isTokenConfigured ? "healthy" : "warning",
+    ok: !isError,
+    status: isError ? "error" : (isTokenConfigured ? "healthy" : "warning"),
     callbackUrl: "/api/whatsapp/webhook",
     fullCallbackUrl,
     verifyToken: metaWebhookConfig.verifyToken,
-    verifyTokenStatus: isTokenConfigured ? "configured_valid" : "missing_or_short",
+    verifyTokenStatus: isError ? "error_connection" : (isTokenConfigured ? "configured_valid" : "missing_or_short"),
     verifyTokenLength: tokenLength,
-    webhookStatus: metaWebhookConfig.webhookStatus || "active",
+    webhookStatus: isError ? "error" : (metaWebhookConfig.webhookStatus || "active"),
     lastVerifiedAt: metaWebhookConfig.lastVerifiedAt,
     autoBotResponse: metaWebhookConfig.autoBotResponse,
     subscribedEvents: metaWebhookConfig.subscribedEvents,
+    // Include alert config in health payload
+    alertEmailEnabled: (metaWebhookConfig as any).alertEmailEnabled || false,
+    alertPushEnabled: (metaWebhookConfig as any).alertPushEnabled || false,
+    alertEmail: (metaWebhookConfig as any).alertEmail || "",
+    alertPhone: (metaWebhookConfig as any).alertPhone || "",
+    notifyOnRecovery: (metaWebhookConfig as any).notifyOnRecovery || false,
+    simulatedError: isError,
+    alertHistory: (metaWebhookConfig as any).alertHistory || [],
     stats: {
       totalEvents: metaWebhookLogs.length,
       inboundsCount,
@@ -7269,12 +7294,12 @@ app.get("/api/whatsapp/webhook/health", (req, res) => {
       lastEventType: metaWebhookLogs[0]?.type || null
     },
     checks: {
-      callbackReachable: true,
-      handshakeEndpointReady: true,
-      verifyTokenSynced: isTokenConfigured,
+      callbackReachable: !isError,
+      handshakeEndpointReady: !isError,
+      verifyTokenSynced: isError ? false : isTokenConfigured,
       sslSecure: protocol === "https" || host.includes(".run.app") || host.includes("localhost"),
-      receiverReady: true,
-      estimatedLatencyMs: 8
+      receiverReady: !isError,
+      estimatedLatencyMs: isError ? 0 : 8
     }
   });
 });
@@ -7282,14 +7307,37 @@ app.get("/api/whatsapp/webhook/health", (req, res) => {
 // 4. POST /api/whatsapp/webhook/config
 app.post("/api/whatsapp/webhook/config", (req, res) => {
   try {
-    const { verifyToken, phoneNumberId, wabaId, autoBotResponse, subscribedEvents } = req.body ?? {};
+    const { 
+      verifyToken, 
+      phoneNumberId, 
+      wabaId, 
+      autoBotResponse, 
+      subscribedEvents,
+      alertEmailEnabled,
+      alertPushEnabled,
+      alertEmail,
+      alertPhone,
+      notifyOnRecovery,
+      simulatedError,
+      alertHistory
+    } = req.body ?? {};
+    
     if (verifyToken !== undefined) metaWebhookConfig.verifyToken = String(verifyToken).trim();
     if (phoneNumberId !== undefined) metaWebhookConfig.phoneNumberId = String(phoneNumberId).trim();
     if (wabaId !== undefined) metaWebhookConfig.wabaId = String(wabaId).trim();
     if (autoBotResponse !== undefined) metaWebhookConfig.autoBotResponse = Boolean(autoBotResponse);
     if (Array.isArray(subscribedEvents)) metaWebhookConfig.subscribedEvents = subscribedEvents;
     
-    metaWebhookConfig.webhookStatus = "configured";
+    // Alerts and Simulation
+    if (alertEmailEnabled !== undefined) (metaWebhookConfig as any).alertEmailEnabled = Boolean(alertEmailEnabled);
+    if (alertPushEnabled !== undefined) (metaWebhookConfig as any).alertPushEnabled = Boolean(alertPushEnabled);
+    if (alertEmail !== undefined) (metaWebhookConfig as any).alertEmail = String(alertEmail).trim();
+    if (alertPhone !== undefined) (metaWebhookConfig as any).alertPhone = String(alertPhone).trim();
+    if (notifyOnRecovery !== undefined) (metaWebhookConfig as any).notifyOnRecovery = Boolean(notifyOnRecovery);
+    if (simulatedError !== undefined) (metaWebhookConfig as any).simulatedError = Boolean(simulatedError);
+    if (Array.isArray(alertHistory)) (metaWebhookConfig as any).alertHistory = alertHistory;
+    
+    metaWebhookConfig.webhookStatus = (metaWebhookConfig as any).simulatedError ? "error" : "configured";
     
     res.json({ ok: true, config: metaWebhookConfig });
   } catch (error: any) {
