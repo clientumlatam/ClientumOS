@@ -1,6 +1,6 @@
 {
-  "name": "Clientumos CRM & Business OS",
-  "description": "Plataforma integral de CRM, automatizaciones, prospección inteligente, ERP y ecosistema de agentes IA para empresas.",
+  "name": "Clientum · Agencia Digital & Servicios PyME",
+  "description": "Sitio web oficial de la agencia Clientum: Servicios profesionales de consultoría estratégica, chatbots WhatsApp con IA, CRM, desarrollo web y automatización para PyMEs en Argentina y Latinoamérica.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

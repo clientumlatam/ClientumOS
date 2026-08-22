@@ -65,7 +65,8 @@ import {
   Radio,
   Terminal,
   Rocket,
-  Handshake
+  Handshake,
+  Headphones
 } from "lucide-react";
 
 import { KeyProjectsSection } from "./KeyProjectsSection";
@@ -79,6 +80,13 @@ import BrochurePreview from "./BrochurePreview";
 import { PdfExportButton } from "./PdfExportButton";
 import { LanguageSelector } from "./LanguageSelector";
 import { useLanguage } from "../lib/i18n";
+import {
+  ArgentinePymeCard,
+  ArgentinePymesSection,
+  ArgentinePymeDetailBanner,
+  ARGENTINE_PYMES_DATA
+} from "./ArgentinePymeShowcase";
+import { PublicLeadFormModal, PublicFormType } from "./PublicLeadFormModal";
 import serviciosCatalogo from "../data/servicios-catalogo.json";
 import categoriasServicios from "../data/categorias-servicios.json";
 import cursosLms from "../data/cursos-lms.json";
@@ -147,14 +155,14 @@ interface PublicWebsiteProps {
 
 const DEFAULT_BROCHURE_DATA: BrochureData = {
   cover: {
-    company: 'Clientum B2B Intelligence',
-    slogan: 'El Ecosistema Comercial e IA para Escalar tu PyME',
-    sub: 'CRM, Chatbot WhatsApp con IA, E-Commerce, ERP, Business Intelligence, Marketing Digital, Ciberseguridad, Cloud, Apps Móviles y Capacitación — el ecosistema completo de Clientum.',
-    industry: 'Tecnología & Software B2B'
+    company: 'Clientum Agencia Digital',
+    slogan: 'Agencia de Crecimiento Comercial, Inteligencia Artificial & Automatización para PyMEs',
+    sub: 'Consultoría estratégica, implementación de CRM, Agentes WhatsApp IA, Campañas de Marketing Digital, Desarrollo Web & E-Commerce, Integraciones y Analítica para escalar tu negocio.',
+    industry: 'Agencia de Crecimiento & Consultoría B2B'
   },
   logoUrl: '/favicon.svg',
   chatbot: {
-    title: 'Chatbot WhatsApp Inteligente con IA (Gemini 3.6)',
+    title: 'Servicio de Chatbot WhatsApp Inteligente con IA (Gemini 3.6)',
     features: [
       { title: 'Atención Automatizada 24/7', desc: 'Responde consultas en segundos con inteligencia artificial conversacional.' },
       { title: 'Calificación Inmediata de Leads', desc: 'Evalúa la intención de compra y registra los datos directamente en el CRM.' },
@@ -168,7 +176,7 @@ const DEFAULT_BROCHURE_DATA: BrochureData = {
     ]
   },
   crm: {
-    title: 'CRM Inteligente, Analítica & Facturación AFIP',
+    title: 'Consultoría & Implementación CRM, Analítica & Facturación AFIP',
     features: [
       { title: 'Pipeline Kanban Visual', desc: 'Gestión drag & drop de oportunidades por etapas comerciales.' },
       { title: 'Facturación Electrónica AFIP', desc: 'Emisión automática de comprobantes A, B y C con CAE en tiempo real.' },
@@ -176,15 +184,15 @@ const DEFAULT_BROCHURE_DATA: BrochureData = {
     ]
   },
   services: [
-    { title: 'Módulo 1: CRM & Omnicanalidad', desc: 'Gestión integral de clientes, contactos y oportunidades comerciales.', price: 150000, monthly: 45000, time: 5, bullets: ['Pipeline Drag & Drop', 'Historial unificado de chats', 'Múltiples embudos'] },
-    { title: 'Módulo 2: Chatbot WhatsApp IA', desc: 'Agente virtual conversacional alimentado por Gemini 3.6 Flash.', price: 180000, monthly: 55000, time: 7, bullets: ['Entrenamiento con catálogo propio', 'Agendamiento automático', 'Notificaciones de voz'] },
-    { title: 'Módulo 3: Facturación AFIP & ERP', desc: 'Conexión directa con AFIP para emisión de facturas A, B y C.', price: 120000, monthly: 35000, time: 3, bullets: ['CAE automático en tiempo real', 'Envío por email/WhatsApp', 'Cálculo de impuestos'] },
-    { title: 'Módulo 4: Business Intelligence', desc: 'Dashboards analíticos con KPIs en tiempo real y reportes exportables.', price: 140000, monthly: 40000, time: 4, bullets: ['Conversión por canal', 'Atribución de ingresos', 'Exportación PDF/Excel'] },
-    { title: 'Módulo 5: E-Commerce & Portal Cliente', desc: 'Tienda digital conectada con inventario, cuentas corrientes y cobros.', price: 220000, monthly: 65000, time: 10, bullets: ['Pasarela MercadoPago', 'Portal de autogestión B2B', 'Sincronización de stock'] },
-    { title: 'Módulo 6: Ciberseguridad & Cloud', desc: 'Infraestructura protegida con respaldos automáticos y SSL.', price: 160000, monthly: 50000, time: 5, bullets: ['Encriptación de grado bancario', 'Copias de seguridad diarias', 'SLA 99.9% garantizado'] }
+    { title: 'Servicio 1: Consultoría & CRM Omnicanal', desc: 'Diseño e implementación de procesos comerciales y gestión integral de contactos y oportunidades.', price: 150000, monthly: 45000, time: 5, bullets: ['Pipeline Drag & Drop a medida', 'Historial unificado de chats', 'Capacitación a vendedores'] },
+    { title: 'Servicio 2: Agentes & Chatbot WhatsApp IA', desc: 'Desarrollo de agente virtual conversacional alimentado por Gemini 3.6 Flash y catálogo propio.', price: 180000, monthly: 55000, time: 7, bullets: ['Entrenamiento con catálogo y FAQs', 'Agendamiento de reuniones', 'Calificación automática de leads'] },
+    { title: 'Servicio 3: Integraciones AFIP & ERP', desc: 'Conexión directa con AFIP para emisión de facturas electrónicas automáticas y sincronización contable.', price: 120000, monthly: 35000, time: 3, bullets: ['CAE automático en tiempo real', 'Envío por email/WhatsApp', 'Configuración de cuentas'] },
+    { title: 'Servicio 4: Business Intelligence & Analítica', desc: 'Dashboards analíticos con KPIs en tiempo real, atribución de ventas y reportes ejecutivos.', price: 140000, monthly: 40000, time: 4, bullets: ['Conversión por canal y vendedor', 'Atribución de ingresos', 'Reportes automáticos mensuales'] },
+    { title: 'Servicio 5: Desarrollo Web & E-Commerce', desc: 'Diseño y desarrollo de sitios corporativos, landing pages de alta conversión y tiendas online.', price: 220000, monthly: 65000, time: 10, bullets: ['Pasarelas de cobro integradas', 'Diseño UX/UI premium', 'Optimización SEO y velocidad'] },
+    { title: 'Servicio 6: Growth Marketing & Outreach', desc: 'Estrategias de prospección automatizada, campañas masivas de WhatsApp y generación de prospectos B2B.', price: 160000, monthly: 50000, time: 5, bullets: ['Campañas de nutrición de leads', 'Prospección asistida por IA', 'Optimización constante de ROI'] }
   ],
   testimonial: {
-    text: 'Implementamos el ecosistema completo de Clientum en menos de una semana. El chatbot de WhatsApp califica 150+ leads semanales y la integración con AFIP nos ahorra 20 horas de administración al mes.',
+    text: 'Trabajar con la agencia Clientum transformó por completo nuestro proceso de ventas. Nos implementaron el CRM y el chatbot de WhatsApp en menos de 10 días, calificando 150+ leads semanales y ahorrándonos 20 horas de tareas manuales al mes.',
     author: 'Ing. Roberto Albarracín',
     company: 'CEO, Grupo Agro-Industrial Patagonia'
   }
@@ -299,18 +307,31 @@ export default function PublicWebsite({
     }
   }, [colorTheme]);
 
-  // Form states
+  // Form states & Lead Modal triggers
   const [demoForm, setDemoForm] = useState({
     nombre: "",
     email: "",
+    telefono: "",
     empresa: "",
     rubro: "E-Commerce",
     mensaje: "",
     newsletter: true
   });
   const [isDemoSubmitted, setIsDemoSubmitted] = useState<boolean>(false);
+  const [isDemoLoading, setIsDemoLoading] = useState<boolean>(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+
+  // Universal Lead Form Modal State for all subpages
+  const [leadModalOpen, setLeadModalOpen] = useState<boolean>(false);
+  const [leadModalType, setLeadModalType] = useState<PublicFormType>("contacto_comercial");
+  const [leadModalInitialData, setLeadModalInitialData] = useState<Record<string, any>>({});
+
+  const openLeadForm = (formType: PublicFormType, initialData: Record<string, any> = {}) => {
+    setLeadModalType(formType);
+    setLeadModalInitialData(initialData);
+    setLeadModalOpen(true);
+  };
 
   // Filter state for portfolio/industries
   const [industryFilter, setIndustryFilter] = useState<string>("todos");
@@ -567,17 +588,53 @@ export default function PublicWebsite({
     }
   }, [projectCount, pageCount]);
 
-  // Handle forms
-  const handleDemoSubmit = (e: React.FormEvent) => {
+  // Handle forms with live server integration
+  const handleDemoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!demoForm.nombre || !demoForm.email) return;
-    setIsDemoSubmitted(true);
+    setIsDemoLoading(true);
+
+    try {
+      await fetch('/api/public/submit-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formType: 'diagnostico_pyme',
+          nombre: demoForm.nombre,
+          email: demoForm.email,
+          telefono: demoForm.telefono,
+          empresa: demoForm.empresa,
+          rubro: demoForm.rubro,
+          mensaje: demoForm.mensaje || 'Solicitud de diagnóstico o cotización desde el sitio web público',
+          metadata: { newsletter: demoForm.newsletter }
+        })
+      });
+    } catch (err) {
+      console.warn('Error enviando formulario al backend:', err);
+    } finally {
+      setIsDemoLoading(false);
+      setIsDemoSubmitted(true);
+    }
   };
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newsletterEmail) return;
     setNewsletterSubscribed(true);
+    try {
+      await fetch('/api/public/submit-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formType: 'newsletter_suscripcion',
+          email: newsletterEmail,
+          nombre: 'Suscriptor Newsletter',
+          mensaje: 'Suscripción al boletín de tendencias y actualizaciones de Clientum'
+        })
+      });
+    } catch (err) {
+      // ignore
+    }
     setTimeout(() => {
       setNewsletterEmail("");
       setNewsletterSubscribed(false);
@@ -897,73 +954,70 @@ export default function PublicWebsite({
   // agregar/renombrar un ítem lo actualice en todo el sitio a la vez.
   // Los ítems con `query` no tienen una sección propia: abren el catálogo
   // de servicios filtrado por esa búsqueda (igual que hacía el footer).
-  // Taxonomía por "problema de negocio" (no por función/tecnología): cada
-  // solución resuelve algo concreto. Asistente IA, Portal del Cliente,
-  // Desarrollo Web e Integraciones dejaron de ser productos de primer nivel
-  // y ahora se explican como características DENTRO de estas 8 soluciones.
+  // Servicios profesionales y de consultoría de la agencia Clientum
   const SOLUTIONS_ITEMS = useMemo(() => [
-    { id: "chatbot", label: "Chatbot WhatsApp", desc: isPortuguese ? "Seu negócio atende sozinho, 24 horas por dia" : "Tu negocio atiende solo, las 24 horas", icon: Bot, color: "text-green-500 bg-green-50" },
-    { id: "crm_inteligente", label: "CRM Inteligente", desc: isPortuguese ? "Nunca mais perca uma venda" : "Nunca más perdas una venta", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
-    { id: "asistente_ia", label: isPortuguese ? "Assistente IA" : "Asistente IA", desc: isPortuguese ? "Seu analista de negócios, sempre disponível" : "Tu analista de negocio, siempre disponible", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
-    { id: "automatizacion", label: isPortuguese ? "Broadcast & Automação" : "Broadcast & Automatización", desc: isPortuguese ? "Campanhas em massa no WhatsApp e fluxos sem código" : "Campañas masivas de WhatsApp y flujos sin código", icon: Radio, color: "text-amber-500 bg-amber-50" },
-    { id: "portal_cliente", label: isPortuguese ? "Portal do Cliente" : "Portal del Cliente", desc: isPortuguese ? "Seus clientes com autoatendimento online" : "Tus clientes se autoatienden", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
-    { id: "desarrollo_web", label: isPortuguese ? "Desenvolvimento Web" : "Desarrollo Web", desc: isPortuguese ? "Sua presença web, conectada ao CRM" : "Tu presencia web, conectada al CRM", icon: Code2, color: "text-slate-600 bg-slate-100" },
-    { id: "integraciones", label: isPortuguese ? "Integrações" : "Integraciones", desc: isPortuguese ? "WhatsApp, ERPs, Mercado Pago e mais de 60 serviços" : "WhatsApp, AFIP, MercadoPago y más de 60 servicios", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
-    { id: "afip", label: isPortuguese ? "Faturamento Eletrônico" : "Facturación AFIP", desc: isPortuguese ? "Fature sem sair do CRM com emissão rápida" : "Facturá electrónicamente sin salir del CRM", icon: FileText, color: "text-blue-700 bg-blue-50" },
-    { id: "mercadopago", label: isPortuguese ? "Assinaturas Mercado Pago" : "Suscripciones Mercado Pago", desc: isPortuguese ? "Cobranças recorrentes e links de pagamento automáticos" : "Cobros recurrentes y links de pago automáticos", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
-    { id: "leads", label: isPortuguese ? "Prospecção de Leads" : "Prospección de Leads", desc: isPortuguese ? "Encontre e qualifique clientes potenciais com IA" : "Encontrá y calificá clientes potenciales con IA", icon: Rocket, color: "text-violet-500 bg-violet-50" },
-    { id: "reportes", label: "Business Intelligence", desc: isPortuguese ? "Métricas e relatórios acionáveis do seu negócio" : "Métricas y reportes accionables de tu negocio", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
-    { id: "ecommerce", label: "E-Commerce", desc: isPortuguese ? "Venda online, integrado ao seu CRM e estoque" : "Vendé online, integrado a tu CRM y stock", icon: ShoppingCart, color: "text-orange-500 bg-orange-50", query: "ecommerce" },
+    { id: "chatbot", label: "Agentes & Chatbot WhatsApp IA", desc: isPortuguese ? "Seu negócio atende sozinho com IA, 24 horas por dia" : "Atención comercial automatizada con IA 24/7", icon: Bot, color: "text-green-500 bg-green-50" },
+    { id: "crm_inteligente", label: "Consultoría & CRM Inteligente", desc: isPortuguese ? "Implementação e gestão completa do funil de vendas" : "Implementación y gestión de pipeline comercial", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
+    { id: "asistente_ia", label: isPortuguese ? "Consultoria em Inteligência Artificial" : "Consultoría en Inteligencia Artificial", desc: isPortuguese ? "Estratégia e modelos de IA para seu negócio" : "Estrategia e implementación de IA para tu negocio", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
+    { id: "automatizacion", label: isPortuguese ? "Automação de Processos & Outreach" : "Automatización de Procesos & Outreach", desc: isPortuguese ? "Campanhas em massa no WhatsApp e fluxos automatizados" : "Campañas masivas de WhatsApp y flujos comerciales", icon: Radio, color: "text-amber-500 bg-amber-50" },
+    { id: "portal_cliente", label: isPortuguese ? "Portais B2B & Autoatendimento" : "Portales B2B & Autoatención", desc: isPortuguese ? "Portais de clientes e autosserviço online" : "Portales a medida para autogestión de clientes", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
+    { id: "desarrollo_web", label: isPortuguese ? "Desenvolvimento Web & Landing Pages" : "Desarrollo Web & Landing Pages", desc: isPortuguese ? "Sites institucionais e páginas de alta conversão" : "Sitios corporativos y landings de alta conversión", icon: Code2, color: "text-slate-600 bg-slate-100" },
+    { id: "integraciones", label: isPortuguese ? "Integrações de Sistemas & APIs" : "Integraciones de Sistemas & APIs", desc: isPortuguese ? "Conexão de ERPs, WhatsApp, AFIP e 60+ serviços" : "Conexión de ERPs, WhatsApp, AFIP y más de 60 APIs", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
+    { id: "afip", label: isPortuguese ? "Faturamento Eletrônico AFIP" : "Facturación Electrónica AFIP", desc: isPortuguese ? "Integração fiscal e emissão automática" : "Emisión automática y sincronización fiscal", icon: FileText, color: "text-blue-700 bg-blue-50" },
+    { id: "mercadopago", label: isPortuguese ? "Sistemas de Cobrança e Pagamentos" : "Sistemas de Cobranza y Pagos", desc: isPortuguese ? "Integração Mercado Pago, assinaturas e links" : "MercadoPago, suscripciones y pasarelas de pago", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
+    { id: "leads", label: isPortuguese ? "Geração & Qualificação de Leads" : "Generación & Calificación de Leads", desc: isPortuguese ? "Prospecção B2B com Inteligência Artificial" : "Prospección B2B y prospección Maps con IA", icon: Rocket, color: "text-violet-500 bg-violet-50" },
+    { id: "reportes", label: "Business Intelligence & Analítica", desc: isPortuguese ? "Dashboards de desempenho e métricas executivas" : "Dashboards ejecutivos y métricas de conversión", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
+    { id: "ecommerce", label: "Desarrollo E-Commerce", desc: isPortuguese ? "Lojas virtuais integradas a CRM e estoque" : "Tiendas online integradas con CRM y stock", icon: ShoppingCart, color: "text-orange-500 bg-orange-50", query: "ecommerce" },
   ], [isPortuguese]);
 
   /* ─── Mega-menu groups (desktop only) ─── */
   const SOLUTIONS_GROUPS = useMemo(() => [
     {
       key: "crm",
-      title: isPortuguese ? "CRM & Funil de Vendas" : "CRM & Pipeline",
+      title: isPortuguese ? "Consultoria & Funil CRM" : "Consultoría & Pipeline CRM",
       accent: "border-blue-500",
       headerColor: "text-blue-700",
       items: [
-        { id: "crm_inteligente", label: "CRM Inteligente", desc: isPortuguese ? "Kanban de oportunidades e gestão de negócios" : "Kanban de oportunidades y gestión de deals", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
-        { id: "leads",           label: isPortuguese ? "Prospecção Maps IA" : "Prospección Maps IA", desc: isPortuguese ? "Descubra empresas por região com Gemini AI" : "Descubrí negocios por zona con Gemini AI", icon: Compass, color: "text-violet-500 bg-violet-50" },
-        { id: "leads",           label: "Lead Scoring MEDDIC", desc: isPortuguese ? "Qualifique leads com metodologia B2B" : "Calificá leads con metodología empresarial B2B", icon: Target, color: "text-indigo-500 bg-indigo-50" },
-        { id: "reportes",        label: "Business Intelligence", desc: isPortuguese ? "CAC, LTV e taxas de conversão em tempo real" : "CAC, LTV y métricas de conversión en tiempo real", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
+        { id: "crm_inteligente", label: "Implementación CRM", desc: isPortuguese ? "Kanban de oportunidades e gestão de vendas" : "Configuración de embudos y gestión de deals", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
+        { id: "leads",           label: isPortuguese ? "Prospecção Maps IA" : "Prospección Maps IA", desc: isPortuguese ? "Descubra empresas por região com Gemini AI" : "Búsqueda geolocalizada de prospectos B2B", icon: Compass, color: "text-violet-500 bg-violet-50" },
+        { id: "leads",           label: "Lead Scoring MEDDIC", desc: isPortuguese ? "Qualificação de oportunidades B2B" : "Metodología de calificación de cuentas clave", icon: Target, color: "text-indigo-500 bg-indigo-50" },
+        { id: "reportes",        label: "Business Intelligence", desc: isPortuguese ? "CAC, LTV e taxas de conversão em tempo real" : "KPIs comerciales, CAC, LTV y conversión", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
       ],
     },
     {
       key: "email",
-      title: isPortuguese ? "E-mail & Outreach" : "Email & Outreach",
+      title: isPortuguese ? "Automação & WhatsApp IA" : "Automatización & WhatsApp IA",
       accent: "border-amber-500",
       headerColor: "text-amber-700",
       items: [
-        { id: "automatizacion", label: isPortuguese ? "Campanhas & Automação" : "Campañas & Automatización", desc: isPortuguese ? "Drip email, broadcast em massa e nutrição" : "Drip email, broadcast masivo y nurturing", icon: Radio, color: "text-amber-500 bg-amber-50" },
-        { id: "chatbot",        label: "Chatbot WhatsApp 24/7", desc: isPortuguese ? "Atendimento automático, sem código nem TI" : "Atención automática, sin código ni IT", icon: Bot, color: "text-green-500 bg-green-50" },
-        { id: "automatizacion", label: isPortuguese ? "Agente Outreach Automático" : "Agente Outreach Automático", desc: isPortuguese ? "SDR com IA que prospecta e faz follow-up sozinho" : "SDR IA que prospecta y hace seguimiento solo", icon: Zap, color: "text-orange-500 bg-orange-50" },
-        { id: "portal_cliente", label: isPortuguese ? "Portal do Cliente" : "Portal del Cliente", desc: isPortuguese ? "Autoatendimento, tickets e acompanhamento online" : "Autoatención, tickets y seguimiento en línea", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
+        { id: "chatbot",        label: "Chatbot WhatsApp 24/7", desc: isPortuguese ? "Atendimento comercial com inteligência artificial" : "Atención comercial automatizada con IA", icon: Bot, color: "text-green-500 bg-green-50" },
+        { id: "automatizacion", label: isPortuguese ? "Campanhas & Outreach" : "Campañas & Outreach", desc: isPortuguese ? "Drip email e broadcast em massa no WhatsApp" : "Campañas masivas de WhatsApp y secuencias", icon: Radio, color: "text-amber-500 bg-amber-50" },
+        { id: "automatizacion", label: isPortuguese ? "Agente SDR Automático" : "Agente SDR Automático", desc: isPortuguese ? "Prospecção e follow-up automático com IA" : "Prospección y seguimiento comercial con IA", icon: Zap, color: "text-orange-500 bg-orange-50" },
+        { id: "portal_cliente", label: isPortuguese ? "Portais de Autoatendimento" : "Portales de Autoatención", desc: isPortuguese ? "Autoatendimento, tickets e acompanhamento" : "Portales de autogestión para clientes B2B", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
       ],
     },
     {
       key: "ia",
-      title: isPortuguese ? "IA & Conteúdo" : "IA & Contenido",
+      title: isPortuguese ? "Marketing & IA Aplicada" : "Growth Marketing & IA",
       accent: "border-violet-500",
       headerColor: "text-violet-700",
       items: [
-        { id: "asistente_ia", label: "Asistente IA Gemini 2.5", desc: isPortuguese ? "Analista executivo disponível em tempo integral" : "Analista CMO disponible en todo momento", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
-        { id: "asistente_ia", label: isPortuguese ? "Gerador de Estratégias" : "Generador de Estrategias", desc: isPortuguese ? "Planos go-to-market com IA em minutos" : "Planes go-to-market con IA en minutos", icon: Megaphone, color: "text-rose-500 bg-rose-50" },
-        { id: "asistente_ia", label: "AI Ad Copy Studio", desc: isPortuguese ? "Cópias de alta conversão para LinkedIn, anúncios e e-mail" : "Copys para LinkedIn, anuncios y email", icon: FileText, color: "text-blue-500 bg-blue-50" },
-        { id: "reportes",     label: isPortuguese ? "Suíte SEO Completa" : "Suite SEO Completa", desc: isPortuguese ? "Palavras-chave, auditoria, ranking e calendário" : "Keywords, auditoría, rank tracker y calendario", icon: TrendingUp, color: "text-emerald-500 bg-emerald-50" },
+        { id: "asistente_ia", label: "Consultoría IA Gemini 2.5", desc: isPortuguese ? "Estratégia e automação personalizada de IA" : "Asesoría estratégica de adopción de IA", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
+        { id: "asistente_ia", label: isPortuguese ? "Estratégias Go-to-Market" : "Estrategias Go-to-Market", desc: isPortuguese ? "Planos de expansão comercial e posicionamento" : "Planes de lanzamiento y posicionamiento", icon: Megaphone, color: "text-rose-500 bg-rose-50" },
+        { id: "asistente_ia", label: "AI Copy & Contenido", desc: isPortuguese ? "Cópias de alta conversão para anúncios e e-mails" : "Redacción publicitaria para anuncios y ventas", icon: FileText, color: "text-blue-500 bg-blue-50" },
+        { id: "reportes",     label: isPortuguese ? "Consultoria SEO Completa" : "Posicionamiento SEO", desc: isPortuguese ? "Palavras-chave, auditoria e visibilidade" : "Auditoría, keywords y visibilidad en Google", icon: TrendingUp, color: "text-emerald-500 bg-emerald-50" },
       ],
     },
     {
       key: "platform",
-      title: isPortuguese ? "Plataforma & Tecnologia" : "Plataforma & Tech",
+      title: isPortuguese ? "Desenvolvimento Web & Integrações" : "Desarrollo Web & Integraciones",
       accent: "border-slate-400",
       headerColor: "text-slate-700",
       items: [
-        { id: "integraciones", label: isPortuguese ? "60+ Integrações" : "60+ Integraciones", desc: isPortuguese ? "WhatsApp, ERP, APIs, webhooks e mais" : "WhatsApp, ERP, APIs, webhooks y más", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
-        { id: "afip",          label: isPortuguese ? "Faturamento Eletrônico" : "Facturación AFIP", desc: isPortuguese ? "Emissão e controle fiscal integrado ao CRM" : "Facturá electrónicamente sin salir del CRM", icon: FileText, color: "text-blue-700 bg-blue-50" },
-        { id: "mercadopago",   label: isPortuguese ? "Cobranças Mercado Pago" : "Cobros MercadoPago", desc: isPortuguese ? "Assinaturas e links de pagamento automáticos" : "Suscripciones y links de pago automáticos", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
-        { id: "desarrollo_web",label: isPortuguese ? "Desenvolvimento Web" : "Desarrollo Web", desc: isPortuguese ? "Seu site conectado ao CRM desde o primeiro dia" : "Tu sitio conectado al CRM desde el día 1", icon: Code2, color: "text-slate-600 bg-slate-100" },
+        { id: "desarrollo_web",label: isPortuguese ? "Desenvolvimento Web" : "Desarrollo Web & Landings", desc: isPortuguese ? "Sites modernos focados em conversão" : "Sitios modernos de alta conversión y velocidad", icon: Code2, color: "text-slate-600 bg-slate-100" },
+        { id: "integraciones", label: isPortuguese ? "60+ Integrações de APIs" : "Integraciones API & ERP", desc: isPortuguese ? "Conexão fluida de sistemas e bancos de dados" : "Conexión de sistemas, webhooks y bases de datos", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
+        { id: "afip",          label: isPortuguese ? "Faturamento Eletrônico AFIP" : "Facturación AFIP Automática", desc: isPortuguese ? "Emissão e controle fiscal integrado" : "Integración directa de comprobantes y CAE", icon: FileText, color: "text-blue-700 bg-blue-50" },
+        { id: "mercadopago",   label: isPortuguese ? "Cobranças Mercado Pago" : "Pasarelas MercadoPago", desc: isPortuguese ? "Assinaturas e links de pagamento automáticos" : "Suscripciones y checkout automatizado", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
       ],
     },
   ], [isPortuguese]);
@@ -998,7 +1052,7 @@ export default function PublicWebsite({
 
   const menuConfig = useMemo(() => [
     { id: "inicio",     label: isPortuguese ? "Início" : "Inicio",        type: "link"     as const },
-    { id: "soluciones", label: isPortuguese ? "Soluções" : "Soluciones",     type: "megamenu" as const, children: SOLUTIONS_ITEMS, groups: SOLUTIONS_GROUPS },
+    { id: "servicios",  label: isPortuguese ? "Serviços" : "Servicios",   type: "megamenu" as const, children: SOLUTIONS_ITEMS, groups: SOLUTIONS_GROUPS },
     { id: "industrias", label: isPortuguese ? "Indústrias" : "Industrias",     type: "link"     as const },
     { id: "casos",      label: isPortuguese ? "Casos de Sucesso" : "Casos de Éxito", type: "link"     as const },
     { id: "recursos",   label: isPortuguese ? "Recursos" : "Recursos",       type: "dropdown" as const, children: RECURSOS_ITEMS },
@@ -1019,7 +1073,7 @@ export default function PublicWebsite({
               CLIENTUM
             </span>
             <span className="text-[9px] uppercase tracking-widest text-[#1A3461] font-bold block mt-0.5">
-              CRM, Chatbots &amp; Tecnología PyME
+              Agencia de Crecimiento &amp; Consultoría
             </span>
           </div>
         </div>
@@ -1047,8 +1101,8 @@ export default function PublicWebsite({
                 </button>
               );
             } else if (item.type === "megamenu") {
-              /* ── MEGA-MENU (Soluciones) ── */
-              const isGroupActive = item.groups.some(g => g.items.some(c => c.id === activeTab));
+              /* ── MEGA-MENU (Servicios) ── */
+              const isGroupActive = activeTab === "servicios" || item.groups.some(g => g.items.some(c => c.id === activeTab));
               return (
                 <div
                   key={item.id}
@@ -1057,6 +1111,11 @@ export default function PublicWebsite({
                   className="relative py-2"
                 >
                   <button
+                    onClick={() => {
+                      setActiveTab("servicios");
+                      setActiveDropdown(null);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                     className={`px-3 py-2 rounded-lg transition-all text-[11px] uppercase tracking-wider font-extrabold cursor-pointer flex items-center gap-1 ${
                       isGroupActive
                         ? "bg-emerald-50/70 text-[#1A3461] border-b-2 border-emerald-500 rounded-b-none"
@@ -1079,14 +1138,14 @@ export default function PublicWebsite({
                         {/* Mega-menu header */}
                         <div className="bg-gradient-to-r from-[#0A2558] to-[#1A3461] px-5 py-3 flex items-center justify-between">
                           <div>
-                            <p className="text-white font-black text-sm tracking-tight">Plataforma Clientum CRM</p>
-                            <p className="text-slate-300 text-[10px] mt-0.5">Suite completa de ventas, marketing e IA para PyMEs</p>
+                            <p className="text-white font-black text-sm tracking-tight">Agencia Clientum</p>
+                            <p className="text-slate-300 text-[10px] mt-0.5">Servicios integrales de Consultoría, IA, CRM y Crecimiento Digital para PyMEs</p>
                           </div>
                           <button
                             onClick={() => { setActiveTab("servicios"); setActiveDropdown(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                            className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-[10px] uppercase px-3 py-1.5 rounded-lg tracking-wider transition-all cursor-pointer border-0"
+                            className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase px-3 py-1.5 rounded-lg tracking-wider transition-all cursor-pointer border-0"
                           >
-                            Ver todo <ArrowUpRight className="w-3 h-3" />
+                            Ver todos los servicios <ArrowUpRight className="w-3 h-3" />
                           </button>
                         </div>
                         {/* 4-column grid */}
@@ -1246,17 +1305,6 @@ export default function PublicWebsite({
             <span>Brochure PDF</span>
           </button>
 
-          {authUser && (
-            <button
-              onClick={onBackToEditor}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase px-4 py-2 rounded-xl tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-900/20 border-0"
-            >
-              <span>Ir al Dashboard</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-white" />
-            </button>
-          )}
-          <AuthButton onLoginSuccess={onLoginSuccess} />
-
           {/* Standalone Demo CTA */}
           <button
             onClick={() => {
@@ -1380,23 +1428,6 @@ export default function PublicWebsite({
               <span>Brochure Corporativo PDF</span>
             </button>
 
-            {authUser && (
-              <button
-                onClick={() => {
-                  onBackToEditor?.();
-                  setMobileMenuOpen(false);
-                }}
-                className="mt-2 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase py-2.5 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 shadow-md shadow-emerald-900/20"
-              >
-                <span>Ir al Dashboard CRM</span>
-                <ArrowUpRight className="w-4 h-4 text-white" />
-              </button>
-            )}
-
-            <div className="flex justify-center w-full mt-2">
-              <AuthButton onLoginSuccess={onLoginSuccess} />
-            </div>
-
             <button
               onClick={() => {
                 setActiveTab("contacto");
@@ -1438,25 +1469,25 @@ export default function PublicWebsite({
                     <div className="lg:col-span-7 flex flex-col items-start gap-6">
                       <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 text-[10px] font-extrabold uppercase px-4 py-1.5 rounded-full tracking-widest flex items-center gap-2 font-mono">
                         <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                        {isPortuguese ? "Plataforma All-in-One para PMEs" : "Plataforma All-in-One para PyMEs"}
+                        {isPortuguese ? "Agência de Crescimento & Tecnologia para PMEs" : "Agencia de Crecimiento & Consultoría PyME"}
                       </span>
                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tight leading-[1.05]">
                         {brochureData?.cover?.slogan ? (
                           <span>{brochureData.cover.slogan}</span>
                         ) : (
                           <>
-                            {isPortuguese ? "Tudo o que sua empresa" : "Todo lo que tu empresa"}<br />
-                            {isPortuguese ? "precisa, " : "necesita, "}
+                            {isPortuguese ? "Serviços especializados para" : "Servicios estratégicos para"}<br />
+                            {isPortuguese ? "escalar sua empresa, " : "escalar tu empresa, "}
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400">
-                              {isPortuguese ? "em uma única plataforma." : "en una sola plataforma."}
+                              {isPortuguese ? "com tecnologia e IA." : "con tecnología e IA."}
                             </span>
                           </>
                         )}
                       </h1>
                       <p className="text-slate-300 text-sm md:text-base max-w-xl leading-relaxed">
                         {brochureData?.cover?.sub || (isPortuguese
-                          ? "CRM, Chatbot WhatsApp com IA, E-Commerce, ERP, Business Intelligence, Marketing Digital, Cibersegurança, Cloud e Capacitação — o ecossistema completo da Clientum para expandir sua PME."
-                          : "CRM, Chatbot WhatsApp con IA, E-Commerce, ERP, Business Intelligence, Marketing Digital, Ciberseguridad, Cloud, Apps Móviles y Capacitación — el ecosistema completo de Clientum para hacer crecer tu PyME."
+                          ? "Consultoria comercial, Chatbots WhatsApp com IA, E-Commerce, CRM, Business Intelligence, Marketing Digital e Automações — a equipe da Clientum cuidando do seu crescimento."
+                          : "Consultoría comercial, Chatbots WhatsApp con IA, E-Commerce, CRM, Business Intelligence, Marketing Digital y Automatizaciones — el equipo de Clientum impulsando tu negocio."
                         )}
                       </p>
                       <div className="flex flex-wrap gap-3 w-full sm:w-auto">
@@ -1464,7 +1495,7 @@ export default function PublicWebsite({
                           onClick={() => setActiveTab("servicios")}
                           className={`bg-gradient-to-r ${theme.btnGradient} text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl cursor-pointer transition-all shadow-md shadow-blue-900/30 flex items-center gap-2`}
                         >
-                          {isPortuguese ? "Ver Soluções" : "Ver Servicios"} <ArrowRight className="w-4 h-4 text-emerald-400" />
+                          {isPortuguese ? "Ver Serviços" : "Ver Servicios"} <ArrowRight className="w-4 h-4 text-emerald-400" />
                         </button>
                         <button
                           onClick={() => setIsBrochureModalOpen(true)}
@@ -1701,7 +1732,7 @@ export default function PublicWebsite({
                         <span className="text-emerald-700 font-bold">Sin costo · Sin compromiso</span>
                       </p>
                       <button
-                        onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        onClick={() => openLeadForm('diagnostico_pyme', { source: 'inicio_cta_diagnostico' })}
                         className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs uppercase tracking-wider px-7 py-3 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-200"
                       >
                         Solicitar Diagnóstico Gratuito <ArrowRight className="w-4 h-4" />
@@ -1737,7 +1768,7 @@ export default function PublicWebsite({
                 <section className="bg-slate-50 border-b border-slate-200 py-20 px-6">
                   <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-12">
-                      <span className="text-emerald-600 font-mono text-[10px] uppercase font-bold tracking-widest">Soluciones Principales</span>
+                      <span className="text-emerald-600 font-mono text-[10px] uppercase font-bold tracking-widest">{isPortuguese ? "Serviços Principais" : "Servicios Principales"}</span>
                       <h2 className="text-2xl font-display font-black text-slate-900 tracking-tight mt-2">Nuestros Servicios Más Contratados</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1766,6 +1797,145 @@ export default function PublicWebsite({
                         </div>
                       );
                     })}
+                    </div>
+                  </div>
+                </section>
+
+                {/* ═══ PYMES ARGENTINAS EN ACCIÓN (FOTOS REALES DE EQUIPOS) ═══ */}
+                <section className="bg-white border-b border-slate-200 py-20 px-6">
+                  <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-12">
+                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-mono font-bold uppercase px-3 py-1 rounded-full tracking-widest inline-flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-emerald-600" /> PyMEs Argentinas en Acción
+                      </span>
+                      <h2 className="text-2xl md:text-3xl font-display font-black text-slate-950 tracking-tight mt-3">
+                        Personas y Equipos Trabajando con Nuestros Servicios
+                      </h2>
+                      <p className="text-slate-500 text-xs md:text-sm mt-3 max-w-2xl mx-auto leading-relaxed">
+                        Desde el mostrador comercial hasta la gerencia operativa: acompañamos a PyMEs de todo el país con soluciones a medida que ahorran horas de trabajo y potencian sus ventas.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {[
+                        {
+                          img: "https://images.unsplash.com/photo-1556742049-0a67c57750c9?auto=format&fit=crop&w=800&q=80",
+                          tag: "Comercio & Retail",
+                          city: "General Roca · Río Negro",
+                          flag: "🇦🇷",
+                          team: "Equipo de Mostrador & Ventas",
+                          service: "Chatbot WhatsApp + CRM Comercial",
+                          desc: "Atención inmediata por WhatsApp con derivación a vendedores en el local y catálogo digital sincronizado.",
+                          stat: "+45% consultas respondidas en <2 min",
+                        },
+                        {
+                          img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+                          tag: "Distribución Mayorista",
+                          city: "Neuquén Capital · Neuquén",
+                          flag: "🇦🇷",
+                          team: "Operaciones de Depósito y Logística",
+                          service: "Sincronización de Stock & E-Commerce",
+                          desc: "Control de stock multicanal en tiempo real entre el depósito central, sucursales y la tienda mayorista online.",
+                          stat: "Cero quiebres de stock no declarados",
+                        },
+                        {
+                          img: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
+                          tag: "Administración & Finanzas",
+                          city: "Buenos Aires · Microcentro",
+                          flag: "🇦🇷",
+                          team: "Estudio Contable & Administrativo",
+                          service: "Facturación AFIP + MercadoPago",
+                          desc: "Emisión electrónica automática de comprobantes con CAE y conciliación diaria de cobros con pasarelas de pago.",
+                          stat: "35 horas mensuales de Excel ahorradas",
+                        },
+                        {
+                          img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+                          tag: "Atención al Cliente",
+                          city: "Córdoba Capital · Córdoba",
+                          flag: "🇦🇷",
+                          team: "Asesores de Ventas & Post-Venta",
+                          service: "Consultoría en IA Conversacional",
+                          desc: "Respuestas sugeridas por IA y seguimiento programado de presupuestos enviados sin intervención manual.",
+                          stat: "+28% en tasa de cierre de presupuestos",
+                        },
+                        {
+                          img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80",
+                          tag: "Agroindustria & Empaque",
+                          city: "Alto Valle · Río Negro",
+                          flag: "🇦🇷",
+                          team: "Supervisores de Campo y Acopio",
+                          service: "Portal B2B & Reportes BI",
+                          desc: "Trazabilidad de lotes de fruta, liquidación a productores y reportes de rendimiento por hectárea en tiempo real.",
+                          stat: "100% de liquidaciones al día",
+                        },
+                        {
+                          img: "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
+                          tag: "Dirección y Estrategia",
+                          city: "Sede Regional Patagonia",
+                          flag: "🇦🇷",
+                          team: "Consultoría Directiva & Capacitación",
+                          service: "Plan de Transformación Digital 90 Días",
+                          desc: "Acompañamiento presencial y virtual con auditoría de procesos, hoja de ruta técnica y capacitación de equipos.",
+                          stat: "Acompañamiento continuo y cercano",
+                        },
+                      ].map((card, i) => (
+                        <div key={i} className="bg-slate-50 border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group">
+                          <div className="relative h-48 w-full overflow-hidden bg-slate-800">
+                            <img
+                              src={card.img}
+                              alt={`${card.team} - ${card.city}`}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
+                            <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-slate-900/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-xs border border-white/10">
+                              <span>{card.flag}</span>
+                              <span>{card.city}</span>
+                            </div>
+                            <div className="absolute bottom-3 left-3 right-3">
+                              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/30">
+                                {card.tag}
+                              </span>
+                              <h4 className="text-white font-bold text-sm mt-1 leading-snug drop-shadow-xs">{card.team}</h4>
+                            </div>
+                          </div>
+
+                          <div className="p-5 flex flex-col flex-1 gap-3">
+                            <div className="text-[11px] font-bold text-[#1A3461] bg-blue-50/70 border border-blue-200/60 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              <span className="truncate">{card.service}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-600 leading-relaxed flex-1">
+                              {card.desc}
+                            </p>
+                            <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                {card.stat}
+                              </span>
+                              <button
+                                onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                className="text-[11px] font-bold text-[#1A3461] hover:text-emerald-600 transition-colors flex items-center gap-1 cursor-pointer"
+                              >
+                                Consultar servicio →
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-10 bg-gradient-to-r from-[#0A2558] to-[#1A3461] text-white rounded-2xl p-8 text-center flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+                      <div className="text-left">
+                        <span className="text-emerald-400 font-mono text-[10px] uppercase font-bold tracking-widest">Atención en todo el país</span>
+                        <h3 className="text-lg md:text-xl font-bold mt-1">¿Querés que tu equipo trabaje más organizado y con menos esfuerzo?</h3>
+                        <p className="text-slate-300 text-xs mt-1 max-w-xl">Hacemos un relevamiento sin costo de tu operación y te presentamos una propuesta de servicios a medida en 48hs.</p>
+                      </div>
+                      <button
+                        onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        className="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider px-6 py-3 rounded-xl transition-all cursor-pointer shadow-lg border-0"
+                      >
+                        Solicitar Asesoría Gratuita
+                      </button>
                     </div>
                   </div>
                 </section>
@@ -1869,7 +2039,7 @@ export default function PublicWebsite({
                         </div>
                         <h4 className="font-bold text-sm tracking-tight text-white mb-2">Versatilidad</h4>
                         <p className="text-[11px] text-slate-400 leading-relaxed">
-                          Ofrecemos soluciones sumamente personalizables. Nos adaptamos a diferentes industrias, escalas de facturación y requerimientos reglamentarios AFIP.
+                          Ofrecemos servicios sumamente personalizables. Nos adaptamos a diferentes industrias, escalas de facturación y requerimientos reglamentarios AFIP.
                         </p>
                       </div>
 
@@ -1886,37 +2056,45 @@ export default function PublicWebsite({
                   </div>
                 </section>
 
-                {/* ───────── SOLUCIONES HUB ───────── */}
+                {/* ───────── SERVICIOS HUB ───────── */}
                 <section className="bg-white border-t border-slate-200 py-20 px-6">
                   <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-12 flex flex-col items-center gap-4">
-                      <span className="text-[#1A3461] font-mono text-[10px] uppercase font-bold tracking-widest">Plataforma Completa</span>
-                      <h2 className="text-2xl font-display font-black text-slate-900 tracking-tight mt-2">Todas las Soluciones</h2>
-                      <p className="text-slate-500 text-xs mt-2 max-w-xl mx-auto">Cada herramienta diseñada para conectarse entre sí y multiplicar el impacto en tu PyME.</p>
+                      <span className="text-[#1A3461] font-mono text-[10px] uppercase font-bold tracking-widest">
+                        {isPortuguese ? "Portfólio de Serviços" : "Servicios de Agencia"}
+                      </span>
+                      <h2 className="text-2xl font-display font-black text-slate-900 tracking-tight mt-2">
+                        {isPortuguese ? "Todos os Nossos Serviços" : "Todos los Servicios de la Agencia"}
+                      </h2>
+                      <p className="text-slate-500 text-xs mt-2 max-w-xl mx-auto">
+                        {isPortuguese
+                          ? "Serviços estratégicos de consultoria, IA, CRM e marketing digital para acelerar seus resultados comerciais."
+                          : "Servicios estratégicos de consultoría, IA, CRM y marketing digital para acelerar tus resultados comerciales."}
+                      </p>
                       <button
                         onClick={handleExportWooCommerceCSV}
-                        className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-900 text-white hover:bg-black transition-all"
-                        title="Exportar catálogo completo (servicios, planes, cursos y soluciones) listo para importar en WooCommerce"
+                        className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-900 text-white hover:bg-black transition-all cursor-pointer"
+                        title="Exportar catálogo completo de servicios listo para importar en WooCommerce"
                       >
                         <Download className="w-3.5 h-3.5" />
-                        Exportar todo a WooCommerce · CSV
+                        Exportar catálogo de servicios · CSV
                       </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {[
-                        { id: "chatbot",        icon: Bot,          color: "bg-green-50 text-green-600 border-green-100",   accent: "group-hover:text-green-600",  label: "Chatbot WhatsApp",      desc: "Tu negocio atiende solo, las 24 horas." },
-                        { id: "crm_inteligente",icon: Briefcase,    color: "bg-blue-50 text-blue-600 border-blue-100",     accent: "group-hover:text-blue-600",   label: "CRM Inteligente",       desc: "Nunca más perdas una venta." },
-                        { id: "asistente_ia",   icon: Sparkles,     color: "bg-violet-50 text-violet-600 border-violet-100",accent: "group-hover:text-violet-600", label: "Asistente IA",          desc: "Tu analista de negocio, siempre disponible." },
-                        { id: "reportes",       icon: BarChart2,    color: "bg-orange-50 text-orange-600 border-orange-100",accent: "group-hover:text-orange-600", label: "Reportes Automáticos",  desc: "Dashboards en tiempo real para decisiones basadas en datos." },
-                        { id: "automatizacion", icon: Zap,          color: "bg-amber-50 text-amber-600 border-amber-100",  accent: "group-hover:text-amber-600",  label: "Automatización",        desc: "Hacé más con menos esfuerzo." },
-                        { id: "portal_cliente", icon: LayoutGrid,   color: "bg-teal-50 text-teal-600 border-teal-100",     accent: "group-hover:text-teal-600",   label: "Portal del Cliente",    desc: "Tus clientes se autoatienden." },
-                        { id: "desarrollo_web", icon: Code2,        color: "bg-slate-100 text-slate-700 border-slate-200", accent: "group-hover:text-slate-900",  label: "Desarrollo Web",        desc: "Tu presencia web, conectada al CRM." },
-                        { id: "integraciones",  icon: ArrowLeftRight,color:"bg-amber-50 text-amber-600 border-amber-100",  accent: "group-hover:text-amber-600",  label: "Integraciones",         desc: "WhatsApp, AFIP, MercadoPago, Gmail y más de 50 servicios." },
-                        { id: "catalogo",       icon: LayoutGrid,   color: "bg-indigo-50 text-indigo-600 border-indigo-100",accent:"group-hover:text-indigo-600", label: "Catálogo Completo",     desc: "425 servicios en 14 categorías con precios reales." },
-                        { id: "servicios",      icon: Briefcase,    color: "bg-blue-50 text-blue-700 border-blue-100",     accent: "group-hover:text-blue-700",   label: "Consultoría & ERP",     desc: "Auditoría de procesos, ERP personalizado y hoja de ruta." },
-                        { id: "planes",         icon: CheckCircle2, color: "bg-emerald-50 text-emerald-600 border-emerald-100",accent:"group-hover:text-emerald-600",label: "Planes y Precios",    desc: "Desde $20 USD/mes. Implementación en 5 días hábiles." },
-                        { id: "casos",          icon: Star,         color: "bg-rose-50 text-rose-600 border-rose-100",     accent: "group-hover:text-rose-600",   label: "Casos de Éxito",        desc: "Historias reales de PyMEs que multiplicaron sus ventas." },
-                        { id: "clientes",       icon: Users,        color: "bg-cyan-50 text-cyan-600 border-cyan-100",     accent: "group-hover:text-cyan-600",   label: "Nuestros Clientes",     desc: "+35 empresas e instituciones del Alto Valle que ya confían en nosotros." },
+                        { id: "chatbot",        icon: Bot,          color: "bg-green-50 text-green-600 border-green-100",   accent: "group-hover:text-green-600",  label: "Agentes & Chatbot WhatsApp", desc: "Atención comercial automatizada con IA 24/7." },
+                        { id: "crm_inteligente",icon: Briefcase,    color: "bg-blue-50 text-blue-600 border-blue-100",     accent: "group-hover:text-blue-600",   label: "Consultoría & CRM",          desc: "Implementación y optimización de tu embudo." },
+                        { id: "asistente_ia",   icon: Sparkles,     color: "bg-violet-50 text-violet-600 border-violet-100",accent: "group-hover:text-violet-600", label: "Consultoría en IA",        desc: "Estrategia e implementación de modelos de IA." },
+                        { id: "reportes",       icon: BarChart2,    color: "bg-orange-50 text-orange-600 border-orange-100",accent: "group-hover:text-orange-600", label: "Business Intelligence",    desc: "Dashboards en tiempo real y métricas comerciales." },
+                        { id: "automatizacion", icon: Zap,          color: "bg-amber-50 text-amber-600 border-amber-100",  accent: "group-hover:text-amber-600",  label: "Automatización & Outreach",  desc: "Campañas masivas de WhatsApp y secuencias." },
+                        { id: "portal_cliente", icon: LayoutGrid,   color: "bg-teal-50 text-teal-600 border-teal-100",     accent: "group-hover:text-teal-600",   label: "Portales de Clientes",       desc: "Portales a medida para autogestión B2B." },
+                        { id: "desarrollo_web", icon: Code2,        color: "bg-slate-100 text-slate-700 border-slate-200", accent: "group-hover:text-slate-900",  label: "Desarrollo Web & Landings",  desc: "Sitios institucionales y páginas de conversión." },
+                        { id: "integraciones",  icon: ArrowLeftRight,color:"bg-amber-50 text-amber-600 border-amber-100",  accent: "group-hover:text-amber-600",  label: "Integraciones de Sistemas",  desc: "WhatsApp, AFIP, MercadoPago, ERPs y más de 60 APIs." },
+                        { id: "catalogo",       icon: LayoutGrid,   color: "bg-indigo-50 text-indigo-600 border-indigo-100",accent:"group-hover:text-indigo-600", label: "Catálogo de Servicios",    desc: "Explorá nuestro catálogo completo con alcances y entregables." },
+                        { id: "servicios",      icon: Briefcase,    color: "bg-blue-50 text-blue-700 border-blue-100",     accent: "group-hover:text-blue-700",   label: "Consultoría Estratégica",    desc: "Auditoría de procesos, hoja de ruta y gestión integral." },
+                        { id: "planes",         icon: CheckCircle2, color: "bg-emerald-50 text-emerald-600 border-emerald-100",accent:"group-hover:text-emerald-600",label: "Planes de Servicio",      desc: "Planes mensuales de acompañamiento e implementación." },
+                        { id: "casos",          icon: Star,         color: "bg-rose-50 text-rose-600 border-rose-100",     accent: "group-hover:text-rose-600",   label: "Casos de Éxito",        desc: "Historias reales de PyMEs que escalaron sus ventas." },
+                        { id: "clientes",       icon: Users,        color: "bg-cyan-50 text-cyan-600 border-cyan-100",     accent: "group-hover:text-cyan-600",   label: "Nuestros Clientes",     desc: "+35 empresas e instituciones que ya confían en la agencia." },
                       ].map(({ id, icon: Icon, color, accent, label, desc }) => (
                         <button
                           key={id}
@@ -2062,12 +2240,16 @@ export default function PublicWebsite({
             {activeTab === "servicios" && (
               <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
                 <div className="text-center max-w-2xl mx-auto">
-                  <span className="text-emerald-600 font-mono text-xs uppercase tracking-widest font-bold">Nuestra Especialización</span>
+                  <span className="text-emerald-600 font-mono text-xs uppercase tracking-widest font-bold">
+                    {isPortuguese ? "Nossos Serviços de Agência" : "Servicios de la Agencia"}
+                  </span>
                   <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tight mt-2">
-                    Ingeniería de Software de Pila Completa
+                    {isPortuguese ? "Soluções Estratégicas e Tecnologia para PMEs" : "Consultoría, Tecnología y Crecimiento Comercial"}
                   </h1>
                   <p className="text-slate-500 text-xs md:text-sm mt-3 leading-relaxed">
-                    Diseñamos sistemas que integran todas las facetas de tu negocio en una única plataforma, facilitando la gestión y el análisis de datos en tiempo real.
+                    {isPortuguese
+                      ? "Aceleramos o crescimento da sua empresa com serviços de ponta a ponta: implementação de CRM, automações com IA, desenvolvimento web e marketing de alta conversão."
+                      : "Aceleramos el crecimiento de tu empresa con servicios integrales: implementación de CRM, automatizaciones con IA, desarrollo web y marketing de alta conversión."}
                   </p>
                 </div>
 
@@ -2197,11 +2379,11 @@ export default function PublicWebsite({
                   </div>
                 </div>
 
-                {/* ── SOLUCIONES ADICIONALES ── */}
+                {/* ── SERVICIOS ADICIONALES ── */}
                 <div>
                   <div className="text-center mb-10">
                     <span className="text-[#1A3461] font-mono text-[10px] uppercase tracking-widest font-bold">Acompañamiento integral para tu PyME</span>
-                    <h2 className="text-2xl font-display font-black text-slate-950 tracking-tight mt-2">Soluciones a medida</h2>
+                    <h2 className="text-2xl font-display font-black text-slate-950 tracking-tight mt-2">Servicios a medida</h2>
                     <p className="text-slate-500 text-xs mt-2 max-w-xl mx-auto">Consultoría, implementación, IA, BI y desarrollo web — todo integrado con Clientum CRM.</p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2295,7 +2477,7 @@ export default function PublicWebsite({
                           ))}
                         </ul>
                         <button
-                          onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          onClick={() => openLeadForm('cotizador_web', { service: title, price })}
                           className="mt-2 text-xs font-bold text-[#1A3461] hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           Consultar disponibilidad <ArrowRight className="w-3.5 h-3.5" />
@@ -2312,7 +2494,7 @@ export default function PublicWebsite({
                 <div>
                   <div className="text-center mb-8">
                     <span className="text-[#1A3461] font-mono text-[10px] uppercase tracking-widest font-bold">Sectores que atendemos</span>
-                    <h2 className="text-2xl font-display font-black text-slate-950 tracking-tight mt-2">Una solución simple para tareas complejas</h2>
+                    <h2 className="text-2xl font-display font-black text-slate-950 tracking-tight mt-2">Servicios directos para operaciones complejas</h2>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {[
@@ -2417,7 +2599,7 @@ export default function PublicWebsite({
                       <tfoot>
                         <tr className="bg-slate-50 border-t border-slate-200">
                           <td colSpan={4} className="px-5 py-3 text-[10px] text-slate-400 italic">
-                            Precios en ARS · Cada proyecto se cotiza según alcance real · <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="text-[#1A3461] font-semibold hover:underline cursor-pointer">Solicitá propuesta sin costo →</button>
+                            Precios en ARS · Cada proyecto se cotiza según alcance real · <button onClick={() => openLeadForm('contacto_comercial', { source: 'tabla_precios_referencia' })} className="text-[#1A3461] font-semibold hover:underline cursor-pointer">Solicitá propuesta sin costo →</button>
                           </td>
                         </tr>
                       </tfoot>
@@ -2573,7 +2755,7 @@ export default function PublicWebsite({
                           ))}
                         </ul>
                         <button
-                          onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          onClick={() => openLeadForm('plan_enterprise', { plan: title, category: 'Infraestructura' })}
                           className="mt-2 text-xs font-bold text-[#1A3461] hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           Consultar →
@@ -2586,9 +2768,7 @@ export default function PublicWebsite({
                 {/* ── PROYECTOS DESTACADOS ── */}
                 <KeyProjectsSection
                   onContactClick={(title) => {
-                    setDemoForm({ ...demoForm, mensaje: `Hola, me interesa consultar sobre el proyecto destacado "${title}".` });
-                    setActiveTab("contacto");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
+                    openLeadForm('cotizador_web', { project: title, interest: 'Implementación llave en mano' });
                   }}
                 />
 
@@ -2598,6 +2778,19 @@ export default function PublicWebsite({
                     setActiveTab("blog");
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
+                />
+
+                {/* ── PYMES ARGENTINAS EN ACCIÓN CON NUESTROS SERVICIOS ── */}
+                <ArgentinePymesSection
+                  title="Equipos en Argentina Trabajando con Nuestros Servicios"
+                  subtitle="Comercios, distribuidoras, agroempresas y estudios profesionales que potencian sus operaciones comerciales y administrativas a diario."
+                  items={[
+                    ARGENTINE_PYMES_DATA.lubrano,
+                    ARGENTINE_PYMES_DATA.distribuidora,
+                    ARGENTINE_PYMES_DATA.estudio,
+                    ARGENTINE_PYMES_DATA.terbay,
+                  ]}
+                  badge="Servicios en Operación Real"
                 />
 
               </div>
@@ -2754,11 +2947,9 @@ export default function PublicWebsite({
                             </span>
                             <button
                               onClick={() => {
-                                setDemoForm({ ...demoForm, mensaje: `Hola Clientum, quiero consultar sobre el servicio "${s.name}".` });
-                                setActiveTab("contacto");
-                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                openLeadForm('cotizador_web', { service: s.name, category: s.cat || "General", code: `CTM-${s.id}` });
                               }}
-                              className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                              className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
                             >
                               Consultar <ArrowRight className="w-3 h-3" />
                             </button>
@@ -3093,6 +3284,19 @@ export default function PublicWebsite({
                     ))}
                   </div>
                 </div>
+
+                {/* ── EMPRESAS ARGENTINAS QUE OPERAN CON NUESTROS PLANES ── */}
+                <ArgentinePymesSection
+                  title="PyMEs Argentinas que Operan con Nuestros Planes"
+                  subtitle="Desde comercios en expansión hasta distribuidoras mayoristas con múltiples sucursales en todo el país."
+                  items={[
+                    ARGENTINE_PYMES_DATA.farmacia,
+                    ARGENTINE_PYMES_DATA.lubrano,
+                    ARGENTINE_PYMES_DATA.distribuidora,
+                    ARGENTINE_PYMES_DATA.consorcio,
+                  ]}
+                  badge="Planes en Acción"
+                />
               </div>
             )}
 
@@ -3296,6 +3500,19 @@ export default function PublicWebsite({
                   </div>
                   <OrganigramaClientum />
                 </div>
+
+                {/* Presencia en Territorio & Equipos Clientes */}
+                <ArgentinePymesSection
+                  title="Nuestra Presencia y Trabajo Junto a Empresas Argentinas"
+                  subtitle="Acompañamos a dueños, gerentes de operaciones y equipos de trabajo en la Patagonia, Buenos Aires, Córdoba y todo el país."
+                  items={[
+                    ARGENTINE_PYMES_DATA.consultoria,
+                    ARGENTINE_PYMES_DATA.lubrano,
+                    ARGENTINE_PYMES_DATA.distribuidora,
+                    ARGENTINE_PYMES_DATA.estudio,
+                  ]}
+                  badge="Presencia en Territorio"
+                />
 
                 {/* CTA */}
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center flex flex-col items-center gap-4">
@@ -3588,6 +3805,19 @@ export default function PublicWebsite({
                   </div>
                 ))}
 
+                {/* ── EQUIPOS Y PROFESIONALES EN ACCIÓN EN SUS EMPRESAS ── */}
+                <ArgentinePymesSection
+                  title="Equipos y Profesionales en Acción en Sus Empresas"
+                  subtitle="Fotos reales de los equipos comerciales, logísticos y directivos que usan Clientum en su día a día."
+                  items={[
+                    ARGENTINE_PYMES_DATA.lubrano,
+                    ARGENTINE_PYMES_DATA.distribuidora,
+                    ARGENTINE_PYMES_DATA.terbay,
+                    ARGENTINE_PYMES_DATA.cabarcos,
+                  ]}
+                  badge="Nuestros Clientes en Territorio"
+                />
+
                 {/* CTA */}
                 <div className="bg-[#1A3461] text-white rounded-2xl p-10 text-center flex flex-col items-center gap-4">
                   <span className="text-emerald-400 font-mono text-[10px] uppercase tracking-widest font-bold">¿Querés unirte?</span>
@@ -3753,6 +3983,19 @@ export default function PublicWebsite({
                     ))}
                   </div>
                 </div>
+
+                {/* ── GALERÍA DE EQUIPOS EN CASOS DE ÉXITO ── */}
+                <ArgentinePymesSection
+                  title="Equipos Reales que Protagonizan Nuestros Casos de Éxito"
+                  subtitle="Detrás de cada indicador de crecimiento hay un equipo argentino que transformó su manera de trabajar junto a Clientum."
+                  items={[
+                    ARGENTINE_PYMES_DATA.distribuidora,
+                    ARGENTINE_PYMES_DATA.terbay,
+                    ARGENTINE_PYMES_DATA.farmacia,
+                    ARGENTINE_PYMES_DATA.estudio,
+                  ]}
+                  badge="Protagonistas del Cambio"
+                />
               </div>
             )}
 
@@ -3853,19 +4096,32 @@ export default function PublicWebsite({
                             />
                           </div>
                           <div>
-                            <label className="block mb-1 text-slate-600">Servicio Requerido</label>
-                            <select
+                            <label className="block mb-1 text-slate-600">WhatsApp / Teléfono</label>
+                            <input
+                              type="tel"
+                              placeholder="Ej. +54 9 298 451-0883"
                               className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:border-[#1A3461] focus:outline-none"
-                              value={demoForm.rubro}
-                              onChange={(e) => setDemoForm({ ...demoForm, rubro: e.target.value })}
-                            >
-                              <option value="E-Commerce">Desarrollo Web E-Commerce</option>
-                              <option value="ERP-CRM">Sistemas ERP / CRM</option>
-                              <option value="Consultoria">Consultoría de Negocios</option>
-                              <option value="Ciberseguridad">Ciberseguridad y Auditoría</option>
-                              <option value="Academia">Cursos en Academia</option>
-                            </select>
+                              value={demoForm.telefono}
+                              onChange={(e) => setDemoForm({ ...demoForm, telefono: e.target.value })}
+                            />
                           </div>
+                        </div>
+
+                        <div>
+                          <label className="block mb-1 text-slate-600">Servicio Requerido</label>
+                          <select
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:border-[#1A3461] focus:outline-none"
+                            value={demoForm.rubro}
+                            onChange={(e) => setDemoForm({ ...demoForm, rubro: e.target.value })}
+                          >
+                            <option value="E-Commerce">Desarrollo Web E-Commerce</option>
+                            <option value="ERP-CRM">Sistemas ERP / CRM</option>
+                            <option value="Chatbot">Chatbots de WhatsApp con IA</option>
+                            <option value="Facturación AFIP">Facturación AFIP Automática</option>
+                            <option value="Consultoria">Consultoría de Negocios &amp; Transformación</option>
+                            <option value="Ciberseguridad">Ciberseguridad y Auditoría</option>
+                            <option value="Academia">Cursos en Academia</option>
+                          </select>
                         </div>
 
                         <div>
@@ -3998,6 +4254,13 @@ export default function PublicWebsite({
                     </div>
                   </div>
                 </div>
+
+                {/* Mesa de Ayuda y Soporte Humano Local */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.soporte_central}
+                  title="Atención Directa por Asesores en Argentina"
+                  description="Nuestro equipo brinda asistencia en español por WhatsApp, Meet y presencial en la Patagonia y todo el país. Sin robots impersonales para resolver tus urgencias de negocio."
+                />
               </div>
             )}
 
@@ -4174,6 +4437,13 @@ export default function PublicWebsite({
                     <div>&#125;</div>
                   </div>
                 </div>
+
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.cabarcos}
+                  title="Conectividad Integral de Sistemas"
+                  description="Compañías de transporte y logística conectan sus ERPs tradicionales (Tango, Bejerman, Dolibarr) con el CRM de Clientum para sincronización de stock y despachos."
+                />
               </div>
             )}
 
@@ -4232,11 +4502,8 @@ export default function PublicWebsite({
                       </ul>
                     </div>
                     <button
-                      onClick={() => {
-                        setDemoForm({ ...demoForm, mensaje: "Hola, me gustaría inscribirme en el Programa de Afiliados de Clientum y recibir mis enlaces promocionales." });
-                        setActiveTab("contacto");
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
+                      id="cta-unirme-afiliado-btn"
+                      onClick={() => openLeadForm('postulacion_partner', { tipo_alianza: 'Afiliado Comercial / Referencias' })}
                       className="w-full bg-[#1A3461] hover:bg-[#0d1f3c] text-white text-xs font-bold py-3 rounded-lg tracking-wider uppercase transition-all cursor-pointer"
                     >
                       Unirme como Afiliado Gratis
@@ -4269,11 +4536,8 @@ export default function PublicWebsite({
                       </ul>
                     </div>
                     <button
-                      onClick={() => {
-                        setDemoForm({ ...demoForm, mensaje: "Hola, represento a una agencia/consultora y me interesa postularme como Partner Certificado de Clientum." });
-                        setActiveTab("contacto");
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
+                      id="cta-partner-certificado-btn"
+                      onClick={() => openLeadForm('postulacion_partner', { tipo_alianza: 'Implementador / Consultor Técnico' })}
                       className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold py-3 rounded-lg tracking-wider uppercase transition-all cursor-pointer"
                     >
                       Postularme como Partner Certificado
@@ -4344,7 +4608,12 @@ export default function PublicWebsite({
                   </div>
                 </div>
 
-
+                {/* Red de Aliados Comerciales en Territorio */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.consultoria}
+                  title="Red de Aliados y Consultores en Territorio"
+                  description="Agencias y consultores implementan Clientum en empresas de la Patagonia y Buenos Aires, generando ingresos recurrentes y relaciones de largo plazo."
+                />
               </div>
             )}
 
@@ -4406,18 +4675,27 @@ export default function PublicWebsite({
 
                   <div className="bg-slate-900 text-white border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
                     <div>
-                      <h4 className="font-bold text-white text-sm mb-2">Soporte por Correo Electrónico</h4>
+                      <h4 className="font-bold text-white text-sm mb-2">Soporte por Ticket &amp; Correo Electrónico</h4>
                       <p className="text-xs text-slate-300 leading-relaxed mb-4">
                         Para consultas de facturación, contratos corporativos, solicitudes de integraciones complejas con ERP locales o problemas con cursos de Clientum Academia.
                       </p>
                     </div>
-                    <a
-                      href={`mailto:${contact.email}`}
-                      className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition-all text-center border border-slate-700 flex items-center justify-center gap-1.5"
-                    >
-                      <Mail className="w-4 h-4 text-emerald-400" />
-                      Enviar Correo de Soporte
-                    </a>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => openLeadForm('soporte_ticket', { priority: 'Media', system: 'General' })}
+                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-2.5 px-4 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Headphones className="w-4 h-4" />
+                        Crear Ticket Prioritario
+                      </button>
+                      <a
+                        href={`mailto:${contact.email}`}
+                        className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition-all text-center border border-slate-700 flex items-center justify-center gap-1.5"
+                      >
+                        <Mail className="w-4 h-4 text-emerald-400" />
+                        Enviar Email
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4479,8 +4757,8 @@ export default function PublicWebsite({
                       ))}
                     </ul>
                     <div className="flex gap-3 mt-8">
-                      <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Probar 14 días gratis</button>
-                      <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Ver demo</button>
+                      <button id="cta-chatbot-cotizar-btn" onClick={() => openLeadForm('cotizador_chatbot', { rubro: 'Comercial / Servicios' })} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Cotizar Bot WhatsApp</button>
+                      <button id="cta-chatbot-demo-btn" onClick={() => openLeadForm('cotizador_chatbot', { mensaje: 'Solicito demostración guiada del Bot de WhatsApp' })} className="border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Ver demo</button>
                     </div>
                   </div>
                   <div className="bg-slate-900 rounded-2xl p-6 flex flex-col gap-4 shadow-xl">
@@ -4513,10 +4791,16 @@ export default function PublicWebsite({
                     </div>
                   ))}
                 </div>
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.lubrano}
+                  title="Atención Comercial y Consultas en Negocios Argentinos"
+                  description="Lubrano y otros comercios del Alto Valle y Buenos Aires utilizan nuestro bot de WhatsApp para canalizar consultas de stock, horarios y pedidos de forma inmediata."
+                />
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">¿Listo para automatizar tu atención al cliente?</h3>
                   <p className="text-xs text-slate-500 mt-2">Probá el chatbot de WhatsApp 14 días gratis, sin compromisos.</p>
-                  <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis →</button>
+                  <button id="cta-chatbot-probar-btn" onClick={() => openLeadForm('cotizador_chatbot')} className="mt-5 bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Solicitar Cotización de Bot →</button>
                 </div>
               </div>
             )}
@@ -4607,6 +4891,13 @@ export default function PublicWebsite({
                   </div>
                 </div>
 
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.terbay}
+                  title="Pipelines y Seguimiento en Equipos Comerciales"
+                  description="Inmobiliarias, distribuidoras y firmas de servicios estructuran sus oportunidades comerciales y cierres con el CRM inteligente de Clientum."
+                />
+
                 <div className="bg-[#1A3461] text-white rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold">Organizá tu pipeline hoy</h3>
                   <p className="text-xs text-slate-300 mt-2">Probalo 14 días gratis y cerrá más ventas desde la primera semana.</p>
@@ -4663,6 +4954,12 @@ export default function PublicWebsite({
                     <div key={q} className="bg-white border border-slate-200 rounded-xl p-4 text-xs text-slate-600 italic shadow-sm">{q}</div>
                   ))}
                 </div>
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.consultoria}
+                  title="Análisis Operativo en Empresas de Servicios"
+                  description="Directivos y dueños de PyMEs consultan al Asistente de IA en lenguaje natural para obtener resúmenes de rendimiento semanal y alertas de gestión."
+                />
                 <div className="bg-violet-50 border border-violet-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">Tu analista de negocio, siempre disponible</h3>
                   <p className="text-xs text-slate-500 mt-2">Incluido en todos los planes sin costo adicional.</p>
@@ -4756,6 +5053,13 @@ export default function PublicWebsite({
                   </div>
                 </div>
 
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.bi_dashboard}
+                  title="Tableros y Reportes en Tiempo Real"
+                  description="Gerencias de operaciones en el sector frutihortícola, farmacéutico y de logística monitorean sus indicadores de ventas y cobranzas al instante."
+                />
+
                 <div className="bg-orange-50 border border-orange-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">Datos claros para decisiones rápidas</h3>
                   <p className="text-xs text-slate-500 mt-2">Probá los reportes automáticos 14 días sin costo.</p>
@@ -4843,10 +5147,16 @@ export default function PublicWebsite({
                     </div>
                   ))}
                 </div>
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.distribuidora}
+                  title="Automatización de Ventas y Envíos"
+                  description="Distribuidoras mayoristas despachan cientos de pedidos coordinando avisos automáticos de preparación, despacho y factura por WhatsApp."
+                />
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">Automatizá tu negocio hoy</h3>
                   <p className="text-xs text-slate-500 mt-2">Probalo 14 días gratis y activá tus primeros flujos en minutos.</p>
-                  <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis →</button>
+                  <button id="cta-automatizaciones-cotizar-btn" onClick={() => openLeadForm('cotizador_automatizacion')} className="mt-5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Cotizar Automatización de Procesos →</button>
                 </div>
               </div>
             )}
@@ -4869,7 +5179,7 @@ export default function PublicWebsite({
                       ))}
                     </ul>
                     <div className="flex gap-3 mt-8">
-                      <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis</button>
+                      <button id="cta-afip-cotizar-btn" onClick={() => openLeadForm('cotizador_afip')} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Cotizar Facturación AFIP</button>
                     </div>
                   </div>
                   <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
@@ -4906,10 +5216,16 @@ export default function PublicWebsite({
                     </div>
                   ))}
                 </div>
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.estudio}
+                  title="Facturación Homologada AFIP sin Errores"
+                  description="Estudios contables, comercios y distribuidores sincronizan comprobantes A, B y C directamente con ARCA / AFIP al momento de cerrar una operación."
+                />
                 <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">Dejá de facturar a mano</h3>
                   <p className="text-xs text-slate-500 mt-2">Conectá tu CUIT y empezá a emitir facturas homologadas desde tu primera venta.</p>
-                  <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis →</button>
+                  <button id="cta-afip-empezar-btn" onClick={() => openLeadForm('cotizador_afip')} className="mt-5 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Solicitar Integración AFIP →</button>
                 </div>
               </div>
             )}
@@ -4932,7 +5248,7 @@ export default function PublicWebsite({
                       ))}
                     </ul>
                     <div className="flex gap-3 mt-8">
-                      <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis</button>
+                      <button id="cta-mercadopago-cotizar-btn" onClick={() => openLeadForm('cotizador_mercadopago')} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Cotizar Pasarela Mercado Pago</button>
                     </div>
                   </div>
                   <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
@@ -4969,6 +5285,12 @@ export default function PublicWebsite({
                     </div>
                   ))}
                 </div>
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.mercadopago_retail}
+                  title="Cobranzas y Débitos Recurrentes en Mostrador y Online"
+                  description="Comercios y empresas de servicios cobran suscripciones mensuales y ventas puntuales con links de Mercado Pago y conciliación automática."
+                />
                 <div className="bg-sky-50 border border-sky-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">Cobrá todos los meses sin pedirlo</h3>
                   <p className="text-xs text-slate-500 mt-2">Conectá Mercado Pago y activá tu primera suscripción hoy mismo.</p>
@@ -5026,6 +5348,12 @@ export default function PublicWebsite({
                     </div>
                   ))}
                 </div>
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.prospeccion_maps}
+                  title="Identificación de Nuevas Cuentas y Comercios"
+                  description="Fuerzas de venta b2b identifican prospectos geolocalizados en el Alto Valle y Buenos Aires para alimentar sus pipelines comerciales."
+                />
                 <div className="bg-violet-50 border border-violet-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">Tu próximo cliente ya existe, solo falta encontrarlo</h3>
                   <p className="text-xs text-slate-500 mt-2">Probá el Prospectador IA gratis y sumá tus primeros leads hoy.</p>
@@ -5093,6 +5421,12 @@ export default function PublicWebsite({
                     </div>
                   ))}
                 </div>
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.consorcio}
+                  title="Autogestión de Clientes y Propietarios"
+                  description="Administraciones y empresas de servicios brindan a sus clientes acceso web para descargar comprobantes, revisar consumos y consultar saldos."
+                />
                 <div className="bg-teal-50 border border-teal-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">Menos llamadas, más satisfacción</h3>
                   <p className="text-xs text-slate-500 mt-2">Tus clientes se autoatienden. Vos te enfocás en crecer.</p>
@@ -5183,10 +5517,17 @@ export default function PublicWebsite({
                   </div>
                 </div>
 
+                {/* PyME Argentina en Acción */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.yendoapp}
+                  title="Desarrollo e Ingeniería Web de Alto Rendimiento"
+                  description="Casos reales como YendoApp y portales empresariales construidos por nuestro equipo técnico en General Roca y Brasil para clientes en toda la región."
+                />
+
                 <div className="bg-slate-100 border border-slate-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">¿Tenés un proyecto en mente?</h3>
                   <p className="text-xs text-slate-500 mt-2">Contanos qué necesitás y te damos presupuesto en 48 horas.</p>
-                  <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-slate-900 hover:bg-[#1A3461] text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Pedir presupuesto →</button>
+                  <button id="cta-web-presupuesto-btn" onClick={() => openLeadForm('cotizador_web')} className="mt-5 bg-slate-900 hover:bg-[#1A3461] text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Cotizar Proyecto Web / E-Commerce →</button>
                 </div>
               </div>
             )}
@@ -5232,6 +5573,20 @@ export default function PublicWebsite({
                     </div>
                   ))}
                 </div>
+
+                {/* ── PYMES EN DIFERENTES INDUSTRIAS ARGENTINAS ── */}
+                <ArgentinePymesSection
+                  title="Sectores Productivos de Argentina en Acción"
+                  subtitle="Comercios minoristas, transporte y logística, agroindustria del Alto Valle y servicios profesionales con soluciones adaptadas a su marco impositivo y operativo."
+                  items={[
+                    ARGENTINE_PYMES_DATA.lubrano,
+                    ARGENTINE_PYMES_DATA.distribuidora,
+                    ARGENTINE_PYMES_DATA.consorcio,
+                    ARGENTINE_PYMES_DATA.cabarcos,
+                  ]}
+                  badge="Sectores Productivos"
+                />
+
                 <div className="bg-[#1A3461] text-white rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold">¿Tu industria no está en la lista?</h3>
                   <p className="text-xs text-slate-300 mt-2 max-w-xl mx-auto">
@@ -5313,8 +5668,8 @@ export default function PublicWebsite({
                           ))}
                         </div>
                         <button
-                          onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                          className="mt-auto text-xs font-bold text-[#1A3461] hover:text-emerald-600 transition-colors flex items-center gap-1"
+                          onClick={() => openLeadForm('postulacion_carrera', { position: role, type })}
+                          className="mt-auto text-xs font-bold text-[#1A3461] hover:text-emerald-600 transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           Postularme →
                         </button>
@@ -5323,13 +5678,20 @@ export default function PublicWebsite({
                   </div>
                 </div>
 
+                {/* Equipo & Ambiente de Trabajo */}
+                <ArgentinePymeDetailBanner
+                  item={ARGENTINE_PYMES_DATA.soporte_central}
+                  title="Cultura de Trabajo Cercana y Orientada a Resultados"
+                  description="Trabajamos con autonomía, herramientas de punta y un foco obsesivo en resolver problemas reales de las empresas argentinas."
+                />
+
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
                   <h3 className="text-lg font-display font-bold text-slate-900">¿No encontrás tu perfil?</h3>
                   <p className="text-xs text-slate-500 mt-2 max-w-lg mx-auto">
                     Mandanos tu CV y contanos en qué podés aportar. Siempre estamos abiertos a perfiles que sorprendan.
                   </p>
                   <button
-                    onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    onClick={() => openLeadForm('postulacion_carrera', { position: 'Postulación Espontánea' })}
                     className="mt-5 bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer"
                   >
                     Enviar CV espontáneo →
@@ -5425,7 +5787,7 @@ export default function PublicWebsite({
                   <h3 className="text-lg font-display font-bold text-slate-900">¿Necesitás integrar Clientum?</h3>
                   <p className="text-xs text-slate-500 mt-2">Nuestro equipo técnico puede guiarte en la integración. Escribinos y te respondemos en menos de 24 horas hábiles.</p>
                   <button
-                    onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    onClick={() => openLeadForm('soporte_ticket', { priority: 'Media', system: 'API & Webhooks' })}
                     className="mt-5 bg-slate-900 hover:bg-[#1A3461] text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer"
                   >
                     Contactar al equipo técnico →
@@ -5437,6 +5799,23 @@ export default function PublicWebsite({
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* ── PYMES ARGENTINAS EN ACCIÓN (Footer Showcase) ── */}
+      <div className="bg-slate-900 border-t border-slate-800 text-white py-12 px-6">
+        <div className="max-w-6xl mx-auto">
+          <ArgentinePymesSection
+            title="Equipos Reales en Argentina Trabajando con Clientum"
+            subtitle="Conectamos procesos de ventas, facturación AFIP y atención al cliente para PyMEs de la Patagonia, Buenos Aires, Córdoba, Santa Fe y todo el país."
+            items={[
+              ARGENTINE_PYMES_DATA.lubrano,
+              ARGENTINE_PYMES_DATA.distribuidora,
+              ARGENTINE_PYMES_DATA.estudio,
+              ARGENTINE_PYMES_DATA.terbay,
+            ]}
+            badge="Red Federal de Clientes"
+          />
+        </div>
+      </div>
 
       {/* Corporate Footer (Maps directly to Footer layout in shortcodes) */}
       <footer className="bg-slate-950 text-white shrink-0">
@@ -5555,9 +5934,9 @@ export default function PublicWebsite({
             </div>
           </div>
 
-          {/* Soluciones — 2 cols — misma taxonomía que el menú (SOLUTIONS_ITEMS) */}
+          {/* Servicios — 2 cols — misma taxonomía que el menú (SOLUTIONS_ITEMS) */}
           <div className="md:col-span-2">
-            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">{isPortuguese ? "Soluções" : "Soluciones"}</h4>
+            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">{isPortuguese ? "Serviços" : "Servicios"}</h4>
             <ul className="flex flex-col gap-2.5">
               {[
                 ...SOLUTIONS_ITEMS.map((s) => ({ id: s.id, label: s.label, query: s.query })),
@@ -5789,6 +6168,14 @@ export default function PublicWebsite({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Universal Public Lead Form Modal */}
+      <PublicLeadFormModal
+        isOpen={leadModalOpen}
+        onClose={() => setLeadModalOpen(false)}
+        formType={leadModalType}
+        initialData={leadModalInitialData}
+      />
     </div>
   );
 }

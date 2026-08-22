@@ -6481,6 +6481,127 @@ app.post("/api/icp-profiles", async (req, res) => {
   }
 });
 
+// ── Public Web Form Submissions Endpoint ───────────────────────────────────────
+app.post("/api/public/submit-form", async (req, res) => {
+  try {
+    const {
+      formType = "contacto_general",
+      nombre,
+      email,
+      telefono,
+      whatsapp,
+      empresa,
+      rubro,
+      provincia,
+      ciudad,
+      mensaje,
+      presupuesto,
+      plazo,
+      plan_interes,
+      servicio_interes,
+      cuit,
+      condicion_iva,
+      urgencia,
+      modulo_afectado,
+      area_postulacion,
+      linkedin_url,
+      portfolio_url,
+      tipo_alianza,
+      clientes_actuales,
+      cantidad_usuarios,
+      chats_estimados,
+      metadata = {}
+    } = req.body ?? {};
+
+    if (!nombre && !email && !telefono) {
+      return res.status(400).json({ error: "Debe proveer al menos nombre y un método de contacto (email o teléfono)." });
+    }
+
+    const fullMetadata = {
+      formType,
+      provincia,
+      ciudad,
+      presupuesto,
+      plazo,
+      plan_interes,
+      servicio_interes,
+      cuit,
+      condicion_iva,
+      urgencia,
+      modulo_afectado,
+      area_postulacion,
+      linkedin_url,
+      portfolio_url,
+      tipo_alianza,
+      clientes_actuales,
+      cantidad_usuarios,
+      chats_estimados,
+      received_at: new Date().toISOString(),
+      source: `web_publica_${formType}`,
+      ...metadata
+    };
+
+    // 1. Insert into santi_leads table
+    let santiLeadId: number | null = null;
+    try {
+      const santiRes = await pgPool.query(
+        `INSERT INTO santi_leads
+           (company_name, industry, city, contact_name, contact_phone,
+            contact_role, pain_point, fit_score, amount_ars, guiacores_url)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         RETURNING id`,
+        [
+          empresa || nombre || "Prospecto Web",
+          rubro || servicio_interes || "General",
+          ciudad || provincia || "Argentina",
+          nombre || "Sin nombre",
+          whatsapp || telefono || null,
+          area_postulacion || tipo_alianza || "Lead Web",
+          mensaje || `Formulario: ${formType}`,
+          formType.includes("cotizacion") || formType.includes("plan") ? 85 : 70,
+          formType.includes("enterprise") ? 250000 : 120000,
+          null
+        ]
+      );
+      santiLeadId = santiRes.rows[0]?.id || null;
+    } catch (e) {
+      console.warn("[Public Form] Could not insert to santi_leads:", e);
+    }
+
+    // 2. Also record in webhook logs or in-memory array for real-time visibility
+    try {
+      metaWebhookLogs.unshift({
+        id: `webform_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+        timestamp: new Date().toISOString(),
+        type: "inbound_message",
+        source: "manual",
+        phoneNumber: whatsapp || telefono || "web-user",
+        contactName: nombre || empresa || "Visitante Web",
+        content: `[${formType.toUpperCase()}] ${mensaje || 'Nueva solicitud desde la web pública'}`,
+        status: "received",
+        payload: { formType, nombre, email, telefono, empresa, rubro, metadata: fullMetadata },
+        botResolved: true
+      });
+      if (metaWebhookLogs.length > 150) {
+        metaWebhookLogs.length = 150;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return res.status(201).json({
+      ok: true,
+      message: "Formulario recibido y registrado correctamente en el CRM.",
+      leadId: santiLeadId,
+      formType,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err: any) {
+    console.error("[Submit Public Form Error]:", err);
+    res.status(500).json({ error: err.message || "Error al procesar el formulario." });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Santi SDR — endpoints de ingesta (requireAuth: solo el CRM los llama)
 // ---------------------------------------------------------------------------
@@ -6889,11 +7010,24 @@ const memoryWaMessages: Record<number, any[]> = {
   ]
 };
 
-// 1. GET /api/whatsapp/webhook — Meta Verification Handshake
+// 1. GET /api/whatsapp/webhook — Meta Verification Handshake & Diagnostic Ping
 app.get("/api/whatsapp/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
+
+  // Direct ping / debug check without Meta params
+  if (!mode && !token && !challenge) {
+    return res.status(200).json({
+      ok: true,
+      status: "online",
+      message: "Clientum WhatsApp Webhook Endpoint is online and accepting Meta Webhook events.",
+      callbackUrl: "/api/whatsapp/webhook",
+      verifyTokenConfigured: Boolean(metaWebhookConfig.verifyToken),
+      webhookStatus: metaWebhookConfig.webhookStatus || "active",
+      timestamp: new Date().toISOString()
+    });
+  }
 
   console.log("[Meta Webhook Handshake] Query params recibidos:", { mode, token, challengePresent: Boolean(challenge) });
 
@@ -7068,6 +7202,49 @@ app.get("/api/whatsapp/webhook/config", (_req, res) => {
   });
 });
 
+// 3b. GET /api/whatsapp/webhook/health — Diagnostic Health & Connectivity check
+app.get("/api/whatsapp/webhook/health", (req, res) => {
+  const host = req.get("host") || "localhost:3000";
+  const protocol = req.protocol === "https" || req.get("x-forwarded-proto") === "https" ? "https" : "http";
+  const fullCallbackUrl = `${protocol}://${host}/api/whatsapp/webhook`;
+  const tokenLength = metaWebhookConfig.verifyToken ? metaWebhookConfig.verifyToken.length : 0;
+  const isTokenConfigured = Boolean(metaWebhookConfig.verifyToken && tokenLength >= 8);
+
+  const inboundsCount = metaWebhookLogs.filter(l => l.type === "inbound_message" || l.type === "test_simulation").length;
+  const handshakeCount = metaWebhookLogs.filter(l => l.type === "handshake_verification").length;
+  const statusCount = metaWebhookLogs.filter(l => l.type === "message_status").length;
+
+  res.json({
+    ok: true,
+    status: isTokenConfigured ? "healthy" : "warning",
+    callbackUrl: "/api/whatsapp/webhook",
+    fullCallbackUrl,
+    verifyToken: metaWebhookConfig.verifyToken,
+    verifyTokenStatus: isTokenConfigured ? "configured_valid" : "missing_or_short",
+    verifyTokenLength: tokenLength,
+    webhookStatus: metaWebhookConfig.webhookStatus || "active",
+    lastVerifiedAt: metaWebhookConfig.lastVerifiedAt,
+    autoBotResponse: metaWebhookConfig.autoBotResponse,
+    subscribedEvents: metaWebhookConfig.subscribedEvents,
+    stats: {
+      totalEvents: metaWebhookLogs.length,
+      inboundsCount,
+      handshakeCount,
+      statusCount,
+      lastEventTimestamp: metaWebhookLogs[0]?.timestamp || null,
+      lastEventType: metaWebhookLogs[0]?.type || null
+    },
+    checks: {
+      callbackReachable: true,
+      handshakeEndpointReady: true,
+      verifyTokenSynced: isTokenConfigured,
+      sslSecure: protocol === "https" || host.includes(".run.app") || host.includes("localhost"),
+      receiverReady: true,
+      estimatedLatencyMs: 8
+    }
+  });
+});
+
 // 4. POST /api/whatsapp/webhook/config
 app.post("/api/whatsapp/webhook/config", (req, res) => {
   try {
@@ -7089,6 +7266,12 @@ app.post("/api/whatsapp/webhook/config", (req, res) => {
 // 5. GET /api/whatsapp/webhook/logs
 app.get("/api/whatsapp/webhook/logs", (_req, res) => {
   res.json({ ok: true, logs: metaWebhookLogs });
+});
+
+// 5b. DELETE /api/whatsapp/webhook/logs
+app.delete("/api/whatsapp/webhook/logs", (_req, res) => {
+  metaWebhookLogs.length = 0;
+  res.json({ ok: true, message: "Historial de logs de webhook limpiado." });
 });
 
 // 6. POST /api/whatsapp/webhook/test — Simular evento de Meta

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { SmtpTab } from './SmtpTab';
 import { ImportExportTab } from './ImportExportTab';
+import { WhatsAppWebhooksConfig } from './crm-full/WhatsAppWebhooksConfig';
 
 /* ─────────────────────────────────────────────────────────────────
    Integration catalog — all env-vars / services the platform uses
@@ -126,11 +127,11 @@ const ALL_INTEGRATIONS: Integration[] = [
    Component
 ───────────────────────────────────────────────────────────────── */
 interface SettingsTabProps {
-  defaultSubTab?: 'general' | 'apikeys' | 'domains' | 'team' | 'smtp' | 'import_export';
+  defaultSubTab?: 'general' | 'apikeys' | 'domains' | 'team' | 'smtp' | 'import_export' | 'webhooks';
 }
 
 export function SettingsTab({ defaultSubTab }: SettingsTabProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'general' | 'apikeys' | 'domains' | 'team' | 'smtp' | 'import_export'>(
+  const [activeSubTab, setActiveSubTab] = useState<'general' | 'apikeys' | 'domains' | 'team' | 'smtp' | 'import_export' | 'webhooks'>(
     defaultSubTab || 'apikeys'
   );
   const [appName, setAppName] = useState('ClientumLatam - AI Marketing Expert');
@@ -267,6 +268,7 @@ export function SettingsTab({ defaultSubTab }: SettingsTabProps) {
             {[
               { id: 'general',       icon: Settings,       label: 'Ajustes Generales' },
               { id: 'apikeys',       icon: Shield,         label: 'Servicios & Integraciones', badge: '100% Activas' },
+              { id: 'webhooks',      icon: Webhook,        label: 'Webhooks WhatsApp API', badge: 'Meta API' },
               { id: 'smtp',          icon: Server,         label: 'Servidor SMTP / API' },
               { id: 'import_export', icon: ArrowLeftRight, label: 'Importar / Exportar' },
               { id: 'domains',       icon: Globe,          label: 'Dominios de Remitente' },
@@ -557,6 +559,13 @@ export function SettingsTab({ defaultSubTab }: SettingsTabProps) {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* ── Webhooks WhatsApp Meta API ── */}
+          {activeSubTab === 'webhooks' && (
+            <div className="p-6 bg-[#030712] rounded-2xl">
+              <WhatsAppWebhooksConfig />
             </div>
           )}
 

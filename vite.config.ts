@@ -11,6 +11,7 @@ export default defineConfig(() => {
       emptyOutDir: true,
       chunkSizeWarningLimit: 2500,
       rollupOptions: {
+        external: ['jspdf'],
         cache: false,
         maxParallelFileOps: 10,
         output: {
