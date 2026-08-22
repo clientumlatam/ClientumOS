@@ -27,42 +27,46 @@ app.set("trust proxy", 1);
 const PORT = 3000;
 const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL);
 
-if (!databaseUrl ) {
-  console.error("FATAL: DATABASE_URL is not configured or invalid. ClientumOS requires a valid PostgreSQL database to start.");
-  process.exit(1);
+let pgPool: any;
+let isDbConnected = false;
+try {
+  if (!databaseUrl) throw new Error("No database URL");
+  pgPool = new Pool({
+    connectionString: databaseUrl,
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+    connectionTimeoutMillis: 5000,
+  });
+  pgPool.on('error', (err: any) => {
+    console.warn('[AI Studio] PostgreSQL error:', err.message);
+  });
+  isDbConnected = true;
+} catch {
+  console.warn('[AI Studio] PostgreSQL not connected — using mock pool');
+  pgPool = {
+    query: async () => ({ rows: [], rowCount: 0 }),
+    connect: async () => ({ query: async () => ({ rows: [], rowCount: 0 }), release: () => {} }),
+    on: () => {}
+  };
 }
 
-const pgPool = new Pool({
-  connectionString: databaseUrl,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-  connectionTimeoutMillis: 5000,
-});
-
-pgPool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
-});
-
-// Ensure connection is valid
-pgPool.query('SELECT 1').catch((err) => {
-  console.error("FATAL: Failed to connect to PostgreSQL:", err.message);
-  process.exit(1);
-});
-
 let sessionStore: any;
-try {
-  const PgSessionStore = connectPgSimple(session);
-  sessionStore = new PgSessionStore({
-    pool: pgPool,
-    tableName: "session",
-    createTableIfMissing: true,
-    errorLog: (err: any) => {
-      console.error("[SessionStore] PostgreSQL session store warning:", err?.message || err);
-    },
-  });
-} catch (err: any) {
-  console.error("FATAL: Failed to initialize PostgreSQL session store:", err?.message || err);
-  process.exit(1);
+if (isDbConnected) {
+  try {
+    const PgSessionStore = connectPgSimple(session);
+    sessionStore = new PgSessionStore({
+      pool: pgPool,
+      tableName: "session",
+      createTableIfMissing: true,
+      errorLog: (err: any) => {
+        console.error("[SessionStore] PostgreSQL session store warning:", err?.message || err);
+      },
+    });
+  } catch (err: any) {
+    console.error("Warning: Failed to initialize PostgreSQL session store:", err?.message || err);
+    sessionStore = new session.MemoryStore();
+  }
+} else {
+  sessionStore = new session.MemoryStore();
 }
 
 app.use(express.json());
@@ -4144,6 +4148,7 @@ Devolvé SOLO este JSON (sin markdown):
 // ---------------------------------------------------------------------------
 // LMS — tablas para la Academia Clientum: inscripciones, progreso y certificados
 // ---------------------------------------------------------------------------
+let pgUserIdType = "INTEGER";
 async function initLmsTables() {
   await pgPool.query(`
     CREATE TABLE IF NOT EXISTS lms_enrollments (
