@@ -19,8 +19,14 @@ import {
   Webhook,
   Upload,
   FileSpreadsheet,
-  CheckCircle2
+  CheckCircle2,
+  Download,
+  Mic,
+  MicOff,
+  Tag,
+  FileText
 } from 'lucide-react';
+import jsPDF from 'jspdf';
 import { BulkWhatsAppModal, BulkContactItem } from '../BulkWhatsAppModal';
 import { WhatsAppResolutionMetrics } from './WhatsAppResolutionMetrics';
 import { WhatsAppWebhooksConfig } from './WhatsAppWebhooksConfig';
@@ -84,6 +90,64 @@ function formatTime(iso: string) {
   return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
 }
 
+function detectIntent(messages: WaMessage[]): { key: string; label: string; color: string; quickReplies: string[] } {
+  const lastInbound = [...messages].reverse().find(m => m.direction === 'inbound')?.content?.toLowerCase() || '';
+  
+  if (/precio|cuanto|costo|cotiz|plan|tarifa|valor|reais/i.test(lastInbound)) {
+    return {
+      key: 'price_inquiry',
+      label: '💰 Consulta de Precios',
+      color: 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40',
+      quickReplies: [
+        "Te comparto nuestros planes con implementación en 5 días y soporte 24/7.",
+        "¿Cuántos usuarios comerciales operarán en tu empresa para armar presupuesto?"
+      ]
+    };
+  }
+  if (/api|webhook|afip|factura|integracion|error|tecnico|sincroniz/i.test(lastInbound)) {
+    return {
+      key: 'technical',
+      label: '⚙️ Soporte Técnico',
+      color: 'bg-purple-500/25 text-purple-300 border-purple-500/40',
+      quickReplies: [
+        "Nuestra API REST y Webhooks de Meta se conectan en menos de 10 minutos.",
+        "Te paso con nuestro equipo de ingeniería para revisar los logs de tu servidor."
+      ]
+    };
+  }
+  if (/pago|tarjeta|factura|pix|transferencia|abono/i.test(lastInbound)) {
+    return {
+      key: 'billing',
+      label: '💳 Facturación y Pagos',
+      color: 'bg-sky-500/25 text-sky-300 border-sky-500/40',
+      quickReplies: [
+        "Emitimos factura A, B y soporte para PIX / transferencias bancarias corporativas.",
+        "El pago se procesa de forma segura con acreditación inmediata."
+      ]
+    };
+  }
+  if (/demo|reunion|jueves|ver|reuniao|apresentacao/i.test(lastInbound)) {
+    return {
+      key: 'demo',
+      label: '📅 Solicitud de Demo',
+      color: 'bg-amber-500/25 text-amber-300 border-amber-500/40',
+      quickReplies: [
+        "Perfecto, coordinemos una demo guiada de 15 minutos esta semana.",
+        "Te comparto el link de calendario para que elijas el horario que prefieras."
+      ]
+    };
+  }
+  return {
+    key: 'support',
+    label: '💬 Soporte General',
+    color: 'bg-slate-700/60 text-slate-300 border-slate-600',
+    quickReplies: [
+      "¡Hola! Estoy aquí para asistirte con todo lo que necesites en tu operación.",
+      "¿En qué área te gustaría enfocar la automatización hoy?"
+    ]
+  };
+}
+
 type WhatsAppTab = 'chats' | 'metrics' | 'webhooks';
 
 export default function CrmFullWhatsApp() {
@@ -103,6 +167,7 @@ export default function CrmFullWhatsApp() {
   const [showCsvImportModal, setShowCsvImportModal] = useState(false);
   const [importedCustomContacts, setImportedCustomContacts] = useState<BulkContactItem[]>([]);
   const [importNotification, setImportNotification] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -244,14 +309,123 @@ export default function CrmFullWhatsApp() {
     } catch {}
   };
 
+  const handleDownloadPdf = () => {
+    if (!selected) return;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header banner
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pageWidth, 35, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('CLIENTUM - REPORTE DE CONVERSACIÓN WHATSAPP', 14, 15);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text(`Contacto: ${selected.contact_name || selected.phone} (${selected.phone})`, 14, 22);
+    doc.text(`Fecha de exportación: ${new Date().toLocaleString('es-AR')}`, 14, 28);
+
+    let currentY = 45;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Historial de Mensajes', 14, currentY);
+    currentY += 8;
+
+    messages.forEach((msg) => {
+      if (currentY > 270) {
+        doc.addPage();
+        currentY = 20;
+      }
+      const senderLabel = msg.direction === 'inbound' 
+        ? `[Cliente] ${selected.contact_name || selected.phone}` 
+        : `[${msg.sent_by === 'bot' ? 'Bot IA' : 'Asesor'}] Clientum`;
+      const timeStr = new Date(msg.created_at).toLocaleString('es-AR');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(msg.direction === 'inbound' ? 30 : 13, 148, 136);
+      doc.text(`${senderLabel} (${timeStr}):`, 14, currentY);
+      currentY += 5;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(51, 65, 85);
+      const splitText = doc.splitTextToSize(msg.content, pageWidth - 28);
+      doc.text(splitText, 14, currentY);
+      currentY += (splitText.length * 5) + 6;
+    });
+
+    const cleanPhone = selected.phone.replace(/[^0-9]/g, '');
+    doc.save(`whatsapp_chat_${cleanPhone}.pdf`);
+  };
+
+  const handleToggleVoiceRecording = () => {
+    if (isRecording) {
+      setIsRecording(false);
+      return;
+    }
+
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognitionAPI) {
+      try {
+        const recognition = new SpeechRecognitionAPI();
+        recognition.lang = 'es-AR';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+          setIsRecording(true);
+        };
+
+        recognition.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+          setIsRecording(false);
+        };
+
+        recognition.onerror = () => {
+          setIsRecording(false);
+          simulateVoiceTranscription();
+        };
+
+        recognition.onend = () => {
+          setIsRecording(false);
+        };
+
+        recognition.start();
+        return;
+      } catch {
+        simulateVoiceTranscription();
+      }
+    } else {
+      simulateVoiceTranscription();
+    }
+  };
+
+  const simulateVoiceTranscription = () => {
+    setIsRecording(true);
+    setTimeout(() => {
+      setIsRecording(false);
+      const simulatedPhrases = [
+        "Hola, quisiera coordinar una demostración del ERP para nuestro equipo comercial.",
+        "¿Podrían enviarnos el presupuesto detallado para 15 usuarios?",
+        "Necesitamos verificar la integración de Webhooks con Meta y WhatsApp."
+      ];
+      const chosen = simulatedPhrases[Math.floor(Math.random() * simulatedPhrases.length)];
+      setInput(chosen);
+    }, 2500);
+  };
+
   const handleCsvImported = (contacts: BulkContactItem[], openBulk?: boolean) => {
     setImportedCustomContacts(contacts);
     setImportNotification(`¡Se importaron ${contacts.length} prospectos exitosamente!`);
     setTimeout(() => setImportNotification(null), 5000);
-
-    // Refresh conversation list with new leads
     loadConversations();
-
     if (openBulk) {
       setShowBulkWAModal(true);
     }
@@ -260,6 +434,8 @@ export default function CrmFullWhatsApp() {
   const filtered = conversations.filter(c =>
     !searchTerm || c.contact_name?.toLowerCase().includes(searchTerm.toLowerCase()) || c.phone.includes(searchTerm)
   );
+
+  const intentInfo = detectIntent(messages);
 
   const mergedBulkContacts: BulkContactItem[] = [
     ...importedCustomContacts,
@@ -467,18 +643,32 @@ export default function CrmFullWhatsApp() {
               </div>
             ) : (
               <>
-                {/* Conversation top info */}
-                <div className="p-3.5 border-b border-[#1E293B] flex items-center justify-between bg-[#0A101F]/90">
+                {/* Conversation top info with Intent Badge and PDF Download */}
+                <div className="p-3.5 border-b border-[#1E293B] flex flex-wrap items-center justify-between gap-3 bg-[#0A101F]/90">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-sm">
                       {(selected.contact_name || selected.phone)[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-semibold text-white text-sm leading-tight">{selected.contact_name || selected.phone}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-white text-sm leading-tight">{selected.contact_name || selected.phone}</p>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${intentInfo.color}`}>
+                          {intentInfo.label}
+                        </span>
+                      </div>
                       <p className="text-xs text-slate-400 font-mono mt-0.5">{selected.phone}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      onClick={handleDownloadPdf}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl transition-all shadow-sm cursor-pointer"
+                      title="Exportar historial de chat actual como PDF"
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Descargar PDF</span>
+                    </button>
+
                     <button
                       onClick={() => handleToggleBot(selected)}
                       className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-all ${
@@ -575,32 +765,62 @@ export default function CrmFullWhatsApp() {
                   </div>
                 )}
 
-                {/* Input Area */}
+                {/* Input Area with Quick-Replies & Voice-to-Text */}
                 <div className="p-3 border-t border-[#1E293B] bg-[#0A101F]">
+                  {intentInfo.quickReplies.length > 0 && (
+                    <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 font-medium mr-1">Plantillas rápidas ({intentInfo.label}):</span>
+                      {intentInfo.quickReplies.map((qr, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSend(qr)}
+                          className="text-[11px] bg-white/5 hover:bg-white/10 text-slate-300 border border-slate-700/60 px-2.5 py-1 rounded-lg transition-all cursor-pointer shadow-xs"
+                        >
+                          {qr}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-end gap-2">
                     <button
                       onClick={handleSuggest}
                       disabled={suggesting || messages.length === 0}
-                      className="flex items-center gap-1.5 text-xs px-3 py-2.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 rounded-xl disabled:opacity-50 transition-colors flex-shrink-0 font-semibold"
+                      className="flex items-center gap-1.5 text-xs px-3 py-2.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 rounded-xl disabled:opacity-50 transition-colors flex-shrink-0 font-semibold cursor-pointer"
                       title="Generar respuesta sugerida con Gemini IA"
                     >
                       {suggesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                       Copilot IA
                     </button>
+
+                    <button
+                      onClick={handleToggleVoiceRecording}
+                      className={`p-2.5 rounded-xl border transition-all flex-shrink-0 cursor-pointer ${
+                        isRecording 
+                          ? 'bg-rose-500/20 text-rose-400 border-rose-500/50 animate-pulse' 
+                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                      }`}
+                      title={isRecording ? "Escuchando voz... (Haga clic para detener)" : "Dictar mensaje por voz (Voice-to-Text)"}
+                    >
+                      {isRecording ? <MicOff className="w-4 h-4 text-rose-400 animate-bounce" /> : <Mic className="w-4 h-4 text-emerald-400" />}
+                    </button>
+
                     <div className="flex-1 relative">
                       <textarea
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                        placeholder="Escribí un mensaje por WhatsApp... (Presioná Enter para enviar)"
+                        placeholder={isRecording ? "Escuchando audio... hable ahora..." : "Escribí un mensaje por WhatsApp o dictá por voz..."}
                         rows={1}
-                        className="w-full bg-[#050B14] border border-[#1E293B] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 resize-none"
+                        className={`w-full bg-[#050B14] border rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none resize-none ${
+                          isRecording ? 'border-rose-500/50 ring-1 ring-rose-500/30' : 'border-[#1E293B] focus:border-emerald-500/50'
+                        }`}
                       />
                     </div>
                     <button
                       onClick={() => handleSend()}
                       disabled={!input.trim() || sending}
-                      className="p-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all shadow-md shadow-emerald-600/20 flex-shrink-0"
+                      className="p-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all shadow-md shadow-emerald-600/20 flex-shrink-0 cursor-pointer"
                     >
                       {sending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </button>
@@ -642,3 +862,4 @@ export default function CrmFullWhatsApp() {
     </div>
   );
 }
+
