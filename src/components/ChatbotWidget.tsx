@@ -170,7 +170,7 @@ export default function ChatbotWidget({ standalone = false }: ChatbotWidgetProps
 
   const mainWidget = (
     <div className={`flex flex-col bg-white border border-slate-200 shadow-2xl overflow-hidden ${
-      standalone ? "w-full h-full rounded-none" : "w-[380px] h-[550px] rounded-2xl"
+      standalone ? "w-full h-full rounded-none" : "w-[calc(100vw-1.5rem)] sm:w-[380px] h-[80vh] max-h-[550px] rounded-2xl"
     }`}>
       <div className="bg-[#0a1628] text-white p-4 flex items-center justify-between shadow-md shrink-0">
         <div className="flex items-center gap-2.5">
@@ -416,7 +416,7 @@ export default function ChatbotWidget({ standalone = false }: ChatbotWidgetProps
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 font-sans">
+    <div className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3 font-sans max-w-full">
       <AnimatePresence>
         {isOpen && (
           <motion.div

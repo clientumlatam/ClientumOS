@@ -80,6 +80,7 @@ import BrochurePreview from "./BrochurePreview";
 import { PdfExportButton } from "./PdfExportButton";
 import { LanguageSelector } from "./LanguageSelector";
 import { useLanguage } from "../lib/i18n";
+import ChatbotWidget from "./ChatbotWidget";
 const ArgentinePymeCard = () => null;
 const ArgentinePymesSection = () => null;
 const ArgentinePymeDetailBanner = () => null;
@@ -320,6 +321,39 @@ export default function PublicWebsite({
   const [isDemoLoading, setIsDemoLoading] = useState<boolean>(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+
+  // Interactive ROI Calculator state
+  const [calcLeads, setCalcLeads] = useState<number>(150);
+  const [calcHours, setCalcHours] = useState<number>(20);
+
+  // WhatsApp AI Bot Simulator state
+  const [botMessages, setBotMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string }>>([
+    { sender: 'bot', text: '¡Hola! Soy el asistente IA de Clientum. ¿En qué puedo ayudarte a automatizar tu PyME hoy?' }
+  ]);
+  const [botInput, setBotInput] = useState('');
+  const [botLoading, setBotLoading] = useState(false);
+
+  const handleBotSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!botInput.trim()) return;
+    const userText = botInput;
+    setBotMessages(prev => [...prev, { sender: 'user', text: userText }]);
+    setBotInput('');
+    setBotLoading(true);
+    setTimeout(() => {
+      let reply = "¡Excelente consulta! En Clientum integramos bots de WhatsApp y CRM con IA para calificar leads y agendar reuniones 24/7. ¿Te gustaría agendar un diagnóstico gratuito de 30 minutos con nuestro equipo?";
+      const low = userText.toLowerCase();
+      if (low.includes('precio') || low.includes('cuanto') || low.includes('costo')) {
+        reply = "Nuestros planes para PyMEs comienzan desde los $20 USD/mes (Plan Inicial) y planes Pro con IA y AFIP desde $80 USD/mes. ¡Implementación en 5 días!";
+      } else if (low.includes('crm') || low.includes('factura') || low.includes('afip')) {
+        reply = "Implementamos CRM con pipeline visual y facturación electrónica AFIP con CAE automático en tiempo real. ¿Hacemos una demo?";
+      } else if (low.includes('hola') || low.includes('buenos')) {
+        reply = "¡Hola! Qué gusto saludarte. ¿De qué rubro es tu empresa para contarte cómo podemos ayudarte a multiplicar tus ventas?";
+      }
+      setBotMessages(prev => [...prev, { sender: 'bot', text: reply }]);
+      setBotLoading(false);
+    }, 800);
+  };
 
   // Universal Lead Form Modal State for all subpages
   const [leadModalOpen, setLeadModalOpen] = useState<boolean>(false);
@@ -1760,6 +1794,131 @@ export default function PublicWebsite({
                         <span className="text-[11px] font-medium whitespace-nowrap">{label}</span>
                       </div>
                     ))}
+                  </div>
+                </section>
+
+                {/* ═══ CALCULADORA DE ROI & SIMULADOR WHATSAPP IA ═══ */}
+                <section className="bg-gradient-to-b from-slate-900 to-[#0a1628] text-white py-12 sm:py-20 px-4 sm:px-6 border-b border-slate-800">
+                  <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                    
+                    {/* ROI Calculator */}
+                    <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl flex flex-col gap-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                          <TrendingUp className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400">Calculadora Interactiva</span>
+                          <h3 className="text-xl font-display font-black tracking-tight text-white">Calculá cuánto ahorrás con Clientum</h3>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex justify-between text-xs font-medium mb-1.5 text-slate-300">
+                            <span>Consultas de WhatsApp / mes:</span>
+                            <span className="font-mono font-bold text-emerald-400">{calcLeads} leads</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="20"
+                            max="1000"
+                            step="10"
+                            value={calcLeads}
+                            onChange={(e) => setCalcLeads(Number(e.target.value))}
+                            className="w-full accent-emerald-500 cursor-pointer"
+                          />
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-xs font-medium mb-1.5 text-slate-300">
+                            <span>Horas manuales semanales en planillas/stock:</span>
+                            <span className="font-mono font-bold text-blue-400">{calcHours} hs/sem</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="5"
+                            max="80"
+                            step="5"
+                            value={calcHours}
+                            onChange={(e) => setCalcHours(Number(e.target.value))}
+                            className="w-full accent-blue-500 cursor-pointer"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
+                        <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-center">
+                          <div className="text-2xl font-black font-mono text-emerald-400">{calcHours * 4} hs</div>
+                          <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Horas ahorradas al mes</div>
+                        </div>
+                        <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-center">
+                          <div className="text-2xl font-black font-mono text-blue-400">${(calcLeads * 1200).toLocaleString('es-AR')}</div>
+                          <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Ventas recuperadas estimadas</div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => openLeadForm('diagnostico_pyme', { source: 'roi_calculator', leads: calcLeads, hours: calcHours })}
+                        className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider py-3.5 rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
+                      >
+                        Implementar Automatización Ahora <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* WhatsApp Bot Live Simulator */}
+                    <div className="bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col h-[460px]">
+                      <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
+                            🤖
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-sm text-white">Clientum AI WhatsApp Bot</h4>
+                            <span className="text-[10px] text-emerald-400 flex items-center gap-1">● En línea 24/7 (Gemini 3.6 Flash)</span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-mono bg-slate-900 text-slate-400 px-2.5 py-1 rounded-full border border-slate-800">Demo Interactiva</span>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
+                        {botMessages.map((msg, idx) => (
+                          <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed ${
+                              msg.sender === 'user'
+                                ? 'bg-emerald-600 text-white rounded-br-xs'
+                                : 'bg-slate-900 text-slate-200 border border-slate-800 rounded-bl-xs'
+                            }`}>
+                              {msg.text}
+                            </div>
+                          </div>
+                        ))}
+                        {botLoading && (
+                          <div className="flex justify-start">
+                            <div className="bg-slate-900 text-slate-400 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs animate-pulse">
+                              Escribiendo respuesta con IA...
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <form onSubmit={handleBotSend} className="mt-4 pt-3 border-t border-slate-800 flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Preguntale algo al bot (ej. '¿Cuánto cuesta el CRM?')"
+                          value={botInput}
+                          onChange={(e) => setBotInput(e.target.value)}
+                          className="flex-1 bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 text-xs focus:border-emerald-500 focus:outline-none"
+                        />
+                        <button
+                          type="submit"
+                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center"
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </form>
+                    </div>
+
                   </div>
                 </section>
 
@@ -5816,64 +5975,234 @@ export default function PublicWebsite({
         </div>
       </div>
 
-      {/* Corporate Footer (Maps directly to Footer layout in shortcodes) */}
-      <footer className="bg-slate-950 text-white shrink-0">
+      {/* ── CLIENTUM UNIFIED CORPORATE FOOTER ── */}
+      <footer id="clientum_footer_unified" className="bg-[#0b1320] text-white shrink-0 font-sans border-t border-slate-800/80">
 
-        {/* ── QUICK-LINKS SITEMAP ── */}
-        <div className="border-b border-slate-800/60">
-          <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              {
-                // Mismos 9 sectores que la página "Industrias" y "Casos de Éxito" — casos reales, no inventados.
-                title: isPortuguese ? "Indústrias" : "Industrias",
-                items: [
-                  ...INDUSTRIES_ITEMS.map((i) => ({ label: i.label, industry: i.id })),
-                  { label: isPortuguese ? "Ver todas" : "Ver todas", industry: "todos" },
-                ],
-              },
-              {
-                // Misma taxonomía que el dropdown "Soluciones" del menú — una sola fuente de verdad.
-                title: isPortuguese ? "Soluções" : "Soluciones",
-                items: SOLUTIONS_ITEMS.map((s) => ({ label: s.label, tab: s.query ? undefined : s.id, query: s.query })),
-              },
-              {
-                // Misma taxonomía que el dropdown "Recursos" del menú.
-                title: isPortuguese ? "Recursos" : "Recursos",
-                items: [
-                  ...RECURSOS_ITEMS.filter((r) => r.id !== "catalogo").map((r) => ({ label: r.label, tab: r.id })),
-                  { label: isPortuguese ? "Casos de Sucesso" : "Casos de Éxito", tab: "casos" },
-                ],
-              },
-              {
-                // Misma taxonomía que el dropdown "Empresa" del menú.
-                title: isPortuguese ? "Empresa" : "Empresa",
-                items: [
-                  ...EMPRESA_ITEMS.filter((e) => e.id !== "carreras").map((e) => ({ label: e.label, tab: e.id })),
-                  { label: isPortuguese ? "Planos & Preços" : "Planes & Precios", tab: "planes" },
-                ],
-              },
-            ].map((col) => (
-              <div key={col.title}>
-                <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">{col.title}</h4>
-                <ul className="flex flex-col gap-2.5">
-                  {col.items.map((item) => (
+        {/* ── TOP SECTION: 4 COLUMNS (Industrias, Soluciones, Leverage, Empezar) ── */}
+        <div className="border-b border-slate-800/80 py-16 px-6 md:px-12">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+
+            {/* Col 1: INDUSTRIAS & CASOS */}
+            <div>
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">
+                Industrias & Casos
+              </h3>
+              <ul className="space-y-3">
+                {[
+                  { name: "Comercio y Retail", badge: "RETAIL", category: "retail" },
+                  { name: "Salud", badge: "HEALTH", category: "salud" },
+                  { name: "Agroindustria", badge: "AGRO", category: "agro" },
+                  { name: "Inmobiliaria", badge: "REAL", category: "inmobiliaria" },
+                  { name: "Logística & Distribución", badge: "LOG", category: "logistica" },
+                ].map((item) => (
+                  <li key={item.name}>
+                    <button
+                      onClick={() => {
+                        setIndustryFilter(item.category);
+                        setActiveTab("casos");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="text-sm text-slate-300 hover:text-emerald-400 transition cursor-pointer group text-left w-full"
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="text-emerald-500 group-hover:translate-x-1 transition mt-0.5">→</span>
+                        <div>
+                          <div className="font-medium text-slate-200 text-sm leading-snug">{item.name}</div>
+                          <span className="text-[10px] text-slate-500 tracking-wider font-mono uppercase block">{item.badge}</span>
+                        </div>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Col 2: SOLUCIONES & SERVICIOS */}
+            <div>
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">
+                Soluciones & Servicios
+              </h3>
+              <ul className="space-y-3">
+                {[
+                  { label: "APIs de ChatBot Inteligencia IA", query: "chatbot" },
+                  { label: "CRM Inteligencia IA", query: "crm" },
+                  { label: "Casacheras IA CRM Inteligencia", query: "casacheras" },
+                  { label: "Automatización de Procesos & QA Phase", query: "automatizacion" },
+                  { label: "Portales SOS & Automatización", query: "portales" },
+                ].map((item) => (
+                  <li key={item.label}>
+                    <button
+                      onClick={() => {
+                        setActiveTab("catalogo");
+                        setCatalogQuery(item.query);
+                        setCatalogCat("");
+                        setCatalogPage(1);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="text-sm text-slate-300 hover:text-cyan-400 transition cursor-pointer group text-left w-full"
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="text-cyan-500 group-hover:translate-x-1 transition mt-0.5">→</span>
+                        <span className="font-medium text-slate-200 text-sm leading-snug">{item.label}</span>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Col 3: # LEVERAGE */}
+            <div>
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">
+                # Leverage
+              </h3>
+              <ul className="space-y-4">
+                {[
+                  { title: "Santi/Clientum", desc: "Soluciones inteligentes", tab: "agencia" },
+                  { title: "Academia Clientum", desc: "Capacitación continua", tab: "academia" },
+                  { title: "Partners", desc: "Red de aliados", tab: "asociacion" },
+                  { title: "Contacto", desc: "Equipo dedicado", tab: "contacto" },
+                  { title: "Noticias & Prensa", desc: "Históricos de medios", tab: "prensa" },
+                ].map((item) => (
+                  <li key={item.title}>
+                    <button
+                      onClick={() => {
+                        setActiveTab(item.tab);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="hover:translate-x-1 transition cursor-pointer text-left block w-full"
+                    >
+                      <div className="font-semibold text-slate-200 text-sm">{item.title}</div>
+                      <div className="text-xs text-slate-500">{item.desc}</div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Col 4: EMPEZAR */}
+            <div className="flex flex-col justify-between">
+              <div>
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">
+                  Empezar
+                </h3>
+                <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+                  Transforma tu negocio con automatización IA. Sin código. Sin contratos largos.
+                </p>
+              </div>
+              <button
+                onClick={() => openLeadForm("contacto_comercial")}
+                className="w-full px-6 py-3.5 bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-bold text-sm rounded-lg transition-all transform hover:scale-[1.02] shadow-lg cursor-pointer text-center"
+              >
+                Suscribirse
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ── MIDDLE SECTION: CARACTERÍSTICAS PRINCIPALES ── */}
+        <div className="px-6 md:px-12 py-16 border-b border-slate-800/80">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold mb-10 text-white tracking-tight">
+              Características principales
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+              <div className="group bg-slate-900/40 p-6 rounded-2xl border border-slate-800/60 hover:border-slate-700 transition-all">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-3 bg-emerald-500/20 rounded-xl group-hover:bg-emerald-500/30 transition text-emerald-400">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-base text-white">Automatización IA</h3>
+                </div>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Agentes inteligentes para WhatsApp, email y SMS con Hermes Prime.
+                </p>
+              </div>
+
+              <div className="group bg-slate-900/40 p-6 rounded-2xl border border-slate-800/60 hover:border-slate-700 transition-all">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-3 bg-cyan-500/20 rounded-xl group-hover:bg-cyan-500/30 transition text-cyan-400">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-base text-white">CRM Completo</h3>
+                </div>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Gestión integral de clientes con seguimiento automático y prospecting.
+                </p>
+              </div>
+
+              <div className="group bg-slate-900/40 p-6 rounded-2xl border border-slate-800/60 hover:border-slate-700 transition-all">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-3 bg-purple-500/20 rounded-xl group-hover:bg-purple-500/30 transition text-purple-400">
+                    <BarChart2 className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-base text-white">Analítica & BI</h3>
+                </div>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Reportes inteligentes y dashboards personalizables en tiempo real.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {/* ── BOTTOM SECTION: FOOTER DETAILS ── */}
+        <div className="px-6 md:px-12 py-16">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+
+              {/* CLIENTUM */}
+              <div>
+                <h2 className="text-2xl font-black tracking-tight text-white mb-3">CLIENTUM</h2>
+                <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                  Plataforma de CRM e Inteligencia Artificial para PyMEs que buscan automatizar y escalar sus operaciones.
+                </p>
+                <div className="flex gap-3">
+                  <a
+                    href="mailto:info@clientum.com.ar"
+                    className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 hover:border-emerald-500/40 hover:text-emerald-400 text-slate-400 flex items-center justify-center transition-all"
+                    title="Email"
+                  >
+                    <Mail className="w-4 h-4" />
+                  </a>
+                  <a
+                    href="https://clientum.com.ar"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 hover:border-emerald-500/40 hover:text-emerald-400 text-slate-400 flex items-center justify-center transition-all"
+                    title="Website"
+                  >
+                    <Globe className="w-4 h-4" />
+                  </a>
+                  <a
+                    href="https://wa.me/5492994110000"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 hover:border-emerald-500/40 hover:text-emerald-400 text-slate-400 flex items-center justify-center transition-all"
+                    title="WhatsApp"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Producto */}
+              <div>
+                <h3 className="font-semibold text-white text-sm mb-4">Producto</h3>
+                <ul className="space-y-2.5">
+                  {[
+                    { label: "CRM & Automation", tab: "crm" },
+                    { label: "WhatsApp Bots", tab: "whatsapp" },
+                    { label: "E-invoicing AFIP", tab: "afip" },
+                    { label: "Prospecting IA", tab: "prospector" },
+                  ].map((item) => (
                     <li key={item.label}>
                       <button
-                        onClick={() => {
-                          if ((item as any).industry) {
-                            setIndustryFilter((item as any).industry);
-                            setActiveTab("casos");
-                          } else if (item.tab) {
-                            setActiveTab(item.tab);
-                          } else {
-                            setActiveTab("catalogo");
-                            setCatalogQuery(item.query);
-                            setCatalogCat("");
-                            setCatalogPage(1);
-                          }
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                        className="text-left text-slate-400 hover:text-emerald-400 transition-colors text-xs leading-snug"
+                        onClick={() => { setActiveTab(item.tab); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        className="text-xs text-slate-400 hover:text-white transition cursor-pointer"
                       >
                         {item.label}
                       </button>
@@ -5881,207 +6210,66 @@ export default function PublicWebsite({
                   ))}
                 </ul>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* ── MAIN FOOTER BODY ── */}
-        <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-12 gap-10">
-
-          {/* Brand col — 3 cols */}
-          <div className="md:col-span-3 flex flex-col gap-3">
-            <span className="font-display font-black text-white text-lg tracking-tight">CLIENTUM</span>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              {isPortuguese
-                ? "Ecossistema comercial e engenharia de software para PMEs e empresas em expansão na Argentina e no Brasil."
-                : "Ecosistema comercial e ingeniería de software para PyMEs y empresas en expansión en Argentina y Brasil."}
-            </p>
-            <div className="space-y-1.5 text-xs text-slate-400 pt-1">
-              <div className="flex items-start gap-1.5">
-                <span className="text-sm shrink-0">🇦🇷</span>
-                <div>
-                  <strong className="text-slate-200 block text-[11px]">{isPortuguese ? "Sede Principal (Patagônia):" : "Sede Principal (Patagonia):"}</strong>
-                  <span className="text-[10px] text-slate-400">General Roca, Río Negro · Jonathan Ledantes</span>
-                </div>
+              {/* Recursos */}
+              <div>
+                <h3 className="font-semibold text-white text-sm mb-4">Recursos</h3>
+                <ul className="space-y-2.5">
+                  {[
+                    { label: "Documentación", tab: "ayuda" },
+                    { label: "Academia Clientum", tab: "academia" },
+                    { label: "Blog & Noticias", tab: "prensa" },
+                    { label: "Casos de Éxito", tab: "casos" },
+                  ].map((item) => (
+                    <li key={item.label}>
+                      <button
+                        onClick={() => { setActiveTab(item.tab); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        className="text-xs text-slate-400 hover:text-white transition cursor-pointer"
+                      >
+                        {item.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="flex items-start gap-1.5 pt-1">
-                <span className="text-sm shrink-0">🇧🇷</span>
-                <div>
-                  <strong className="text-slate-200 block text-[11px]">{isPortuguese ? "Sede Brasil (Internacional):" : "Sede Brasil (Internacional):"}</strong>
-                  <span className="text-[10px] text-slate-400">Arraial do Cabo, RJ · Matias Rotili</span>
-                </div>
+
+              {/* Contacto */}
+              <div>
+                <h3 className="font-semibold text-white text-sm mb-4">Contacto</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2.5">
+                    <MapPin className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <span className="text-xs text-slate-400">General Roca, Río Negro, Argentina</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <Mail className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <span className="text-xs text-slate-400">info@clientum.com.ar</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <Phone className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <span className="text-xs text-slate-400">+54 9 298 6XXX</span>
+                  </li>
+                </ul>
               </div>
+
             </div>
-            {/* Social links */}
-            <div className="flex gap-3 mt-1">
-              {[
-                { href: "https://wa.me/5492994110000", label: "WhatsApp", emoji: "💬" },
-                { href: "https://instagram.com/clientumlatam", label: "Globe", emoji: "📸" },
-                { href: "https://linkedin.com/company/clientum", label: "LinkedIn", emoji: "💼" },
-              ].map(({ href, label, emoji }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-emerald-500/20 hover:border-emerald-500/40 border border-slate-700 flex items-center justify-center text-sm transition-all"
-                >
-                  {emoji}
-                </a>
-              ))}
-            </div>
-          </div>
 
-          {/* Servicios — 2 cols — misma taxonomía que el menú (SOLUTIONS_ITEMS) */}
-          <div className="md:col-span-2">
-            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">{isPortuguese ? "Serviços" : "Servicios"}</h4>
-            <ul className="flex flex-col gap-2.5">
-              {[
-                ...SOLUTIONS_ITEMS.map((s) => ({ id: s.id, label: s.label, query: s.query })),
-                { id: "planes", label: isPortuguese ? "Planos & Preços" : "Planes & Precios" },
-              ].map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => {
-                      if (item.query) {
-                        setActiveTab("catalogo");
-                        setCatalogQuery(item.query);
-                        setCatalogCat("");
-                        setCatalogPage(1);
-                      } else {
-                        setActiveTab(item.id);
-                      }
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className="text-slate-400 hover:text-emerald-400 transition-colors text-xs cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Empresa — 2 cols — misma taxonomía que el menú (EMPRESA_ITEMS) */}
-          <div className="md:col-span-2">
-            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">{isPortuguese ? "Empresa" : "Empresa"}</h4>
-            <ul className="flex flex-col gap-2.5">
-              {[
-                ...EMPRESA_ITEMS.map((e) => ({ id: e.id, label: e.label })),
-                { id: "privacidad", label: isPortuguese ? "Política de Privacidade" : "Política de Privacidad" },
-              ].map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => { setActiveTab(item.id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    className="text-slate-400 hover:text-emerald-400 transition-colors text-xs cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Soporte — 2 cols */}
-          <div className="md:col-span-2">
-            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">{isPortuguese ? "Suporte" : "Soporte"}</h4>
-            <ul className="flex flex-col gap-2.5">
-              {[
-                { id: "ayuda", label: isPortuguese ? "Central de Ajuda" : "Centro de Ayuda" },
-                { id: "academia", label: isPortuguese ? "Academia" : "Academia" },
-                { id: "asociacion", label: isPortuguese ? "Parceiros & Afiliados" : "Partners & Afiliados" },
-                { id: "contacto", label: isPortuguese ? "Contato" : "Contacto" },
-              ].map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => { setActiveTab(item.id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    className="text-slate-400 hover:text-emerald-400 transition-colors text-xs cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
-              <li>
-                <button
-                  onClick={() => {
-                    setIsBrochureModalOpen(true);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors text-xs cursor-pointer flex items-center gap-1 mt-1"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>{isPortuguese ? "Brochure PDF (8 Págs)" : "Brochure PDF (8 Págs)"}</span>
+            {/* Copyright Bar */}
+            <div className="border-t border-slate-800/80 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+              <p>© {new Date().getFullYear()} Clientum S.R.L. — CUIT: 20-39164538-1 | Todos los derechos reservados.</p>
+              <div className="flex gap-6">
+                <button onClick={() => { setActiveTab("privacidad"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="hover:text-slate-300 transition cursor-pointer">
+                  Privacidad
                 </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Newsletter — 3 cols */}
-          <div className="md:col-span-3 flex flex-col gap-3">
-            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-1">Newsletter</h4>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              {isPortuguese
-                ? "Novidades, lançamentos e recursos para fazer sua empresa crescer."
-                : "Novedades, lanzamientos y recursos para hacer crecer tu empresa."}
-            </p>
-            <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-2 mt-1">
-              <input
-                type="email"
-                required
-                placeholder="seu@email.com"
-                className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 w-full placeholder:text-slate-600 transition-all"
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-              />
-              <button
-                type="submit"
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs cursor-pointer transition-colors"
-              >
-                {isPortuguese ? "Inscrever-se →" : "Suscribirme →"}
-              </button>
-            </form>
-            {newsletterSubscribed && (
-              <span className="text-emerald-400 text-xs flex items-center gap-1.5">
-                {isPortuguese ? "✓ Inscrição confirmada!" : "✓ ¡Suscripción registrada!"}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* ── BOTTOM BAR ── */}
-        <div className="border-t border-slate-800/60">
-          <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-            <span>
-              © {new Date().getFullYear()} Clientum S.R.L. — {isPortuguese ? "Todos os direitos reservados." : "Todos los derechos reservados."}
-            </span>
-            <div className="flex items-center gap-5 flex-wrap justify-center sm:justify-end">
-              <span>
-                {isPortuguese
-                  ? "Sede Principal: General Roca, Río Negro 🇦🇷 · Sede Brasil: Arraial do Cabo 🇧🇷"
-                  : "Sede Central: General Roca, Río Negro 🇦🇷 · Sede Brasil: Arraial do Cabo 🇧🇷"}
-              </span>
-              <a
-                href="https://github.com/clientumlatam/clientum"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-slate-300 transition-colors"
-              >
-                GitHub
-              </a>
-              <button
-                onClick={() => { setActiveTab("privacidad"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="hover:text-slate-300 transition-colors"
-              >
-                {isPortuguese ? "Privacidade" : "Privacidad"}
-              </button>
-              <button
-                onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="hover:text-slate-300 transition-colors"
-              >
-                {isPortuguese ? "Contato" : "Contacto"}
-              </button>
+                <button onClick={() => { setActiveTab("privacidad"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="hover:text-slate-300 transition cursor-pointer">
+                  Términos
+                </button>
+                <button onClick={() => { setActiveTab("privacidad"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="hover:text-slate-300 transition cursor-pointer">
+                  Cookies
+                </button>
+              </div>
             </div>
+
           </div>
         </div>
 
@@ -6175,6 +6363,9 @@ export default function PublicWebsite({
         formType={leadModalType}
         initialData={leadModalInitialData}
       />
+
+      {/* Floating AI WhatsApp Chatbot Widget */}
+      <ChatbotWidget />
     </div>
   );
 }
