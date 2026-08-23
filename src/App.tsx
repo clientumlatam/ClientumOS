@@ -59,7 +59,8 @@ import PublicWebsite from './components/PublicWebsite';
 import { AuthButton } from './components/AuthButton';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
-// removed import
+import { LoginPage } from './pages/LoginPage';
+import { AppSwitcher } from './components/AppSwitcher';
 
 function DashboardApp({ currentUser, handleLogout, resetModalElement }: { currentUser: string | null, handleLogout: () => void, resetModalElement: React.ReactNode }) {
   const navigate = useNavigate();
@@ -260,29 +261,40 @@ export default function App() {
     />
   );
 
+  const publicWebsiteElement = (
+    <div className="w-screen min-h-screen bg-slate-900 overflow-y-auto">
+      <PublicWebsite 
+        onBackToEditor={() => navigate('/app')}
+        authUser={currentUser}
+        onOpenLogin={() => navigate('/login')}
+        onLogout={handleLogout}
+        onLoginSuccess={() => navigate('/app')}
+      />
+      <div className="hidden">
+        <AuthButton onLoginSuccess={() => navigate('/app')} />
+      </div>
+      <AppSwitcher variant="floating" authUser={currentUser} />
+      {resetModalElement}
+    </div>
+  );
+
   return (
     <Routes>
-      <Route path="/" element={
-        <div className="w-screen min-h-screen bg-slate-900 overflow-y-auto">
-          <PublicWebsite 
-            onBackToEditor={() => navigate('/app')}
-            authUser={currentUser}
-            onOpenLogin={() => {
-              window.dispatchEvent(new CustomEvent('open-login-modal'));
-            }}
-            onLogout={handleLogout}
-            onLoginSuccess={() => navigate('/app')}
-          />
-          <div className="hidden">
-            <AuthButton onLoginSuccess={() => navigate('/app')} />
-          </div>
-          {resetModalElement}
-        </div>
+      {/* ACCESO, LOGIN Y REGISTRO */}
+      <Route path="/login" element={
+        <LoginPage 
+          currentUser={currentUser}
+          onLoginSuccess={() => navigate('/app')}
+        />
       } />
-      <Route path="/sitio/*" element={<Navigate to="/" replace />} />
-      <Route path="/web/*" element={<Navigate to="/" replace />} />
-      <Route path="/portal/*" element={<Navigate to="/" replace />} />
-      <Route path="/lms/*" element={<Navigate to="/" replace />} />
+      <Route path="/auth/*" element={
+        <LoginPage 
+          currentUser={currentUser}
+          onLoginSuccess={() => navigate('/app')}
+        />
+      } />
+
+      {/* PLATAFORMA DASHBOARD & CRM SUITE */}
       <Route path="/dashboard/*" element={<Navigate to="/app" replace />} />
       <Route path="/crm/*" element={<Navigate to="/app" replace />} />
       <Route path="/erp/*" element={<Navigate to="/app" replace />} />
@@ -294,7 +306,61 @@ export default function App() {
           resetModalElement={resetModalElement} 
         />
       } />
-      <Route path="*" element={<Navigate to="/" />} />
+
+      {/* SITIO WEB PÚBLICO (todas las paginas con sus propias rutas) */}
+      <Route path="/" element={publicWebsiteElement} />
+      <Route path="/servicios" element={publicWebsiteElement} />
+      <Route path="/soluciones" element={publicWebsiteElement} />
+      <Route path="/soluciones/*" element={publicWebsiteElement} />
+      <Route path="/plataforma" element={publicWebsiteElement} />
+      <Route path="/precios" element={publicWebsiteElement} />
+      <Route path="/planes" element={publicWebsiteElement} />
+      <Route path="/nosotros" element={publicWebsiteElement} />
+      <Route path="/empresa" element={publicWebsiteElement} />
+      <Route path="/contacto" element={publicWebsiteElement} />
+      <Route path="/casos" element={publicWebsiteElement} />
+      <Route path="/casos-de-exito" element={publicWebsiteElement} />
+      <Route path="/industrias" element={publicWebsiteElement} />
+      <Route path="/recursos" element={publicWebsiteElement} />
+      <Route path="/blog" element={publicWebsiteElement} />
+      <Route path="/academia" element={publicWebsiteElement} />
+      <Route path="/catalogo" element={publicWebsiteElement} />
+      <Route path="/clientes" element={publicWebsiteElement} />
+      <Route path="/partners" element={publicWebsiteElement} />
+      <Route path="/afiliados" element={publicWebsiteElement} />
+      <Route path="/trabaja-con-nosotros" element={publicWebsiteElement} />
+      <Route path="/carreras" element={publicWebsiteElement} />
+      <Route path="/ayuda" element={publicWebsiteElement} />
+      <Route path="/faq" element={publicWebsiteElement} />
+      <Route path="/documentacion" element={publicWebsiteElement} />
+      <Route path="/docs" element={publicWebsiteElement} />
+      <Route path="/privacidad" element={publicWebsiteElement} />
+      <Route path="/terminos" element={publicWebsiteElement} />
+      <Route path="/chatbot" element={publicWebsiteElement} />
+      <Route path="/crm-inteligente" element={publicWebsiteElement} />
+      <Route path="/asistente-ia" element={publicWebsiteElement} />
+      <Route path="/automatizacion" element={publicWebsiteElement} />
+      <Route path="/portal-cliente" element={publicWebsiteElement} />
+      <Route path="/desarrollo-web" element={publicWebsiteElement} />
+      <Route path="/integraciones" element={publicWebsiteElement} />
+      <Route path="/facturacion-afip" element={publicWebsiteElement} />
+      <Route path="/afip" element={publicWebsiteElement} />
+      <Route path="/mercadopago" element={publicWebsiteElement} />
+      <Route path="/generacion-leads" element={publicWebsiteElement} />
+      <Route path="/leads" element={publicWebsiteElement} />
+      <Route path="/business-intelligence" element={publicWebsiteElement} />
+      <Route path="/reportes" element={publicWebsiteElement} />
+      <Route path="/ecommerce" element={publicWebsiteElement} />
+      <Route path="/consultoria-erp" element={publicWebsiteElement} />
+      
+      {/* Alias de navegacion anterior */}
+      <Route path="/sitio/*" element={publicWebsiteElement} />
+      <Route path="/web/*" element={publicWebsiteElement} />
+      <Route path="/portal/*" element={publicWebsiteElement} />
+      <Route path="/public/*" element={publicWebsiteElement} />
+      <Route path="/lms/*" element={publicWebsiteElement} />
+
+      <Route path="*" element={publicWebsiteElement} />
     </Routes>
   );
 }

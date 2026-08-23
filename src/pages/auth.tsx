@@ -1,12 +1,22 @@
-// Auth page — uses our custom NeonAuthGate which proxies to Neon Auth
-// (the @neondatabase/neon-js SDK is blocked by the Replit firewall; our
-// backend proxy achieves the same identity-provider integration via REST)
-import NeonAuthGate from "../components/NeonAuthGate";
+import { LoginPage } from './LoginPage';
 
 interface AuthPageProps {
-  onAuthenticated: (username: string, role?: string) => void;
+  onAuthenticated?: (username: string, role?: string) => void;
+  currentUser?: string | null;
 }
 
-export function AuthPage({ onAuthenticated }: AuthPageProps) {
-  return <NeonAuthGate onAuthenticated={onAuthenticated} />;
+export function AuthPage({ onAuthenticated, currentUser }: AuthPageProps) {
+  return (
+    <LoginPage
+      currentUser={currentUser}
+      onLoginSuccess={(user) => {
+        if (onAuthenticated) {
+          onAuthenticated(user.username, user.role);
+        }
+      }}
+    />
+  );
 }
+
+export default AuthPage;
+

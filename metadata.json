@@ -1,6 +1,6 @@
 {
-  "name": "Clientum · Agencia Digital & Servicios PyME",
-  "description": "Sitio web oficial de la agencia Clientum: Servicios profesionales de consultoría estratégica, chatbots WhatsApp con IA, CRM, desarrollo web y automatización para PyMEs en Argentina y Latinoamérica.",
+  "name": "Clientum · Sitio Público & CRM Dashboard",
+  "description": "Plataforma dual Clientum: Sitio web público corporativo con catálogo de servicios, cotizador y academia LMS, junto con la aplicación privada de Dashboard CRM, ERP, facturación AFIP, chatbot WhatsApp IA y autenticación con roles.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

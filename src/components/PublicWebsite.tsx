@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect, JSX } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   MapPin,
@@ -66,7 +67,8 @@ import {
   Terminal,
   Rocket,
   Handshake,
-  Headphones
+  Headphones,
+  LayoutDashboard
 } from "lucide-react";
 
 import { KeyProjectsSection } from "./KeyProjectsSection";
@@ -81,6 +83,21 @@ import { PdfExportButton } from "./PdfExportButton";
 import { LanguageSelector } from "./LanguageSelector";
 import { useLanguage } from "../lib/i18n";
 import ChatbotWidget from "./ChatbotWidget";
+import { InteractiveQuoteWizard } from "./public/InteractiveQuoteWizard";
+import { IndustryWhatsAppSimulator } from "./public/IndustryWhatsAppSimulator";
+import { PricingBillingToggle } from "./public/PricingBillingToggle";
+import { ExpressAuditModal } from "./public/ExpressAuditModal";
+import { SocialProofBar } from "./public/SocialProofBar";
+import { LiveActivityTicker } from "./public/LiveActivityTicker";
+import { TrustAndSlaSection } from "./public/TrustAndSlaSection";
+import { FaqSection } from "./public/FaqSection";
+import { MobileBottomNav } from "./public/MobileBottomNav";
+import { FloatingWhatsAppButton } from "./public/FloatingWhatsAppButton";
+import { PymeTeamsGallery } from "./public/PymeTeamsGallery";
+import pymeTeamMeetingImg from "../assets/images/pyme_team_meeting_1787518635370.jpg";
+import pymeCommercialSalesImg from "../assets/images/pyme_commercial_sales_1787518652661.jpg";
+import pymeAgroLogisticsImg from "../assets/images/pyme_agro_logistics_1787518669322.jpg";
+import pymeCustomerSuccessImg from "../assets/images/pyme_customer_success_1787518683571.jpg";
 const ArgentinePymeCard = () => null;
 const ArgentinePymesSection = () => null;
 const ArgentinePymeDetailBanner = () => null;
@@ -210,11 +227,114 @@ export default function PublicWebsite({
   onLoginSuccess,
 }: PublicWebsiteProps) {
   const { language, isPortuguese, t, offices: contextOffices } = useLanguage();
-  const [activeTab, setActiveTab] = useState<string>("inicio");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const pathToTab = useMemo(() => {
+    return (pathname: string): string => {
+      const clean = pathname.toLowerCase().replace(/\/+$/, '') || '/';
+
+      if (clean === '/' || clean === '/inicio') return 'inicio';
+      if (clean === '/servicios') return 'servicios';
+      if (clean === '/soluciones' || clean === '/plataforma') return 'servicios';
+      if (clean === '/precios' || clean === '/planes') return 'planes';
+      if (clean === '/nosotros' || clean === '/empresa') return 'nosotros';
+      if (clean === '/contacto') return 'contacto';
+      if (clean === '/casos' || clean === '/casos-de-exito') return 'casos';
+      if (clean === '/industrias') return 'industrias';
+      if (clean === '/recursos') return 'recursos';
+      if (clean === '/blog') return 'blog';
+      if (clean === '/academia' || clean === '/lms') return 'academia';
+      if (clean === '/catalogo') return 'catalogo';
+      if (clean === '/clientes') return 'clientes';
+      if (clean === '/partners' || clean === '/afiliados' || clean === '/asociacion') return 'asociacion';
+      if (clean === '/trabaja-con-nosotros' || clean === '/carreras') return 'carreras';
+      if (clean === '/ayuda' || clean === '/faq') return 'ayuda';
+      if (clean === '/documentacion' || clean === '/docs') return 'documentacion';
+      if (clean === '/privacidad' || clean === '/terminos') return 'privacidad';
+
+      // Sub-solutions & feature pages
+      if (clean === '/chatbot' || clean === '/soluciones/chatbot') return 'chatbot';
+      if (clean === '/crm-inteligente' || clean === '/soluciones/crm') return 'crm_inteligente';
+      if (clean === '/asistente-ia' || clean === '/soluciones/ia') return 'asistente_ia';
+      if (clean === '/automatizacion' || clean === '/soluciones/automatizacion') return 'automatizacion';
+      if (clean === '/portal-cliente') return 'portal_cliente';
+      if (clean === '/desarrollo-web') return 'desarrollo_web';
+      if (clean === '/integraciones') return 'integraciones';
+      if (clean === '/facturacion-afip' || clean === '/afip') return 'afip';
+      if (clean === '/mercadopago' || clean === '/cobranzas') return 'mercadopago';
+      if (clean === '/generacion-leads' || clean === '/leads') return 'leads';
+      if (clean === '/business-intelligence' || clean === '/reportes') return 'reportes';
+      if (clean === '/ecommerce') return 'ecommerce';
+      if (clean === '/consultoria-erp') return 'consultoria_erp';
+
+      // Fallback
+      const routeName = clean.replace(/^\//, '');
+      return routeName || 'inicio';
+    };
+  }, []);
+
+  const tabToPath = useMemo(() => {
+    return (tab: string): string => {
+      switch (tab) {
+        case 'inicio': return '/';
+        case 'servicios': return '/servicios';
+        case 'soluciones': return '/soluciones';
+        case 'plataforma': return '/plataforma';
+        case 'planes': return '/precios';
+        case 'nosotros': return '/nosotros';
+        case 'contacto': return '/contacto';
+        case 'casos': return '/casos-de-exito';
+        case 'industrias': return '/industrias';
+        case 'recursos': return '/recursos';
+        case 'blog': return '/blog';
+        case 'academia': return '/academia';
+        case 'catalogo': return '/catalogo';
+        case 'clientes': return '/clientes';
+        case 'asociacion': return '/partners';
+        case 'carreras': return '/trabaja-con-nosotros';
+        case 'ayuda': return '/ayuda';
+        case 'documentacion': return '/documentacion';
+        case 'privacidad': return '/privacidad';
+        case 'chatbot': return '/chatbot';
+        case 'crm_inteligente': return '/crm-inteligente';
+        case 'asistente_ia': return '/asistente-ia';
+        case 'automatizacion': return '/automatizacion';
+        case 'portal_cliente': return '/portal-cliente';
+        case 'desarrollo_web': return '/desarrollo-web';
+        case 'integraciones': return '/integraciones';
+        case 'afip': return '/facturacion-afip';
+        case 'mercadopago': return '/mercadopago';
+        case 'leads': return '/generacion-leads';
+        case 'reportes': return '/business-intelligence';
+        case 'ecommerce': return '/ecommerce';
+        case 'consultoria_erp': return '/consultoria-erp';
+        default: return '/' + tab;
+      }
+    };
+  }, []);
+
+  const [activeTab, setActiveTabState] = useState<string>(() => pathToTab(location.pathname));
+
+  useEffect(() => {
+    const currentTab = pathToTab(location.pathname);
+    if (currentTab !== activeTab) {
+      setActiveTabState(currentTab);
+    }
+  }, [location.pathname, pathToTab]);
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    const targetPath = tabToPath(tab);
+    if (location.pathname !== targetPath) {
+      navigate(targetPath);
+    }
+  };
+
   useEffect(() => {
     (window as any).__setActiveTab = setActiveTab;
     return () => { delete (window as any).__setActiveTab; };
-  }, []);
+  }, [navigate, location.pathname, tabToPath]);
   // El catálogo completo es solo para usuarios autenticados. Algunos botones
   // (grilla "Todas las Soluciones", accesos rápidos del footer, tarjetas de
   // categoría) llaman a setActiveTab("catalogo") sin verificar sesión, lo que
@@ -321,6 +441,10 @@ export default function PublicWebsite({
   const [isDemoLoading, setIsDemoLoading] = useState<boolean>(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+
+  // New CRO and Interactive Modals State
+  const [isQuoteWizardOpen, setIsQuoteWizardOpen] = useState<boolean>(false);
+  const [isExpressAuditOpen, setIsExpressAuditOpen] = useState<boolean>(false);
 
   // Interactive ROI Calculator state
   const [calcLeads, setCalcLeads] = useState<number>(150);
@@ -1325,17 +1449,18 @@ export default function PublicWebsite({
           })}
         </nav>
  
-        {/* Right CTA — Standalone Iniciar sesión + Demo CTA + Brochure PDF + LanguageSelector */}
+        {/* Right CTA — Standalone Iniciar sesión + Demo CTA + LanguageSelector */}
         <div className="hidden lg:flex items-center gap-2">
           <LanguageSelector variant="public" />
 
+          {/* Interactive Quote Wizard Trigger */}
           <button
-            onClick={() => setIsBrochureModalOpen(true)}
-            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 font-extrabold text-xs uppercase px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-emerald-500/30"
-            title="Ver y Descargar Brochure Oficial PDF"
+            onClick={() => setIsQuoteWizardOpen(true)}
+            className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase px-3.5 py-2 rounded-xl tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-md hover:scale-[1.02]"
+            title="Generar Presupuesto Interactivo y PDF"
           >
-            <FileText className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Brochure PDF</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{isPortuguese ? "Cotar" : "Cotizar"}</span>
           </button>
 
           {/* Standalone Demo CTA */}
@@ -1344,11 +1469,24 @@ export default function PublicWebsite({
               setActiveTab("contacto");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs uppercase px-4 py-2 rounded-xl tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-sm border-0"
+            className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase px-3 py-2 rounded-xl tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border border-slate-300/80"
           >
-            Solicitar Demo
-            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Demo</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-slate-600" />
           </button>
+
+          {/* Dedicated Login / Registro Button linking to https://clientumcrm.ai.studio */}
+          <a
+            href="https://clientumcrm.ai.studio"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-gradient-to-r from-[#1A3461] to-[#0A2558] hover:from-[#234580] hover:to-[#0f3475] text-white font-extrabold text-xs uppercase px-4 py-2 rounded-xl tracking-wider transition-all flex items-center gap-2 shadow-md border border-blue-500/30 hover:scale-[1.02] cursor-pointer group"
+            title="Acceder a Clientum CRM (https://clientumcrm.ai.studio)"
+          >
+            <LogIn className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+            <span>Login / Registro</span>
+            <ArrowUpRight className="w-3 h-3 text-emerald-400/80" />
+          </a>
         </div>
  
         {/* Mobile Hamburger Button */}
@@ -1450,6 +1588,40 @@ export default function PublicWebsite({
               <LanguageSelector variant="pill" />
             </div>
 
+            <a
+              href="https://clientumcrm.ai.studio"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mt-3 w-full bg-gradient-to-r from-[#1A3461] to-[#0A2558] text-white font-extrabold text-xs uppercase py-3 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 shadow-md border border-blue-500/30 cursor-pointer"
+            >
+              <LogIn className="w-4 h-4 text-emerald-400" />
+              <span>Login / Registro CRM</span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
+            </a>
+
+            <button
+              onClick={() => {
+                setIsQuoteWizardOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              className="mt-2 w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase py-3 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 shadow-md cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Cotizador Interactivo & PDF</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setIsExpressAuditOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              className="mt-2 w-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase py-2.5 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
+            >
+              <Search className="w-4 h-4 text-emerald-400" />
+              <span>Auditoría Express IA (Gratis)</span>
+            </button>
+
             <button
               onClick={() => {
                 setIsBrochureModalOpen(true);
@@ -1525,22 +1697,30 @@ export default function PublicWebsite({
                       </p>
                       <div className="flex flex-wrap gap-3 w-full sm:w-auto">
                         <button
+                          onClick={() => setIsQuoteWizardOpen(true)}
+                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl cursor-pointer transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          <span>{isPortuguese ? "Cotador Interativo & PDF" : "Cotizador Interactivo & PDF"}</span>
+                        </button>
+                        <button
+                          onClick={() => setIsExpressAuditOpen(true)}
+                          className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider px-5 py-3.5 rounded-xl border border-slate-700 transition-all cursor-pointer flex items-center gap-2 shadow-md"
+                        >
+                          <Search className="w-4 h-4 text-emerald-400" />
+                          <span>{isPortuguese ? "Auditoria Express IA" : "Auditoría Express IA"}</span>
+                        </button>
+                        <button
                           onClick={() => setActiveTab("servicios")}
-                          className={`bg-gradient-to-r ${theme.btnGradient} text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl cursor-pointer transition-all shadow-md shadow-blue-900/30 flex items-center gap-2`}
+                          className={`bg-gradient-to-r ${theme.btnGradient} text-white font-bold text-xs uppercase tracking-wider px-5 py-3.5 rounded-xl cursor-pointer transition-all shadow-md shadow-blue-900/30 flex items-center gap-2`}
                         >
                           {isPortuguese ? "Ver Serviços" : "Ver Servicios"} <ArrowRight className="w-4 h-4 text-emerald-400" />
                         </button>
                         <button
                           onClick={() => setIsBrochureModalOpen(true)}
-                          className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl border border-emerald-500/40 transition-all cursor-pointer flex items-center gap-2 shadow-lg"
+                          className="bg-white/10 hover:bg-white/15 text-white font-bold text-xs uppercase tracking-wider px-5 py-3.5 rounded-xl border border-white/15 transition-all cursor-pointer flex items-center gap-2"
                         >
                           <Download className="w-4 h-4 text-emerald-400" /> Brochure PDF
-                        </button>
-                        <button
-                          onClick={() => setActiveTab("contacto")}
-                          className="bg-white/10 hover:bg-white/15 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl border border-white/15 transition-all cursor-pointer flex items-center gap-2"
-                        >
-                          <Play className="w-3.5 h-3.5 text-emerald-400" /> {isPortuguese ? "Agendar Demo" : "Solicitar Demo"}
                         </button>
                       </div>
                       <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
@@ -1625,6 +1805,9 @@ export default function PublicWebsite({
                     </div>
                   </div>
                 </section>
+
+                {/* ═══ LIVE SOCIAL PROOF & KEY PERFORMANCE METRICS ═══ */}
+                <SocialProofBar />
 
                 {/* ═══ PANELES DESTACADOS (legado Viaweb) ═══ */}
                 <section className="bg-slate-50 border-b border-slate-200 py-16 px-6">
@@ -1797,130 +1980,14 @@ export default function PublicWebsite({
                   </div>
                 </section>
 
-                {/* ═══ CALCULADORA DE ROI & SIMULADOR WHATSAPP IA ═══ */}
-                <section className="bg-gradient-to-b from-slate-900 to-[#0a1628] text-white py-12 sm:py-20 px-4 sm:px-6 border-b border-slate-800">
-                  <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                    
-                    {/* ROI Calculator */}
-                    <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl flex flex-col gap-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                          <TrendingUp className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400">Calculadora Interactiva</span>
-                          <h3 className="text-xl font-display font-black tracking-tight text-white">Calculá cuánto ahorrás con Clientum</h3>
-                        </div>
-                      </div>
+                {/* ═══ INTERACTIVE MULTI-INDUSTRY WHATSAPP AI BOT & ROI SIMULATOR ═══ */}
+                <IndustryWhatsAppSimulator
+                  onOpenWizard={() => setIsQuoteWizardOpen(true)}
+                  onOpenAudit={() => setIsExpressAuditOpen(true)}
+                />
 
-                      <div className="space-y-4">
-                        <div>
-                          <div className="flex justify-between text-xs font-medium mb-1.5 text-slate-300">
-                            <span>Consultas de WhatsApp / mes:</span>
-                            <span className="font-mono font-bold text-emerald-400">{calcLeads} leads</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="20"
-                            max="1000"
-                            step="10"
-                            value={calcLeads}
-                            onChange={(e) => setCalcLeads(Number(e.target.value))}
-                            className="w-full accent-emerald-500 cursor-pointer"
-                          />
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between text-xs font-medium mb-1.5 text-slate-300">
-                            <span>Horas manuales semanales en planillas/stock:</span>
-                            <span className="font-mono font-bold text-blue-400">{calcHours} hs/sem</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="5"
-                            max="80"
-                            step="5"
-                            value={calcHours}
-                            onChange={(e) => setCalcHours(Number(e.target.value))}
-                            className="w-full accent-blue-500 cursor-pointer"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
-                        <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-center">
-                          <div className="text-2xl font-black font-mono text-emerald-400">{calcHours * 4} hs</div>
-                          <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Horas ahorradas al mes</div>
-                        </div>
-                        <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-center">
-                          <div className="text-2xl font-black font-mono text-blue-400">${(calcLeads * 1200).toLocaleString('es-AR')}</div>
-                          <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Ventas recuperadas estimadas</div>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => openLeadForm('diagnostico_pyme', { source: 'roi_calculator', leads: calcLeads, hours: calcHours })}
-                        className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider py-3.5 rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
-                      >
-                        Implementar Automatización Ahora <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* WhatsApp Bot Live Simulator */}
-                    <div className="bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col h-[460px]">
-                      <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
-                            🤖
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-sm text-white">Clientum AI WhatsApp Bot</h4>
-                            <span className="text-[10px] text-emerald-400 flex items-center gap-1">● En línea 24/7 (Gemini 3.6 Flash)</span>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-mono bg-slate-900 text-slate-400 px-2.5 py-1 rounded-full border border-slate-800">Demo Interactiva</span>
-                      </div>
-
-                      <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
-                        {botMessages.map((msg, idx) => (
-                          <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed ${
-                              msg.sender === 'user'
-                                ? 'bg-emerald-600 text-white rounded-br-xs'
-                                : 'bg-slate-900 text-slate-200 border border-slate-800 rounded-bl-xs'
-                            }`}>
-                              {msg.text}
-                            </div>
-                          </div>
-                        ))}
-                        {botLoading && (
-                          <div className="flex justify-start">
-                            <div className="bg-slate-900 text-slate-400 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs animate-pulse">
-                              Escribiendo respuesta con IA...
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <form onSubmit={handleBotSend} className="mt-4 pt-3 border-t border-slate-800 flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Preguntale algo al bot (ej. '¿Cuánto cuesta el CRM?')"
-                          value={botInput}
-                          onChange={(e) => setBotInput(e.target.value)}
-                          className="flex-1 bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 text-xs focus:border-emerald-500 focus:outline-none"
-                        />
-                        <button
-                          type="submit"
-                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center"
-                        >
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </form>
-                    </div>
-
-                  </div>
-                </section>
+                {/* ═══ TRUST, SECURITY, INFRASTRUCTURE & SLA GUARANTEES ═══ */}
+                <TrustAndSlaSection />
 
                 {/* ═══ PRIMARY PILLARS ═══ */}
                 <section className="bg-slate-50 border-b border-slate-200 py-20 px-6">
@@ -1977,7 +2044,7 @@ export default function PublicWebsite({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {[
                         {
-                          img: "https://images.unsplash.com/photo-1556742049-0a67c57750c9?auto=format&fit=crop&w=800&q=80",
+                          img: pymeCommercialSalesImg,
                           tag: "Comercio & Retail",
                           city: "General Roca · Río Negro",
                           flag: "🇦🇷",
@@ -1987,7 +2054,7 @@ export default function PublicWebsite({
                           stat: "+45% consultas respondidas en <2 min",
                         },
                         {
-                          img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+                          img: pymeAgroLogisticsImg,
                           tag: "Distribución Mayorista",
                           city: "Neuquén Capital · Neuquén",
                           flag: "🇦🇷",
@@ -1997,7 +2064,7 @@ export default function PublicWebsite({
                           stat: "Cero quiebres de stock no declarados",
                         },
                         {
-                          img: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
+                          img: pymeCommercialSalesImg,
                           tag: "Administración & Finanzas",
                           city: "Buenos Aires · Microcentro",
                           flag: "🇦🇷",
@@ -2007,7 +2074,7 @@ export default function PublicWebsite({
                           stat: "35 horas mensuales de Excel ahorradas",
                         },
                         {
-                          img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+                          img: pymeCustomerSuccessImg,
                           tag: "Atención al Cliente",
                           city: "Córdoba Capital · Córdoba",
                           flag: "🇦🇷",
@@ -2017,7 +2084,7 @@ export default function PublicWebsite({
                           stat: "+28% en tasa de cierre de presupuestos",
                         },
                         {
-                          img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80",
+                          img: pymeAgroLogisticsImg,
                           tag: "Agroindustria & Empaque",
                           city: "Alto Valle · Río Negro",
                           flag: "🇦🇷",
@@ -2027,7 +2094,7 @@ export default function PublicWebsite({
                           stat: "100% de liquidaciones al día",
                         },
                         {
-                          img: "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
+                          img: pymeTeamMeetingImg,
                           tag: "Dirección y Estrategia",
                           city: "Sede Regional Patagonia",
                           flag: "🇦🇷",
@@ -2143,8 +2210,9 @@ export default function PublicWebsite({
                     </div>
                     <div className="bg-slate-200 rounded-2xl h-64 overflow-hidden relative border border-slate-300 shadow-md">
                       <img
-                        src="https://images.unsplash.com/photo-1542744094-3a31f103e35f?auto=format&fit=crop&w=800&q=80"
-                        alt="Clientum workflow"
+                        src={pymeTeamMeetingImg}
+                        alt="Clientum team workflow"
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -2165,13 +2233,17 @@ export default function PublicWebsite({
                     </div>
                     <div className="md:order-1 bg-slate-200 rounded-2xl h-64 overflow-hidden relative border border-slate-300 shadow-md">
                       <img
-                        src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80"
-                        alt="BI dashboards"
+                        src={pymeCommercialSalesImg}
+                        alt="BI dashboards y ventas comerciales"
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
                 </section>
+
+                {/* ═══ GALERÍA INTERACTIVA DE EQUIPOS PYME EN ACCIÓN ═══ */}
+                <PymeTeamsGallery onContactClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
 
                 {/* Big List section: Lealtad, Versatilidad, Personalidad */}
                 <section className="bg-slate-900 text-white py-16 px-6">
@@ -2951,6 +3023,9 @@ export default function PublicWebsite({
                   badge="Servicios en Operación Real"
                 />
 
+                {/* ── FREQUENTLY ASKED QUESTIONS (FAQ) & INSTANT ANSWERS ── */}
+                <FaqSection onOpenWizard={() => setIsQuoteWizardOpen(true)} />
+
               </div>
             )}
 
@@ -3187,6 +3262,16 @@ export default function PublicWebsite({
                     </button>
                   </div>
                 </div>
+
+                {/* ═══ INTERACTIVE BILLING TOGGLE (MONTHLY / ANNUAL) & PRICING CARDS ═══ */}
+                <PricingBillingToggle
+                  onOpenWizard={() => setIsQuoteWizardOpen(true)}
+                  onSelectPlan={(planName) => {
+                    setActiveTab("contacto");
+                    setDemoForm({ ...demoForm, mensaje: `Hola Clientum, me interesa contratar el plan ${planName}.` });
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
 
                 {/* INTERACTIVE COMPARATIVE WIDGET (Fulfills the comparative requirement) */}
                 <div className="bg-[#0d1f3c] text-white rounded-2xl p-8 border border-[#1A3461]/60 shadow-xl">
@@ -3660,16 +3745,10 @@ export default function PublicWebsite({
                 </div>
 
                 {/* Presencia en Territorio & Equipos Clientes */}
-                <ArgentinePymesSection
-                  title="Nuestra Presencia y Trabajo Junto a Empresas Argentinas"
-                  subtitle="Acompañamos a dueños, gerentes de operaciones y equipos de trabajo en la Patagonia, Buenos Aires, Córdoba y todo el país."
-                  items={[
-                    ARGENTINE_PYMES_DATA.consultoria,
-                    ARGENTINE_PYMES_DATA.lubrano,
-                    ARGENTINE_PYMES_DATA.distribuidora,
-                    ARGENTINE_PYMES_DATA.estudio,
-                  ]}
-                  badge="Presencia en Territorio"
+                <PymeTeamsGallery
+                  title="Nuestra Presencia y Trabajo Junto a PyMEs Argentinas"
+                  subtitle="Acompañamos a dueños, gerentes de operaciones, comerciales y equipos de depósito en la Patagonia, Buenos Aires, Córdoba y todo el país."
+                  onContactClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 />
 
                 {/* CTA */}
@@ -3964,16 +4043,14 @@ export default function PublicWebsite({
                 ))}
 
                 {/* ── EQUIPOS Y PROFESIONALES EN ACCIÓN EN SUS EMPRESAS ── */}
-                <ArgentinePymesSection
+                <PymeTeamsGallery
                   title="Equipos y Profesionales en Acción en Sus Empresas"
-                  subtitle="Fotos reales de los equipos comerciales, logísticos y directivos que usan Clientum en su día a día."
-                  items={[
-                    ARGENTINE_PYMES_DATA.lubrano,
-                    ARGENTINE_PYMES_DATA.distribuidora,
-                    ARGENTINE_PYMES_DATA.terbay,
-                    ARGENTINE_PYMES_DATA.cabarcos,
-                  ]}
-                  badge="Nuestros Clientes en Territorio"
+                  subtitle="Fotos reales de los equipos comerciales, logísticos, contables y directivos que usan Clientum en su día a día."
+                  onContactClick={() => {
+                    setDemoForm({ ...demoForm, mensaje: "Hola Clientum, me gustaría solicitar una demo para el equipo de mi empresa." });
+                    setActiveTab("contacto");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                 />
 
                 {/* CTA */}
@@ -4143,16 +4220,14 @@ export default function PublicWebsite({
                 </div>
 
                 {/* ── GALERÍA DE EQUIPOS EN CASOS DE ÉXITO ── */}
-                <ArgentinePymesSection
+                <PymeTeamsGallery
                   title="Equipos Reales que Protagonizan Nuestros Casos de Éxito"
                   subtitle="Detrás de cada indicador de crecimiento hay un equipo argentino que transformó su manera de trabajar junto a Clientum."
-                  items={[
-                    ARGENTINE_PYMES_DATA.distribuidora,
-                    ARGENTINE_PYMES_DATA.terbay,
-                    ARGENTINE_PYMES_DATA.farmacia,
-                    ARGENTINE_PYMES_DATA.estudio,
-                  ]}
-                  badge="Protagonistas del Cambio"
+                  onContactClick={() => {
+                    setDemoForm({ ...demoForm, mensaje: "Hola Clientum, me interesó conocer los casos de éxito de los equipos y quisiera evaluar una solución similar para mi PyME." });
+                    setActiveTab("contacto");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                 />
               </div>
             )}
@@ -6362,6 +6437,37 @@ export default function PublicWebsite({
         onClose={() => setLeadModalOpen(false)}
         formType={leadModalType}
         initialData={leadModalInitialData}
+      />
+
+      {/* Interactive PDF Proposal & Quote Wizard Modal */}
+      <InteractiveQuoteWizard
+        isOpen={isQuoteWizardOpen}
+        onClose={() => setIsQuoteWizardOpen(false)}
+      />
+
+      {/* Express Digital & AI Presence Audit Modal */}
+      <ExpressAuditModal
+        isOpen={isExpressAuditOpen}
+        onClose={() => setIsExpressAuditOpen(false)}
+        onOpenWizard={() => setIsQuoteWizardOpen(true)}
+      />
+
+      {/* Live Social Proof Activity Ticker */}
+      <LiveActivityTicker />
+
+      {/* Mobile Fixed Bottom Navigation Bar */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        onOpenWizard={() => setIsQuoteWizardOpen(true)}
+      />
+
+      {/* Floating Interactive WhatsApp CTA & Menu */}
+      <FloatingWhatsAppButton
+        onOpenWizard={() => setIsQuoteWizardOpen(true)}
       />
 
       {/* Floating AI WhatsApp Chatbot Widget */}
