@@ -4016,7 +4016,7 @@ export default function PublicWebsite({
                                 alt={name}
                                 className="h-10 max-w-full object-contain"
                                 fallback={
-                                  <Icon className={`w-5 h-5 ${darkLogo ? "text-slate-50" : "text-slate-400"}`} />
+                                  <SectorIcon className={`w-5 h-5 ${darkLogo ? "text-slate-50" : "text-slate-400"}`} />
                                 }
                               />
                             </div>
