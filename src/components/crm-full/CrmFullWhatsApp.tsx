@@ -64,6 +64,7 @@ import { WhatsAppQrModal } from './whatsapp/WhatsAppQrModal';
 import { WhatsAppAccountsManager } from './whatsapp/WhatsAppAccountsManager';
 import { AgentAssignmentDropdown } from './whatsapp/AgentAssignmentDropdown';
 import { BrowserNotificationManager } from './whatsapp/BrowserNotificationManager';
+import { WhatsAppPushWorkerModal } from './whatsapp/WhatsAppPushWorkerModal';
 import { useBrowserNotifications } from './whatsapp/useBrowserNotifications';
 
 function formatTime(iso: string) {
@@ -169,17 +170,28 @@ export default function CrmFullWhatsApp() {
   const [importNotification, setImportNotification] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [simulatingInbound, setSimulatingInbound] = useState(false);
+  const [isPushModalOpen, setIsPushModalOpen] = useState(false);
 
-  // Native Browser Notifications Hook
+  // Native & Background Push Service Worker Hook
   const {
     permission,
     isSupported: isNotificationSupported,
+    isPushSupported,
+    isWorkerActive,
+    isPushSubscribed,
+    isSubscribing,
+    pushStatus,
     soundEnabled,
     toggleSound,
     requestPermission,
+    subscribeToPush,
+    unsubscribeFromPush,
     sendNotification,
     sendTestNotification,
-    playNotificationSound
+    triggerServerPushTest,
+    simulateInboundLeadWebhook,
+    playNotificationSound,
+    fetchPushStatus
   } = useBrowserNotifications();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -549,6 +561,9 @@ export default function CrmFullWhatsApp() {
         }
       });
 
+      // Dispatch Web Push notification through server worker
+      simulateInboundLeadWebhook(sample.name, sample.text);
+
       setSimulatingInbound(false);
     }, 1000);
   };
@@ -797,10 +812,13 @@ export default function CrmFullWhatsApp() {
           permission={permission}
           isSupported={isNotificationSupported}
           soundEnabled={soundEnabled}
+          isWorkerActive={isWorkerActive}
+          isPushSubscribed={isPushSubscribed}
           onRequestPermission={requestPermission}
           onToggleSound={toggleSound}
           onSendTestNotification={sendTestNotification}
           onSimulateInbound={handleSimulateInboundLead}
+          onOpenPushModal={() => setIsPushModalOpen(true)}
           simulating={simulatingInbound}
         />
       </div>
@@ -1447,6 +1465,27 @@ export default function CrmFullWhatsApp() {
         isOpen={showCsvImportModal}
         onClose={() => setShowCsvImportModal(false)}
         onImportComplete={handleCsvImported}
+      />
+
+      {/* Modal: Service Worker & Web Push Background Diagnostics */}
+      <WhatsAppPushWorkerModal
+        isOpen={isPushModalOpen}
+        onClose={() => setIsPushModalOpen(false)}
+        isSupported={isNotificationSupported}
+        isPushSupported={isPushSupported}
+        isWorkerActive={isWorkerActive}
+        isPushSubscribed={isPushSubscribed}
+        isSubscribing={isSubscribing}
+        permission={permission}
+        soundEnabled={soundEnabled}
+        pushStatus={pushStatus}
+        onRequestPermission={requestPermission}
+        onSubscribeToPush={subscribeToPush}
+        onUnsubscribeFromPush={unsubscribeFromPush}
+        onToggleSound={toggleSound}
+        onTriggerServerPushTest={triggerServerPushTest}
+        onSimulateInboundLead={simulateInboundLeadWebhook}
+        onRefreshStatus={fetchPushStatus}
       />
     </div>
   );

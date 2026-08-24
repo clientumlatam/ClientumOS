@@ -1,0 +1,399 @@
+CLIENTUM PROJECT - ESTRUCTURA Y REORGANIZACIÓN DEL DIRECTORIO
+========================================================================================
+
+1. ÁRBOL COMPLETO DE ARCHIVOS (RECURSIVO)
+----------------------------------------------------------------------------------------
+.
+├── assets/                                     # Recursos globales estáticos y estilos externos
+│   ├── css/                                    # Hojas de estilo CSS auxiliares y animaciones
+│   │   ├── animate.min.css                     # Biblioteca de animaciones CSS
+│   │   ├── dashboard-widget.css                # Estilos dedicados para widgets embebidos
+│   │   └── discussions.css                     # Estilos para tableros de comentarios
+│   ├── img/                                    # Iconografía, logos de IA/redes y plantillas
+│   │   ├── templates/                          # Previsualizaciones de plantillas de email
+│   │   │   ├── template-digest-roundup.webp
+│   │   │   ├── template-event-invitation.webp
+│   │   │   ├── template-feedback-request.webp
+│   │   │   ├── template-minimal-dark.webp
+│   │   │   ├── template-modern-card.webp
+│   │   │   ├── template-newsletter-classic.webp
+│   │   │   ├── template-notification-alert.webp
+│   │   │   ├── template-product-launch.webp
+│   │   │   ├── template-promotional-offer.webp
+│   │   │   ├── template-re-engagement.webp
+│   │   │   ├── template-seasonal-sale.webp
+│   │   │   ├── template-simple-text.webp
+│   │   │   ├── template-transactional-receipt.webp
+│   │   │   └── template-welcome-email.webp
+│   │   ├── claude.svg                          # Logo proveedor Claude / Anthropic
+│   │   ├── facebook-logo.svg                   # Logo red social Facebook
+│   │   ├── google-aistudio.svg                 # Logo Google AI Studio
+│   │   ├── instagram-logo.svg                  # Logo red social Instagram
+│   │   ├── open-ai.svg                         # Logo proveedor OpenAI
+│   │   ├── openrouter.svg                      # Logo OpenRouter
+│   │   └── x-logo.svg                          # Logo red social X (Twitter)
+│   └── js/                                     # Scripts utilitarios externos
+│       └── dashboard-widget.js                 # Integración JS para widgets
+├── public/                                     # Archivos servidos directamente por el servidor web
+│   ├── favicon.svg                             # Ícono de pestaña del navegador
+│   └── sw.js                                   # Service Worker para capacidades PWA / Offline
+├── server/                                     # Backend Express / Node.js
+│   ├── middleware/                             # Interceptores de peticiones HTTP
+│   │   └── auth.ts                             # Validación de sesiones, JWT y tokens de usuario
+│   ├── db.ts                                   # Conexión y repositorio de base de datos
+│   └── types.ts                                # Tipos e interfaces de datos para el backend
+├── server_lib/                                 # Librerías y utilidades para el backend
+│   └── mailer.ts                               # Cliente de envío de correos transaccionales / SMTP
+├── src/                                        # Código fuente de la aplicación frontend (React + Vite + TS)
+│   ├── agents/                                 # Módulo de agentes inteligentes de IA autónomos
+│   │   ├── base.ts                             # Clase y estructura base para agentes de IA
+│   │   ├── enricher.ts                         # Agente de enriquecimiento automático de datos
+│   │   ├── index.ts                            # Punto de entrada y registro de agentes
+│   │   ├── orchestrator.ts                     # Orquestador y planificador multi-agente
+│   │   ├── prospector.ts                       # Agente de búsqueda y calificación de prospectos
+│   │   └── types.ts                            # Interfaces de estado, prompts y memoria de agentes
+│   ├── assets/                                 # Recursos visuales empaquetados por Vite
+│   │   ├── images/                             # Fotografías y logotipos de Clientum
+│   │   │   ├── clientum-logo-1.jpg
+│   │   │   ├── clientum-logo-2.jpg
+│   │   │   ├── clientum-logo-3.jpg
+│   │   │   ├── pyme_agro_logistics_1787518669322.jpg
+│   │   │   ├── pyme_commercial_sales_1787518652661.jpg
+│   │   │   ├── pyme_customer_success_1787518683571.jpg
+│   │   │   └── pyme_team_meeting_1787518635370.jpg
+│   │   └── img/                                # Sub-imágenes y vectores
+│   │       ├── templates/                      # Thumbnails de plantillas
+│   │       │   ├── template-newsletter-classic.webp
+│   │       │   ├── template-notification-alert.webp
+│   │       │   └── template-simple-text.webp
+│   │       └── facebook-logo.svg
+│   ├── chatbot-widget/                         # Widget flotante embebible de soporte / chatbot
+│   │   ├── hooks/                              # Hooks de mensajería reactiva
+│   │   │   └── useChat.js                      # Manejo de conexión y streams de chat
+│   │   └── ChatWidget.jsx                      # Componente de interfaz del widget de chat
+│   ├── components/                             # Componentes de interfaz de usuario organizados por módulo
+│   │   ├── Academia/                           # Plataforma LMS y capacitaciones interactivas
+│   │   │   ├── AcademiaLMS.tsx                 # Panel central de la academia Clientum
+│   │   │   ├── coursesData.ts                  # Catálogo de cursos, módulos y lecciones
+│   │   │   └── LmsSandboxes.tsx                # Entornos de práctica guiada
+│   │   ├── ai/                                 # Vistas de asistencia con Inteligencia Artificial
+│   │   │   └── AICopilotModal.tsx              # Asistente modal contextual de IA
+│   │   ├── analytics/                          # Métricas y paneles de rendimiento
+│   │   │   ├── AnalyticsView.tsx               # Tablero analítico principal
+│   │   │   ├── DailyGoalsWidget.tsx            # Widget de cumplimiento de objetivos diarios
+│   │   │   └── ERPAccountingOverviewWidget.tsx # Resumen financiero y contable
+│   │   ├── auth/                               # Módulos de autenticación y perfil
+│   │   │   ├── AuthModal.tsx                   # Modal de inicio de sesión rápido
+│   │   │   ├── AuthScreen.tsx                  # Pantalla completa de login/registro multi-método
+│   │   │   └── UserProfileModal.tsx            # Edición de perfil y preferencias de cuenta
+│   │   ├── common/                             # Componentes transversales reutilizables
+│   │   │   ├── ClientumLogo.tsx                # Renderizado del logo con variantes de tema
+│   │   │   ├── CommandPalette.tsx              # Paleta de comandos global (Cmd+K / Ctrl+K)
+│   │   │   ├── Loader.jsx                      # Indicador visual de carga
+│   │   │   ├── NewRecordModal.tsx              # Modal universal para crear registros
+│   │   │   ├── PdfExportButton.tsx             # Botón con generador de PDF integrado
+│   │   │   ├── RecordDrawer.tsx                # Drawer lateral para inspección de registros
+│   │   │   ├── SavedViewsBar.tsx               # Barra de filtros y vistas personalizadas guardadas
+│   │   │   ├── TimeRangeSelector.jsx           # Selector de rangos de fecha
+│   │   │   └── ToastContainer.tsx              # Notificaciones emergentes (toasts)
+│   │   ├── companies/                          # Directorio B2B y cuentas corporativas
+│   │   │   └── CompaniesView.tsx               # Gestión y tabla de empresas asociadas
+│   │   ├── crm-full/                           # Suite avanzada de omnicanalidad y WhatsApp
+│   │   │   ├── whatsapp/                       # Mensajería y distribución por WhatsApp
+│   │   │   │   ├── AgentAssignmentDropdown.tsx # Asignación dinámica de conversaciones a agentes
+│   │   │   │   ├── BroadcastModal.tsx          # Envío masivo de mensajes/campañas
+│   │   │   │   ├── ContactDetailsSidebar.tsx   # Ficha del contacto en chat
+│   │   │   │   ├── ConversationListItem.tsx    # Tarjeta de conversación en lista de chats
+│   │   │   │   ├── MessageBubble.tsx           # Burbuja de mensaje enriquecida
+│   │   │   │   ├── QuickResponsesModal.tsx     # Respuestas rápidas predefinidas
+│   │   │   │   ├── SearchAndFilterBar.tsx      # Búsqueda y filtrado de chats
+│   │   │   │   ├── TagManagementModal.tsx      # Gestión de etiquetas de segmentación
+│   │   │   │   ├── TypingIndicator.tsx         # Indicador de escritura en tiempo real
+│   │   │   │   └── WhatsAppCRMView.tsx         # Vista integrada WhatsApp CRM
+│   │   │   └── WhatsAppTab.tsx                 # Pestaña para navegación en suite
+│   │   ├── custom/                             # Motor de entidades personalizadas (No-Code)
+│   │   │   └── CustomObjectsView.tsx           # Diseñador y administrador de objetos personalizados
+│   │   ├── erp/                                # Módulo de facturación, inventario y finanzas
+│   │   │   ├── CreateInvoiceModal.tsx          # Asistente de creación de facturas
+│   │   │   ├── ERPView.tsx                     # Panel principal de ERP
+│   │   │   ├── ExpenseTracker.tsx              # Registro y categorización de gastos
+│   │   │   ├── InventoryManager.tsx            # Control de existencias y productos
+│   │   │   ├── InvoiceHistoryTable.tsx         # Historial y auditoría de comprobantes
+│   │   │   └── InvoicingModule.tsx             # Gestión integral de facturación
+│   │   ├── import/                             # Importación / Exportación masiva
+│   │   │   └── CSVStudioModal.tsx              # Estudio interactivo de importación CSV con mapeo
+│   │   ├── layout/                             # Estructura principal de la app
+│   │   │   ├── Navbar.tsx                      # Barra superior de navegación, búsquedas y usuario
+│   │   │   └── Sidebar.tsx                     # Barra lateral de módulos y accesos rápidos
+│   │   ├── Layout/                             # Diseños alternativos
+│   │   │   └── AppLayout.jsx                   # Envoltorio responsivo con contenedor central
+│   │   ├── modules/                            # Módulos especializados de marketing y flujos
+│   │   │   ├── ComingSoonPage.jsx              # Vista provisional para próximos lanzamientos
+│   │   │   ├── ContentGenerator/               # Generador de artículos y copywriting
+│   │   │   │   ├── ArticleEditor.jsx           # Editor visual de artículos SEO
+│   │   │   │   └── ContentDashboard.jsx        # Panel de contenidos generados
+│   │   │   ├── EmailMarketing/                 # Campañas de email masivo y automatizaciones
+│   │   │   │   ├── AutomationEditor.jsx        # Constructor visual de flujos de correo
+│   │   │   │   ├── EmailMarketingPage.jsx      # Panel de campañas de correo
+│   │   │   │   └── Subscribers.jsx             # Listas y estados de suscriptores
+│   │   │   ├── SocialMedia/                    # Redes sociales
+│   │   │   │   ├── Accounts.jsx                # Conexión de perfiles sociales
+│   │   │   │   └── SocialMediaPage.jsx         # Planificador y publicador social
+│   │   │   └── WorkflowAutomation/             # Automatización de tareas
+│   │   │       ├── TemplatePicker.jsx          # Selector de plantillas de flujos
+│   │   │       └── WorkflowList.jsx            # Listado de flujos activos
+│   │   ├── opportunities/                      # Pipeline comercial y oportunidades de venta
+│   │   │   ├── KanbanView.tsx                  # Embudo de ventas visual interactivo (Kanban)
+│   │   │   └── TableView.tsx                   # Vista tabular detallada con filtros avanzados
+│   │   ├── people/                             # Directorio de contactos y personas
+│   │   │   └── PeopleView.tsx                  # Gestión de contactos individuales
+│   │   ├── power/                              # Power Suite (Servicios multi-vertical para negocios)
+│   │   │   ├── AutomationView.tsx              # Automatizaciones del sistema
+│   │   │   ├── BrochureView.tsx                # Generador de folletos y presentaciones
+│   │   │   ├── ChatbotView.tsx                 # Configuración del bot conversacional
+│   │   │   ├── ContactsView.tsx                # Directorio unificado de clientes
+│   │   │   ├── CustomerSegmentsView.tsx        # Segmentador dinámico de audiencias
+│   │   │   ├── EcommerceView.tsx               # Panel para tiendas electrónicas y pedidos
+│   │   │   ├── ErpView.tsx                     # Módulo simplificado de finanzas
+│   │   │   ├── KnowledgeBaseView.tsx           # Base de conocimientos y manuales
+│   │   │   ├── PowerSuiteView.tsx              # Tablero maestro de la Power Suite
+│   │   │   ├── RestaurantView.tsx              # Gestión especializada para gastronomía/restaurantes
+│   │   │   ├── SaaSClusterView.tsx             # Arquitectura y nodos multi-inquilino (SaaS)
+│   │   │   ├── SaaSThemeView.tsx               # Personalizador visual y marca blanca
+│   │   │   ├── SitesView.tsx                   # Gestor de sitios web y landing pages
+│   │   │   └── SubscriptionsView.tsx           # Cobros recurrentes y planes de suscripción
+│   │   ├── public/                             # Landing page pública y componentes comerciales
+│   │   │   ├── ExpressAuditModal.tsx           # Auditoría exprés interactiva para prospectos
+│   │   │   ├── FaqSection.tsx                  # Sección de preguntas frecuentes
+│   │   │   ├── FloatingWhatsAppButton.tsx      # Botón de contacto directo por WhatsApp
+│   │   │   ├── IndustryWhatsAppSimulator.tsx   # Simulador interactivo de WhatsApp por sector
+│   │   │   ├── InteractiveQuoteWizard.tsx      # Cotizador guiado paso a paso
+│   │   │   ├── LiveActivityTicker.tsx          # Barra de notificaciones de actividad en vivo
+│   │   │   ├── MobileBottomNav.tsx             # Menú inferior para dispositivos móviles
+│   │   │   ├── PricingBillingToggle.tsx        # Selector de periodicidad de precios
+│   │   │   ├── PymeTeamsGallery.tsx            # Galería de casos de éxito en PyMEs
+│   │   │   ├── SocialProofBar.tsx              # Barra de métricas y prueba social
+│   │   │   └── TrustAndSlaSection.tsx          # Garantías de seguridad y acuerdos de nivel de servicio
+│   │   ├── settings/                           # Configuración global del sistema
+│   │   │   └── SettingsView.tsx                # Preferencias generales, campos y usuarios
+│   │   ├── shared/                             # Componentes de configuración compartida
+│   │   │   └── GooglePlacesKeyConfig.tsx       # Configuración de credenciales de Google Places
+│   │   ├── sidebar-tabs/                       # Pestañas de la barra lateral secundaria
+│   │   │   ├── ActivityTab.tsx                 # Registro de actividades recientes
+│   │   │   └── QuickCreateTab.tsx              # Creación rápida de registros
+│   │   ├── tasks/                              # Gestión de tareas y compromisos
+│   │   │   └── TasksView.tsx                   # Listado y seguimiento de tareas pendientes
+│   │   ├── ui/                                 # Componentes primitivos de interfaz (shadcn/ui style)
+│   │   │   ├── badge.tsx                       # Etiquetas y badges
+│   │   │   ├── button.tsx                      # Botones interactivos estándar
+│   │   │   ├── card.tsx                        # Contenedores tipo tarjeta
+│   │   │   ├── dialog.tsx                      # Modales y diálogos flotantes
+│   │   │   ├── input.tsx                       # Campos de entrada de texto
+│   │   │   └── select.tsx                      # Menús desplegables de selección
+│   │   ├── vscrm/                              # Modern ERP + CRM Suite (Estilo VSCode)
+│   │   │   ├── ModernErpCrmSuite.tsx           # Vista principal de la suite VSCRM
+│   │   │   ├── VscrmAfipTab.tsx                # Integración fiscal / facturación electrónica
+│   │   │   ├── VscrmClientsTab.tsx             # Gestión de clientes en VSCRM
+│   │   │   ├── VscrmDashboard.tsx              # Tablero ejecutivo
+│   │   │   ├── vscrmData.ts                    # Datos demo para pruebas
+│   │   │   ├── VscrmExpensesTab.tsx            # Registro de gastos
+│   │   │   ├── VscrmInvoicesTab.tsx            # Facturación y cobros
+│   │   │   ├── VscrmProjectsTab.tsx            # Gestión de proyectos y entregables
+│   │   │   └── VscrmTimeTab.tsx                # Registro de horas y control de tiempos
+│   │   ├── whatsapp/                           # Conexión nativa con WhatsApp Web / Baileys
+│   │   │   ├── BroadcastsView.tsx              # Envío masivo de mensajes
+│   │   │   ├── InboxView.tsx                   # Bandeja de entrada de WhatsApp
+│   │   │   ├── TemplateView.tsx                # Plantillas homologadas de mensajes
+│   │   │   ├── WhatsAppBaileysSettings.tsx     # Ajustes y emparejamiento con código QR
+│   │   │   └── WhatsAppView.tsx                # Vista de mensajería en vivo
+│   │   ├── wordpress/                          # Integración con WordPress / WooCommerce
+│   │   │   ├── WpModulos.tsx                   # Módulos instalados de WordPress
+│   │   │   └── WpSetup.tsx                     # Asistente de configuración de endpoints WP
+│   │   ├── workflows/                          # Motor de automatizaciones y triggers
+│   │   │   └── WorkflowsView.tsx               # Creador de reglas y acciones automáticas
+│   │   ├── AdCopyTab.tsx                       # Generador de textos publicitarios (Ads)
+│   │   ├── AiAgentsTab.tsx                     # Pestaña de agentes de IA
+│   │   ├── AiAssistantTab.tsx                  # Pestaña de asistente general de IA
+│   │   ├── AiHubTab.tsx                        # Centro de control de modelos de IA
+│   │   ├── AiMarketingExpertTab.tsx            # Consultor estratégico de marketing con IA
+│   │   ├── AutomationTab.tsx                   # Pestaña de automatización
+│   │   ├── BrochureGeneratorTab.tsx            # Generador de folletos comerciales
+│   │   ├── CampaignsTab.tsx                    # Gestor de campañas comerciales
+│   │   ├── ChatbotTab.tsx                      # Pestaña de chatbot
+│   │   ├── ChatTab.tsx                         # Pestaña de chat interno
+│   │   ├── ClientPortalTab.tsx                 # Portal de autoservicio para clientes
+│   │   ├── ClientsTab.tsx                      # Directorio rápido de clientes
+│   │   ├── ContactsTab.tsx                     # Libreta de contactos
+│   │   ├── CrmAgentsTab.tsx                    # Agentes de ventas para CRM
+│   │   ├── CrmKanbanTab.tsx                    # Acceso directo al Kanban de CRM
+│   │   ├── CrmWhatsappTab.tsx                  # Acceso directo a WhatsApp CRM
+│   │   ├── EcommerceTab.tsx                    # Pestaña de comercio electrónico
+│   │   ├── EmailCampaignsTab.tsx               # Campañas de correo electrónico
+│   │   ├── EmailTemplateBuilderTab.tsx         # Diseñador visual de plantillas de email
+│   │   ├── GeolocatedProspectingTab.tsx        # Prospección B2B basada en geolocalización
+│   │   ├── GoogleDriveTab.tsx                  # Integración de almacenamiento Google Drive
+│   │   ├── GtmStrategyTab.tsx                  # Estrategias Go-To-Market
+│   │   ├── IcpBuilderTab.tsx                   # Generador de perfil de cliente ideal (ICP)
+│   │   ├── KeywordResearchTab.tsx              # Investigación de palabras clave SEO
+│   │   ├── KeywordVaultTab.tsx                 # Bóveda de keywords guardadas
+│   │   ├── LanguageSelector.tsx                # Selector de idioma de la interfaz (ES/EN/PT)
+│   │   ├── LinkBuildingTab.tsx                 # Estrategia y seguimiento de link building
+│   │   ├── ListsTab.tsx                        # Listas de prospectos y contactos
+│   │   ├── MeddicTab.tsx                       # Metodología de calificación de ventas MEDDIC
+│   │   ├── navigationData.ts                   # Estructura del menú y rutas activas
+│   │   ├── NavigationRail.tsx                  # Barra de navegación colapsable compacta
+│   │   ├── NeonAuthGate.tsx                    # Puerta de autenticación y verificación
+│   │   ├── OnPageAuditTab.tsx                  # Auditoría SEO On-Page
+│   │   ├── OrganigramaClientum.tsx             # Organigrama corporativo de agentes
+│   │   ├── OrganigramaUnificado.tsx            # Estructura organizativa unificada
+│   │   ├── OrgVariantLanes.tsx                 # Vista de carriles de organigrama
+│   │   ├── OrgVariantPipeline.tsx              # Vista de pipeline de organigrama
+│   │   ├── OrgVariantRadial.tsx                # Vista radial de organigrama
+│   │   ├── OrgVariantRoster.tsx                # Vista de lista de miembros
+│   │   ├── OrquestadorIA.tsx                   # Panel central del orquestador de agentes
+│   │   ├── OutreachAgentTab.tsx                # Agente de prospección y contacto en frío
+│   │   ├── OverviewTab.tsx                     # Vista general ejecutiva
+│   │   ├── PdfExportButton.tsx                 # Generador directo de PDF
+│   │   ├── PrintReportButton.tsx               # Botón de impresión rápida de informes
+│   │   ├── ProspectMap.tsx                     # Mapa interactivo de prospectos geolocalizados
+│   │   ├── PublicFeatureModal.tsx              # Modal de detalles de características públicas
+│   │   ├── PublicWebsite.tsx                   # Landing page pública de Clientum
+│   │   ├── RankTrackerTab.tsx                  # Rastreo de posiciones en motores de búsqueda
+│   │   ├── ResetPasswordModal.tsx              # Modal de recuperación de contraseña
+│   │   ├── SalesAssistantChat.tsx              # Chat con asistente de ventas
+│   │   ├── SalesProspectorDashboard.tsx        # Tablero de prospección comercial
+│   │   ├── SdrOutreachTab.tsx                  # Flujos de contacto SDR
+│   │   ├── SegmentosUnificados.tsx             # Segmentación unificada
+│   │   ├── SeoAutomationTab.tsx                # Automatización de tareas SEO
+│   │   ├── SeoSuiteTab.tsx                     # Suite completa de herramientas SEO
+│   │   ├── SeoTab.tsx                          # Auditoría y optimización SEO
+│   │   ├── SettingsTab.tsx                     # Ajustes generales
+│   │   ├── Sidebar.tsx                         # Barra lateral tradicional
+│   │   ├── SidebarCRM.tsx                      # Barra lateral orientada a CRM
+│   │   ├── SidebarEditor.tsx                   # Editor de navegación lateral
+│   │   ├── SmtpTab.tsx                         # Configuración de servidor de correo SMTP
+│   │   ├── StrategyTab.tsx                     # Estrategia de crecimiento y marketing
+│   │   ├── SyncStatus.tsx                      # Indicador de estado de sincronización
+│   │   ├── TemplatesTab.tsx                    # Biblioteca de plantillas
+│   │   ├── TopicMapTab.tsx                     # Mapa temático de contenidos SEO
+│   │   ├── UnifiedCrmSuite.tsx                 # Suite unificada de CRM
+│   │   └── WorkflowTab.tsx                     # Pestaña de flujos de trabajo
+│   ├── context/                                # Estados globales con React Context
+│   │   └── CRMContext.tsx                      # Proveedor y contexto central del CRM
+│   ├── data/                                   # Datos estáticos, catálogos y presets
+│   │   ├── categorias-servicios.json           # Clasificación de categorías de servicios
+│   │   ├── clientumCatalog.ts                  # Catálogo de servicios y precios de Clientum
+│   │   ├── clientumLeads.ts                    # Registros de prospectos de demostración
+│   │   ├── cursos-lms.json                     # Temarios y lecciones para la Academia
+│   │   ├── erpInitialData.ts                   # Datos iniciales para el módulo ERP
+│   │   ├── initialData.ts                      # Datos predeterminados de empresas, tratos y contactos
+│   │   ├── servicios-catalogo.json             # Catálogo de servicios en formato JSON
+│   │   └── data.ts                             # Configuración general de datos
+│   ├── docs/                                   # Documentación técnica interna
+│   │   └── pluginpulse-integration.md          # Guía de integración con PluginPulse
+│   ├── i18n/                                   # Soporte multilenguaje
+│   │   └── translations.ts                     # Diccionarios de traducción (ES, EN, PT)
+│   ├── lib/                                    # Clientes de servicios externos y utilidades
+│   │   ├── neon-sdk/                           # Integración con base de datos Neon Serverless
+│   │   │   ├── auth-react-ui.tsx               # Componentes UI de Neon Auth
+│   │   │   ├── auth-react.tsx                  # Proveedor y hooks de autenticación Neon
+│   │   │   ├── auth.ts                         # Cliente y configuración de Neon Auth
+│   │   │   └── ui-css.ts                       # Estilos para componentes de Neon
+│   │   ├── auth.ts                             # Lógica de sesión y tokens
+│   │   ├── firebase.ts                         # Inicialización de Firebase / Firestore
+│   │   ├── googleAuth.ts                       # Autenticación con Google Identity Services
+│   │   ├── i18n.tsx                            # Hook y contexto de internacionalización
+│   │   ├── pdfProposalGenerator.ts             # Generador de cotizaciones comerciales en PDF
+│   │   ├── smtp.ts                             # Configuración y envío SMTP en cliente
+│   │   ├── supabase.ts                         # Cliente de Supabase
+│   │   └── utils.ts                            # Función auxiliar `cn` para Tailwind
+│   ├── pages/                                  # Vistas de nivel de página
+│   │   ├── account.tsx                         # Página de cuenta de usuario
+│   │   ├── auth.tsx                            # Página de autenticación
+│   │   ├── home.tsx                            # Página principal
+│   │   └── LoginPage.tsx                       # Página de inicio de sesión dedicada
+│   ├── platform/                               # Plataforma integral de operaciones (Agent OS)
+│   │   ├── components/                         # Componentes del sistema operativo de agentes
+│   │   │   ├── ActivityStreamDrawer.tsx        # Flujo de actividad en tiempo real
+│   │   │   ├── AgentDetailModal.tsx            # Ficha técnica de cada agente de IA
+│   │   │   ├── AiAgentsView.tsx                # Vista de agentes de IA activos
+│   │   │   ├── AiAssistantModal.tsx            # Asistente modal inteligente
+│   │   │   ├── AiBoardroom.tsx                 # Sala de directorio virtual de IA
+│   │   │   ├── AnalyticsView.tsx               # Analítica de agentes y plataforma
+│   │   │   ├── ArchitectureBlueprintView.tsx   # Diagrama de arquitectura del sistema
+│   │   │   ├── AutomationView.tsx              # Automatizaciones y triggers
+│   │   │   ├── BackupsView.tsx                 # Copias de seguridad del sistema
+│   │   │   ├── BenchesView.tsx                 # Benchmarking y pruebas de rendimiento
+│   │   │   ├── BillingWebhookModal.tsx         # Configuración de webhooks de facturación
+│   │   │   ├── BroadcastsView.tsx              # Envíos masivos
+│   │   │   ├── CampaignsView.tsx               # Campañas estratégicas
+│   │   │   ├── ChatbotView.tsx                 # Interfaz de chatbot
+│   │   │   ├── ChatbotWidget.tsx               # Widget de chatbot
+│   │   │   ├── ContactsView.tsx                # Directorio de contactos
+│   │   │   ├── CrmPipeline.tsx                 # Pipeline comercial en plataforma
+│   │   │   ├── CustomerPortalView.tsx          # Portal de clientes
+│   │   │   ├── CustomerSegmentsView.tsx        # Segmentos de clientes
+│   │   │   ├── DashboardView.tsx               # Tablero principal de Agent OS
+│   │   │   ├── DelegateTaskModal.tsx           # Delegación de tareas a agentes
+│   │   │   ├── EcommerceView.tsx               # Comercio electrónico
+│   │   │   ├── ErpView.tsx                     # ERP de la plataforma
+│   │   │   ├── Header.tsx                      # Encabezado del dashboard
+│   │   │   ├── InboxView.tsx                   # Bandeja de entrada de mensajes
+│   │   │   ├── KnowledgeBaseView.tsx           # Base de conocimiento empresarial
+│   │   │   ├── LogsView.tsx                    # Visor de logs del sistema
+│   │   │   ├── MetricsPanel.tsx                # Panel de métricas de agentes
+│   │   │   ├── N8nFlowEditor.tsx               # Editor de flujos de n8n
+│   │   │   ├── NewSiteModal.tsx                # Creación de nuevos sitios web
+│   │   │   ├── NotificationsView.tsx           # Centro de notificaciones
+│   │   │   ├── PipelineView.tsx                # Vista del pipeline
+│   │   │   ├── RestaurantView.tsx              # Módulo gastronómico
+│   │   │   ├── SaaSClusterView.tsx             # Gestión de clústeres SaaS
+│   │   │   ├── SaaSThemeView.tsx               # Temas de la plataforma
+│   │   │   ├── SegmentsView.tsx                # Segmentos
+│   │   │   ├── SettingsView.tsx                # Ajustes de la plataforma
+│   │   │   ├── Sidebar.tsx                     # Barra lateral de navegación
+│   │   │   ├── SiteDetailModal.tsx             # Detalles de sitio web
+│   │   │   ├── SitesView.tsx                   # Listado de sitios
+│   │   │   ├── SubscriptionsView.tsx           # Planes y suscripciones
+│   │   │   ├── TemplateView.tsx                # Plantillas
+│   │   │   ├── VirtualOffice.tsx               # Oficina virtual interactiva de agentes
+│   │   │   └── WhatsAppBaileysSettings.tsx     # Conexión Baileys WhatsApp
+│   │   ├── data/                               # Datos preconfigurados del ecosistema
+│   │   │   ├── aiBusinessOsData.ts             # Definición de agentes y capacidades del SO
+│   │   │   ├── ecosystemData.ts                # Mapa de integraciones del ecosistema
+│   │   │   └── mockData.ts                     # Datos de prueba para la plataforma
+│   │   ├── lib/                                # Utilidades de plataforma
+│   │   │   └── tasks.ts                        # Gestión de colas de tareas para agentes
+│   │   ├── mockData.ts                         # Datos de prueba
+│   │   └── types.ts                            # Tipos para Agent OS
+│   ├── services/                               # Servicios de negocio y llamadas a APIs
+│   │   ├── prospectingService.ts               # Servicio de búsqueda de prospectos
+│   │   └── scraperService.ts                   # Servicio de extracción de datos web
+│   ├── store/                                  # Almacenamiento de estado reactivo
+│   │   └── sharedStore.ts                      # Store global compartido
+│   ├── utils/                                  # Funciones y librerías utilitarias
+│   │   ├── api.js                              # Wrapper HTTP para llamadas API
+│   │   ├── constants.js                        # Constantes de la aplicación
+│   │   ├── generatePdfReport.ts                # Generador de reportes en PDF
+│   │   ├── menuUrl.js                          # Parseo de URLs de menú
+│   │   └── pdfGenerator.ts                     # Motor de generación de documentos PDF
+│   ├── App.tsx                                 # Componente raíz de la aplicación
+│   ├── index.css                               # Estilos globales y directivas Tailwind CSS
+│   ├── main.tsx                                # Entrada de renderizado React DOM
+│   ├── types.ts                                # Definiciones de tipos TypeScript globales del CRM
+│   └── vite-env.d.ts                           # Declaraciones de tipos para entorno Vite
+├── .env.example                                # Plantilla de variables de entorno
+├── .gitignore                                  # Archivos y carpetas ignorados por Git
+├── .npmrc                                      # Configuración del gestor de paquetes NPM
+├── favicon.svg                                 # Ícono principal
+├── firebase-blueprint.json                     # Esquema y blueprint de base de datos Firestore
+├── firestore.rules                             # Reglas de seguridad y control de acceso Firestore
+├── index.html                                  # Documento HTML principal
+├── index.ts                                    # Exportación de entrada del servidor
+├── metadata.json                               # Metadatos y permisos de la aplicación AI Studio
+├── package.json                                # Manifiesto de dependencias y scripts de construcción
+├── package-lock.json                           # Bloqueo de versiones de dependencias NPM
+├── README.md                                   # Documentación del proyecto
+├── server.ts                                   # Servidor Express principal
+├── tsconfig.json                               # Configuración del compilador TypeScript
+└── vite.config.ts                              # Configuración del bundler Vite

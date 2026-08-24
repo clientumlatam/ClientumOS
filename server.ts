@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 import { Pool } from "pg";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import webpush from "web-push";
 import { loadSmtpCredentials } from "./src/lib/smtp.js";
 import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, createMailTransport } from "./server_lib/mailer.js";
 
@@ -7752,6 +7753,349 @@ app.patch("/api/whatsapp/conversations/:id/assign", (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// WEB PUSH & BACKGROUND SERVICE WORKER NOTIFICATIONS (WhatsApp Inbound)
+// ─────────────────────────────────────────────────────────────────────────────
+let vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY || "",
+  privateKey: process.env.VAPID_PRIVATE_KEY || "",
+};
+
+if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
+  try {
+    const generated = webpush.generateVAPIDKeys();
+    vapidKeys.publicKey = generated.publicKey;
+    vapidKeys.privateKey = generated.privateKey;
+    console.log("[WebPush] Claves VAPID auto-generadas exitosamente.");
+  } catch (err: any) {
+    console.warn("[WebPush] Error generando claves VAPID:", err?.message || err);
+  }
+}
+
+try {
+  if (vapidKeys.publicKey && vapidKeys.privateKey) {
+    webpush.setVapidDetails(
+      "mailto:soporte@clientum.com.ar",
+      vapidKeys.publicKey,
+      vapidKeys.privateKey
+    );
+  }
+} catch (err: any) {
+  console.warn("[WebPush] Error configurando VAPID details:", err?.message || err);
+}
+
+interface PushSubItem {
+  id?: number;
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+  userId?: number | null;
+  agentName?: string | null;
+  createdAt: string;
+}
+
+let memoryPushSubscriptions: PushSubItem[] = [];
+let pushDeliveryLogs: Array<{ id: string; timestamp: string; title: string; recipientCount: number; successCount: number; failCount: number }> = [];
+
+async function initPushSubscriptionsTable() {
+  try {
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id SERIAL PRIMARY KEY,
+        endpoint TEXT UNIQUE NOT NULL,
+        keys_p256dh TEXT NOT NULL,
+        keys_auth TEXT NOT NULL,
+        user_id INT,
+        agent_name TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+  } catch (err: any) {
+    console.warn("[Push DB] Advertencia creando tabla de push subscriptions:", err?.message || err);
+  }
+}
+
+// 1. Get VAPID Public Key for client subscription
+app.get("/api/push/vapid-public-key", (_req, res) => {
+  res.json({
+    publicKey: vapidKeys.publicKey,
+    status: "active"
+  });
+});
+
+// 2. Register / Subscribe push subscription
+app.post("/api/push/subscribe", async (req: AuthRequest, res: AuthResponse) => {
+  try {
+    const { subscription, agentName } = req.body || {};
+    if (!subscription || !subscription.endpoint || !subscription.keys?.p256dh || !subscription.keys?.auth) {
+      return res.status(400).json({ error: "Suscripción Push inválida (faltan endpoint o claves p256dh/auth)." });
+    }
+
+    const endpoint = subscription.endpoint;
+    const p256dh = subscription.keys.p256dh;
+    const auth = subscription.keys.auth;
+    const userId = req.session?.userId || null;
+    const agent = agentName || req.session?.username || "Asesor Comercial";
+
+    // Save to PostgreSQL if connected
+    try {
+      await pgPool.query(
+        `INSERT INTO push_subscriptions (endpoint, keys_p256dh, keys_auth, user_id, agent_name)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (endpoint) DO UPDATE SET keys_p256dh = EXCLUDED.keys_p256dh, keys_auth = EXCLUDED.keys_auth, agent_name = EXCLUDED.agent_name`,
+        [endpoint, p256dh, auth, userId, agent]
+      );
+    } catch (dbErr) {
+      console.warn("[Push DB] Guardando en memoria:", dbErr);
+    }
+
+    // Always update memory list
+    const existingIndex = memoryPushSubscriptions.findIndex(s => s.endpoint === endpoint);
+    const subObj: PushSubItem = {
+      endpoint,
+      keys: { p256dh, auth },
+      userId,
+      agentName: agent,
+      createdAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+      memoryPushSubscriptions[existingIndex] = subObj;
+    } else {
+      memoryPushSubscriptions.push(subObj);
+    }
+
+    console.log(`[WebPush] Nueva suscripción registrada. Total activas: ${memoryPushSubscriptions.length}`);
+    return res.status(201).json({
+      ok: true,
+      message: "Dispositivo suscrito exitosamente para notificaciones en segundo plano.",
+      totalSubscriptions: memoryPushSubscriptions.length
+    });
+  } catch (err: any) {
+    console.error("[WebPush Subscribe Error]:", err);
+    return res.status(500).json({ error: err.message || "Error al suscribir dispositivo." });
+  }
+});
+
+// 3. Unsubscribe push endpoint
+app.post("/api/push/unsubscribe", async (req: AuthRequest, res: AuthResponse) => {
+  try {
+    const { endpoint } = req.body || {};
+    if (!endpoint) return res.status(400).json({ error: "Endpoint requerido." });
+
+    try {
+      await pgPool.query("DELETE FROM push_subscriptions WHERE endpoint = $1", [endpoint]);
+    } catch (e) {}
+
+    memoryPushSubscriptions = memoryPushSubscriptions.filter(s => s.endpoint !== endpoint);
+    return res.json({ ok: true, message: "Suscripción eliminada." });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. Send Push Notification to all or target subscription
+async function broadcastPushNotification(payload: {
+  title: string;
+  body: string;
+  icon?: string;
+  badge?: string;
+  tag?: string;
+  data?: any;
+  actions?: Array<{ action: string; title: string }>;
+}) {
+  let subs: PushSubItem[] = [];
+  try {
+    const dbRes = await pgPool.query("SELECT endpoint, keys_p256dh, keys_auth, agent_name, user_id, created_at FROM push_subscriptions");
+    if (dbRes.rows && dbRes.rows.length > 0) {
+      subs = dbRes.rows.map((r: any) => ({
+        endpoint: r.endpoint,
+        keys: { p256dh: r.keys_p256dh, auth: r.keys_auth },
+        agentName: r.agent_name,
+        userId: r.user_id,
+        createdAt: r.created_at
+      }));
+    }
+  } catch (e) {}
+
+  if (subs.length === 0) {
+    subs = [...memoryPushSubscriptions];
+  }
+
+  const payloadString = JSON.stringify({
+    title: payload.title || "💬 Nuevo mensaje en Clientum WhatsApp",
+    body: payload.body || "Tienes una nueva consulta entrante de un prospecto.",
+    icon: payload.icon || "/favicon.svg",
+    badge: payload.badge || "/favicon.svg",
+    tag: payload.tag || "wa-lead-" + Date.now(),
+    data: payload.data || { url: "/?tab=whatsapp" },
+    actions: payload.actions || [
+      { action: "open_chat", title: "💬 Abrir Chat" },
+      { action: "quick_reply", title: "⚡ Responder" }
+    ]
+  });
+
+  let successCount = 0;
+  let failCount = 0;
+  const expiredEndpoints: string[] = [];
+
+  for (const sub of subs) {
+    try {
+      const pushSubscription = {
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: sub.keys.p256dh,
+          auth: sub.keys.auth,
+        },
+      };
+
+      await webpush.sendNotification(pushSubscription, payloadString);
+      successCount++;
+    } catch (pushErr: any) {
+      failCount++;
+      // If subscription expired or was cancelled by user
+      if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
+        expiredEndpoints.push(sub.endpoint);
+      }
+      console.warn(`[WebPush] Falló envío a endpoint ${sub.endpoint.slice(0, 30)}... : ${pushErr.message}`);
+    }
+  }
+
+  // Cleanup expired subscriptions
+  if (expiredEndpoints.length > 0) {
+    memoryPushSubscriptions = memoryPushSubscriptions.filter(s => !expiredEndpoints.includes(s.endpoint));
+    try {
+      await pgPool.query("DELETE FROM push_subscriptions WHERE endpoint = ANY($1)", [expiredEndpoints]);
+    } catch (e) {}
+  }
+
+  const logEntry = {
+    id: "push-log-" + Date.now(),
+    timestamp: new Date().toISOString(),
+    title: payload.title,
+    recipientCount: subs.length,
+    successCount,
+    failCount
+  };
+  pushDeliveryLogs.unshift(logEntry);
+  if (pushDeliveryLogs.length > 50) pushDeliveryLogs.pop();
+
+  return { successCount, failCount, totalSubscribers: subs.length };
+}
+
+// 5. Trigger Test Push Notification
+app.post("/api/push/send-test", async (req: AuthRequest, res: AuthResponse) => {
+  try {
+    const { title, body, delaySeconds, chatId, leadName } = req.body || {};
+
+    const pushPayload = {
+      title: title || "💬 Clientum WhatsApp: Mensaje en Segundo Plano",
+      body: body || (leadName ? `${leadName}: "Hola, necesitamos cotización urgente para nuestro equipo comercial."` : '¡Excelente! Tu Service Worker de segundo plano está activo y listo para recibir leads aun con la app cerrada.'),
+      tag: "test-bg-push-" + Date.now(),
+      data: {
+        url: "/?tab=whatsapp" + (chatId ? `&chatId=${chatId}` : ""),
+        chatId: chatId || "conv-1",
+        leadName: leadName || "Agro-Industrial Patagonia",
+        timestamp: Date.now()
+      },
+      actions: [
+        { action: "open_chat", title: "💬 Abrir Chat" },
+        { action: "quick_reply", title: "⚡ Respuesta Rápida" }
+      ]
+    };
+
+    if (delaySeconds && Number(delaySeconds) > 0) {
+      setTimeout(async () => {
+        try {
+          await broadcastPushNotification(pushPayload);
+        } catch (e) {
+          console.error("[WebPush Delayed Test Error]:", e);
+        }
+      }, Number(delaySeconds) * 1000);
+
+      return res.json({
+        ok: true,
+        message: `Notificación push programada para dentro de ${delaySeconds} segundos. ¡Puedes cerrar o minimizar esta pestaña ahora para comprobar la recepción!`,
+        scheduledSeconds: delaySeconds
+      });
+    }
+
+    const result = await broadcastPushNotification(pushPayload);
+    return res.json({
+      ok: true,
+      message: "Notificación push enviada a los trabajadores de servicio activos.",
+      ...result
+    });
+  } catch (err: any) {
+    console.error("[WebPush Send Test Error]:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. Inbound WhatsApp Lead Webhook (dispatches push to all sellers/agents)
+app.post("/api/push/whatsapp-inbound", async (req: AuthRequest, res: AuthResponse) => {
+  try {
+    const { leadName, phone, message, conversationId, priority, channel } = req.body || {};
+    const safeLead = leadName || "Nuevo Prospecto WhatsApp";
+    const safeMsg = message || "Consulta entrante de WhatsApp";
+    const convId = conversationId || `conv-${Date.now()}`;
+
+    const pushPayload = {
+      title: `⚡ WhatsApp: ${safeLead}`,
+      body: safeMsg.length > 120 ? safeMsg.slice(0, 117) + "..." : safeMsg,
+      icon: "/favicon.svg",
+      tag: `wa-inbound-${convId}`,
+      data: {
+        url: `/?tab=whatsapp&chatId=${convId}`,
+        chatId: convId,
+        leadName: safeLead,
+        phone: phone || "",
+        channel: channel || "WhatsApp Baileys",
+        priority: priority || "alta",
+        timestamp: Date.now()
+      },
+      actions: [
+        { action: "open_chat", title: "💬 Responder Ahora" },
+        { action: "quick_reply", title: "⚡ Saludo Automático" }
+      ]
+    };
+
+    const pushResult = await broadcastPushNotification(pushPayload);
+
+    return res.json({
+      ok: true,
+      message: "Lead procesado y alerta Push de fondo emitida.",
+      pushResult
+    });
+  } catch (err: any) {
+    console.error("[Inbound Push Webhook Error]:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 7. Status endpoint
+app.get("/api/push/status", async (_req, res) => {
+  let subCount = memoryPushSubscriptions.length;
+  try {
+    const dbCount = await pgPool.query("SELECT COUNT(*)::int AS count FROM push_subscriptions");
+    if (dbCount.rows && dbCount.rows[0]) {
+      subCount = dbCount.rows[0].count;
+    }
+  } catch (e) {}
+
+  res.json({
+    status: "active",
+    vapidConfigured: !!(vapidKeys.publicKey && vapidKeys.privateKey),
+    publicKeyAvailable: !!vapidKeys.publicKey,
+    totalSubscriptions: subCount,
+    recentLogs: pushDeliveryLogs.slice(0, 10),
+    lastPushTime: pushDeliveryLogs[0]?.timestamp || null,
+    serverTime: new Date().toISOString()
+  });
+});
+
 // Configure Vite or Static Files
 async function setupServer() {
   const isProd = process.env.NODE_ENV === "production";
@@ -7797,6 +8141,7 @@ async function setupServer() {
       await initWhatsAppTables();
       await initAgentTables();
       await initLmsTables();
+      await initPushSubscriptionsTable();
     } catch (dbErr: any) {
       console.warn("[DB Init] Error inicializando tablas (continuando sin DB):", dbErr.message || dbErr);
     }

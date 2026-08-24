@@ -1,11 +1,43 @@
 export type ActiveTab = 
   | 'overview' 
-  | 'unified_crm'
-  | 'modern_erp_crm'
+  | 'opportunities'
+  | 'companies'
+  | 'people'
+  | 'tasks'
+  | 'analytics'
+  | 'mapsProspecting'
+  | 'geolocated_prospecting'
+  | 'meddic'
+  | 'icp_builder'
+  | 'crm_kanban'
+  | 'customObjects'
+  | 'workflows'
+  | 'workflow'
+  | 'csvStudio'
+  | 'import_export'
+  | 'whatsapp'
   | 'crm_whatsapp'
+  | 'chatbot'
+  | 'campaigns'
+  | 'aiAssistant'
+  | 'gtmStrategy'
+  | 'sdrOutreach'
+  | 'adCopy'
   | 'strategy' 
   | 'copywriter' 
-  | 'seo' 
+  | 'outreach_agent'
+  | 'erp'
+  | 'payments'
+  | 'clientPortal'
+  | 'restaurant'
+  | 'ecommerce'
+  | 'seoSuite'
+  | 'seo'
+  | 'webDev'
+  | 'powerSuite'
+  | 'settings'
+  | 'unified_crm'
+  | 'modern_erp_crm'
   | 'clients' 
   | 'chat'
   | 'contacts'
@@ -13,9 +45,7 @@ export type ActiveTab =
   | 'email_campaigns'
   | 'templates'
   | 'automations'
-  | 'import_export'
   | 'smtp'
-  | 'settings'
   | 'keyword_research'
   | 'keyword_vault'
   | 'topic_map'
@@ -25,16 +55,10 @@ export type ActiveTab =
   | 'rank_tracker'
   | 'seo_automation'
   | 'ai_hub'
-  | 'meddic'
-  | 'icp_builder'
-  | 'crm_kanban'
   | 'email_template_builder'
-  | 'geolocated_prospecting'
   | 'analytics_dashboard'
   | 'brochure_generator'
-  | 'outreach_agent'
   | 'public_website'
-  | 'workflow'
   | 'google_drive'
   | 'agent_os'
   | 'crm_agents'
@@ -49,7 +73,251 @@ export type ActiveTab =
   | 'vscrm_expenses'
   | 'vscrm_afip'
   | 'ai_marketing_expert'
-  | 'admin_console';
+  | 'admin_console'
+  | 'academy'
+  | 'subscriptions'
+  | 'segments'
+  | 'knowledge'
+  | 'sites'
+  | 'saasCluster'
+  | 'saasTheme';
+
+export type Language = 'en' | 'es' | 'pt';
+export type ThemeMode = 'dark' | 'light';
+export type OpportunityViewMode = 'board' | 'table' | 'kanban';
+
+export type StageId = 'lead' | 'discovery' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost' | string;
+
+export interface StageConfig {
+  id: StageId;
+  name: string;
+  color: string;
+  probability: number;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  role: string;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  domain?: string;
+  industry?: string;
+  employees?: string;
+  arr?: number;
+  tier?: string;
+  healthScore?: number;
+  address?: string;
+  city?: string;
+  country?: string;
+  assignedTo?: string;
+  createdAt: string;
+  description?: string;
+  customFields?: Record<string, any>;
+  [key: string]: any;
+}
+
+export interface Person {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  jobTitle?: string;
+  companyId?: string;
+  companyName?: string;
+  avatar?: string;
+  city?: string;
+  country?: string;
+  linkedin?: string;
+  status?: string;
+  assignedTo?: string;
+  createdAt: string;
+  lastActivityDate?: string;
+  notes?: string;
+  customFields?: Record<string, any>;
+  [key: string]: any;
+}
+
+export interface Opportunity {
+  id: string;
+  name: string;
+  amount: number;
+  currency?: string;
+  stage: StageId;
+  closeDate?: string;
+  probability?: number;
+  companyId?: string;
+  companyName?: string;
+  contactId?: string;
+  contactName?: string;
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt?: string;
+  priority?: 'Low' | 'Medium' | 'High' | 'Critical' | string;
+  type?: string;
+  tags?: string[];
+  notes?: string;
+  customFields?: Record<string, any>;
+  [key: string]: any;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  dueDate?: string;
+  priority?: 'Low' | 'Medium' | 'High' | 'Urgent' | string;
+  status?: 'Todo' | 'In Progress' | 'Completed' | string;
+  assignedTo?: string;
+  targetType?: 'opportunity' | 'company' | 'person' | 'task' | string;
+  targetId?: string;
+  targetName?: string;
+  createdAt: string;
+  completedAt?: string;
+  [key: string]: any;
+}
+
+export interface Activity {
+  id: string;
+  type: 'meeting' | 'stage_change' | 'email' | 'note' | 'ai_insight' | 'call' | 'task' | string;
+  title: string;
+  content: string;
+  author: string;
+  targetType?: string;
+  targetId?: string;
+  createdAt: string;
+  meta?: Record<string, any>;
+  [key: string]: any;
+}
+
+export interface CustomField {
+  id: string;
+  name: string;
+  label?: string;
+  type: 'text' | 'number' | 'date' | 'select' | 'boolean' | 'email' | 'url' | string;
+  targetType?: 'company' | 'person' | 'opportunity' | string;
+  options?: string[];
+  required?: boolean;
+}
+
+export interface CustomObjectField {
+  id: string;
+  name: string;
+  label?: string;
+  type: 'text' | 'number' | 'date' | 'select' | 'boolean' | 'email' | 'url' | 'json' | 'currency' | string;
+  required?: boolean;
+  options?: string[];
+}
+
+export interface CustomObjectDefinition {
+  id: string;
+  name?: string;
+  singularName?: string;
+  pluralName?: string;
+  description?: string;
+  icon?: string;
+  fields?: CustomObjectField[];
+  records?: Record<string, any>[];
+  [key: string]: any;
+}
+
+export interface FilterState {
+  search: string;
+  stage?: string | string[];
+  owner?: string | string[];
+  priority?: string | string[];
+  tier?: string | string[];
+  minAmount?: number | null | '';
+  maxAmount?: number | null | '';
+  tags?: string[];
+  [key: string]: any;
+}
+
+export interface SavedView {
+  id: string;
+  name: string;
+  type?: 'opportunity' | 'company' | 'person' | 'task';
+  target?: string;
+  filters?: FilterState;
+  rules?: Array<{ id: string; field: string; operator: string; value: any }>;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  isDefault?: boolean;
+  [key: string]: any;
+}
+
+export interface WorkflowRule {
+  id: string;
+  name?: string;
+  trigger?: string;
+  conditions?: any[];
+  actions?: any[];
+  isActive?: boolean;
+  triggerCount?: number;
+  lastTriggered?: string;
+  runCount?: number;
+  [key: string]: any;
+}
+
+export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid' | 'Overdue' | 'Cancelled';
+
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export type InvoiceLineItem = InvoiceItem;
+
+export interface Invoice {
+  id: string;
+  opportunityId?: string;
+  clientName: string;
+  clientEmail: string;
+  clientAddress?: string;
+  issueDate: string;
+  dueDate: string;
+  status: InvoiceStatus | string;
+  items: InvoiceItem[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  stockQuantity: number;
+  reorderLevel: number;
+  unitPrice: number;
+  description?: string;
+  linkedDealsCount?: number;
+  lastRestocked?: string;
+}
+
+export interface ExpenseItem {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  date: string;
+  vendor: string;
+  assignedTo: string;
+  notes?: string;
+}
 
 export interface CampaignStrategy {
   executiveSummary: string;
@@ -151,7 +419,6 @@ export interface AutomationWorkflow {
   subscribersCount: number;
   conversionRate: string;
 }
-
 
 export interface CRMDeal {
   id: string;
@@ -267,3 +534,4 @@ export interface VscrmExpense {
   date: string;
   notes: string;
 }
+

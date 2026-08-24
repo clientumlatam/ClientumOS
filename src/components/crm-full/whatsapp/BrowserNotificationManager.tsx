@@ -9,17 +9,22 @@ import {
   CheckCircle2,
   AlertCircle,
   MessageSquare,
-  RefreshCw
+  RefreshCw,
+  Radio,
+  Sliders
 } from 'lucide-react';
 
 interface BrowserNotificationManagerProps {
   permission: NotificationPermission;
   isSupported: boolean;
   soundEnabled: boolean;
+  isWorkerActive?: boolean;
+  isPushSubscribed?: boolean;
   onRequestPermission: () => void;
   onToggleSound: () => void;
   onSendTestNotification: () => void;
   onSimulateInbound: () => void;
+  onOpenPushModal?: () => void;
   simulating?: boolean;
 }
 
@@ -27,10 +32,13 @@ export const BrowserNotificationManager: React.FC<BrowserNotificationManagerProp
   permission,
   isSupported,
   soundEnabled,
+  isWorkerActive = true,
+  isPushSubscribed = false,
   onRequestPermission,
   onToggleSound,
   onSendTestNotification,
   onSimulateInbound,
+  onOpenPushModal,
   simulating = false
 }) => {
   if (!isSupported) {
@@ -61,19 +69,22 @@ export const BrowserNotificationManager: React.FC<BrowserNotificationManagerProp
         <div className="flex items-center gap-2">
           <span className="font-semibold text-white">
             {permission === 'granted'
-              ? 'Alertas en Segundo Plano Activas'
+              ? 'Push en Segundo Plano Activo'
               : permission === 'denied'
               ? 'Alertas de Navegador Bloqueadas'
               : 'Alertas de Mensajes en Segundo Plano'}
           </span>
-          <span className={`text-[10px] px-2 py-0.2 rounded-full font-bold uppercase ${
-            permission === 'granted'
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-              : permission === 'denied'
-              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-              : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-          }`}>
-            {permission === 'granted' ? 'Habilitado' : permission === 'denied' ? 'Bloqueado' : 'Pendiente'}
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase flex items-center gap-1 ${
+              permission === 'granted'
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                : permission === 'denied'
+                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+            }`}
+          >
+            {isWorkerActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}
+            {permission === 'granted' ? (isPushSubscribed ? 'Worker Vinculado' : 'Habilitado') : permission === 'denied' ? 'Bloqueado' : 'Pendiente'}
           </span>
         </div>
       </div>
@@ -97,7 +108,7 @@ export const BrowserNotificationManager: React.FC<BrowserNotificationManagerProp
                   ? 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
                   : 'bg-slate-800/40 text-slate-500 border-slate-800 line-through'
               }`}
-              title={soundEnabled ? "Sonido activado (clic para silenciar)" : "Sonido silenciado (clic para activar)"}
+              title={soundEnabled ? 'Sonido activado (clic para silenciar)' : 'Sonido silenciado (clic para activar)'}
             >
               {soundEnabled ? <Volume2 className="w-3 h-3 text-emerald-400" /> : <VolumeX className="w-3 h-3" />}
               <span>{soundEnabled ? 'Sonido Chime' : 'Silencio'}</span>
@@ -112,6 +123,18 @@ export const BrowserNotificationManager: React.FC<BrowserNotificationManagerProp
               <span>Probar Alerta</span>
             </button>
           </>
+        )}
+
+        {/* Modal config & diagnostics for Web Push */}
+        {onOpenPushModal && (
+          <button
+            onClick={onOpenPushModal}
+            className="px-2.5 py-1 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-500/40 rounded-lg text-[11px] font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+            title="Diagnóstico y pruebas de Service Worker en segundo plano (app cerrada)"
+          >
+            <Radio className="w-3 h-3 text-emerald-400" />
+            <span>Config Worker Push</span>
+          </button>
         )}
 
         {/* Simulate Inbound Lead Message */}
