@@ -1,11 +1,17 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const auth = getAuth(app);
-export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+
+const customDbId = (firebaseConfig as any).firestoreDatabaseId;
+export const db = customDbId && customDbId !== '(default)' && customDbId.trim() !== ''
+  ? getFirestore(app, customDbId)
+  : getFirestore(app);
+
 export const googleProvider = new GoogleAuthProvider();
 
 // Add contacts scope to google provider
@@ -13,6 +19,16 @@ googleProvider.addScope('https://www.googleapis.com/auth/contacts');
 
 export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
 export const logout = () => signOut(auth);
+
+// Safe Analytics initialization
+export let analytics: any = null;
+if (typeof window !== 'undefined') {
+  isSupported().then(supported => {
+    if (supported) {
+      analytics = getAnalytics(app);
+    }
+  }).catch(() => {});
+}
 
 export enum OperationType {
   CREATE = 'create',

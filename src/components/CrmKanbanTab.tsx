@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BulkWhatsAppModal } from './BulkWhatsAppModal';
+import { TwentySpreadsheetView } from './opportunities/TwentySpreadsheetView';
 
 export interface Deal {
   id: string;
@@ -884,6 +885,46 @@ export function CrmKanbanTab() {
     saveActivities([newAct, ...crmActivities]);
   };
 
+  const handleUpdateSingleDeal = (updatedDeal: Deal) => {
+    updateDealsState(prev => prev.map(d => (d.id === updatedDeal.id ? updatedDeal : d)));
+  };
+
+  const handleDeleteSingleDeal = (dealId: string) => {
+    updateDealsState(prev => prev.filter(d => d.id !== dealId));
+    if (activeDealModal?.id === dealId) {
+      setActiveDealModal(null);
+    }
+  };
+
+  const handleBulkUpdateStage = (dealIds: string[], stageId: Deal['stageId']) => {
+    const matchedStage = STAGES.find(s => s.id === stageId);
+    updateDealsState(prev =>
+      prev.map(d => {
+        if (dealIds.includes(d.id)) {
+          return {
+            ...d,
+            stageId,
+            probability: matchedStage ? matchedStage.defaultProb : d.probability
+          };
+        }
+        return d;
+      })
+    );
+  };
+
+  const handleBulkDelete = (dealIds: string[]) => {
+    updateDealsState(prev => prev.filter(d => !dealIds.includes(d.id)));
+  };
+
+  const handleUpdateCustomValue = (dealId: string, fieldId: string, value: string) => {
+    setDealCustomValues(prev => {
+      const current = prev[dealId] || {};
+      const updated = { ...prev, [dealId]: { ...current, [fieldId]: value } };
+      localStorage.setItem('clientum_crm_custom_values', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   // Filter Logic Applied
   const filteredDeals = deals.filter(deal => {
     // Search filter
@@ -934,15 +975,18 @@ export function CrmKanbanTab() {
           <div className="bg-gray-100 p-0.5 rounded-md border border-gray-200 flex items-center text-[12px] font-medium">
             <button
               onClick={() => setViewMode('kanban')}
-              className={`px-2.5 py-1 rounded transition-all cursor-pointer ${viewMode === 'kanban' ? 'bg-white text-gray-900 shadow-xs font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
+              className={`px-2.5 py-1 rounded transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === 'kanban' ? 'bg-white text-gray-900 shadow-xs font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
             >
-              Tablero
+              <Kanban className="w-3.5 h-3.5" />
+              <span>Tablero</span>
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-2.5 py-1 rounded transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-xs font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
+              className={`px-2.5 py-1 rounded transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-xs font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
             >
-              Lista
+              <FileText className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Twenty Grid</span>
+              <span className="text-[9px] font-bold bg-indigo-100 text-indigo-700 px-1 py-0.2 rounded uppercase">Live</span>
             </button>
           </div>
 
@@ -979,8 +1023,26 @@ export function CrmKanbanTab() {
         </div>
       </div>
 
-      {/* Dynamic Views & Search Header Panel (Frappe Style) */}
-      <div className="bg-white p-4 rounded-md border border-gray-200 shadow-2xs space-y-3.5">
+      {viewMode === 'list' ? (
+        <TwentySpreadsheetView
+          deals={deals}
+          onUpdateDeal={handleUpdateSingleDeal}
+          onDeleteDeal={handleDeleteSingleDeal}
+          onBulkUpdateStage={handleBulkUpdateStage}
+          onBulkDelete={handleBulkDelete}
+          onOpenDealDetail={deal => setActiveDealModal(deal)}
+          onOpenNewDealModal={() => setIsAddModalOpen(true)}
+          onOpenBulkWAModal={() => setShowBulkWAModal(true)}
+          currency={selectedCurrency}
+          onToggleCurrency={setSelectedCurrency}
+          customFields={customFields}
+          dealCustomValues={dealCustomValues}
+          onUpdateCustomValue={handleUpdateCustomValue}
+        />
+      ) : (
+        <>
+          {/* Dynamic Views & Search Header Panel (Frappe Style) */}
+          <div className="bg-white p-4 rounded-md border border-gray-200 shadow-2xs space-y-3.5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           
           {/* Custom Views Toggle Bar */}
@@ -1276,6 +1338,8 @@ export function CrmKanbanTab() {
           );
         })}
       </div>
+        </>
+      )}
 
       {/* Side Panel: Full All-in-One Consolidated Lead Detail (Twenty / Frappe style) */}
       <AnimatePresence>
