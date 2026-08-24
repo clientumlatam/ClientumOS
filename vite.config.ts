@@ -23,6 +23,15 @@ export default defineConfig(() => {
               if (id.includes('react/') || id.includes('react-dom/') || id.includes('react-router') || id.includes('scheduler/')) {
                 return 'vendor-react';
               }
+              if (id.includes('firebase')) {
+                return 'vendor-firebase';
+              }
+              if (id.includes('@xyflow')) {
+                return 'vendor-flow';
+              }
+              if (id.includes('motion')) {
+                return 'vendor-motion';
+              }
               if (id.includes('recharts') || id.includes('d3')) {
                 return 'vendor-charts';
               }
@@ -38,6 +47,9 @@ export default defineConfig(() => {
               if (id.includes('@google/genai')) {
                 return 'vendor-ai';
               }
+              if (id.includes('@radix-ui')) {
+                return 'vendor-ui';
+              }
             }
           },
         },
@@ -45,7 +57,7 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     server: {

@@ -23,11 +23,15 @@ export const logout = () => signOut(auth);
 // Safe Analytics initialization
 export let analytics: any = null;
 if (typeof window !== 'undefined') {
-  isSupported().then(supported => {
-    if (supported) {
-      analytics = getAnalytics(app);
-    }
-  }).catch(() => {});
+  try {
+    isSupported().then(supported => {
+      if (supported) {
+        analytics = getAnalytics(app);
+      }
+    }).catch(() => {});
+  } catch {
+    // Ignore analytics error in sandboxed environments
+  }
 }
 
 export enum OperationType {
