@@ -25,7 +25,7 @@ function normalizeDatabaseUrl(url?: string): string {
 
 const app = express();
 app.set("trust proxy", 1);
-const PORT = 3000;
+const PORT = 3001;
 const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL);
 
 let pgPool: any;
