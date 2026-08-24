@@ -56,7 +56,7 @@ export function MobileBottomNav({ onNavigateTab, onOpenWizard, activeTab }: Mobi
 
         {/* 4. CRM Login */}
         <a
-          href="https://clientumcrm.ai.studio"
+          href="https://crm.clientum.com.ar"
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col items-center justify-center py-1 text-blue-400 hover:text-blue-300 transition-all"

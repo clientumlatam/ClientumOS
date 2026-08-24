@@ -1475,13 +1475,13 @@ export default function PublicWebsite({
             <ArrowUpRight className="w-3.5 h-3.5 text-slate-600" />
           </button>
 
-          {/* Dedicated Login / Registro Button linking to https://clientumcrm.ai.studio */}
+          {/* Dedicated Login / Registro Button linking to Twenty CRM */}
           <a
-            href="https://clientumcrm.ai.studio"
+            href="https://crm.clientum.com.ar"
             target="_blank"
             rel="noopener noreferrer"
             className="bg-gradient-to-r from-[#1A3461] to-[#0A2558] hover:from-[#234580] hover:to-[#0f3475] text-white font-extrabold text-xs uppercase px-4 py-2 rounded-xl tracking-wider transition-all flex items-center gap-2 shadow-md border border-blue-500/30 hover:scale-[1.02] cursor-pointer group"
-            title="Acceder a Clientum CRM (https://clientumcrm.ai.studio)"
+            title="Acceder a Twenty CRM (https://crm.clientum.com.ar)"
           >
             <LogIn className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
             <span>Login / Registro</span>
@@ -1589,7 +1589,7 @@ export default function PublicWebsite({
             </div>
 
             <a
-              href="https://clientumcrm.ai.studio"
+              href="https://crm.clientum.com.ar"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMobileMenuOpen(false)}
