@@ -21,7 +21,7 @@ La aplicación está dividida en dos grandes entornos accesibles de manera trans
        └─────────────────┬─────────────────┘                         └─────────────────┬─────────────────┘
                          │                                                             │
                          │── [Login / Registro] ──────────────────────────────────────►│
-                         │   https://clientumcrm.ai.studio                             │
+                          │   https://crm.clientum.com.ar                             │
                          │                                                             │
                          │◄── [Volver al Sitio Web] ───────────────────────────────────│
 ```
@@ -37,7 +37,7 @@ Sitio web corporativo y comercial enfocado en adquisición de clientes, presenta
    - Selector de Idioma (Español / Português).
    - Menú de navegación navegable por categorías.
    - Botón CTA **Demo** para agendamiento.
-   - **Botón "Login / Registro"** con enlace directo a [`https://clientumcrm.ai.studio`](https://clientumcrm.ai.studio).
+    - **Botón "Login / Registro"** con enlace directo a [`https://crm.clientum.com.ar`](https://crm.clientum.com.ar).
 2. **Catálogo de Servicios**:
    - 12 servicios estructurados en 4 áreas clave:
      - 🤖 **Chatbots WhatsApp & Agentes IA**
@@ -127,7 +127,7 @@ npm start
 ## 🔗 Enlaces Clave
 
 - **Sitio Público**: [`https://clientumlatam.com`](/) (o `/`)
-- **Acceso Directo CRM & Registro**: [`https://clientumcrm.ai.studio`](https://clientumcrm.ai.studio) (o `/login`)
+- **Acceso Directo CRM & Registro**: [`https://crm.clientum.com.ar`](https://crm.clientum.com.ar) (o `/login`)
 - **Dashboard Privado**: [`/app`](/app)
 
 ---
