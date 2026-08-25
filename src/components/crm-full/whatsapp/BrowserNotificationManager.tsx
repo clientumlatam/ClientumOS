@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Bell, BellOff, Volume2, VolumeX, Mail } from 'lucide-react';
 
-/**
- * BrowserNotificationManager
- * 
- * Handles permission requests for web notifications.
- * Note: For true background notifications when the tab is closed or in the background,
- * a Service Worker registered with a backend push service (VAPID) is required.
- * This component handles the client-side request and UI triggers.
- */
 export const BrowserNotificationManager = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
 
@@ -24,18 +17,20 @@ export const BrowserNotificationManager = () => {
     }
   };
 
-  const showNotification = (title: string, body: string) => {
-    if (permission === 'granted') {
-      new Notification(title, {
-        body,
-        icon: '/favicon.svg', // Ensure this path exists or update accordingly
-      });
-    }
-  };
+  if (permission === 'granted') return null;
 
-  return {
-    permission,
-    requestPermission,
-    showNotification,
-  };
+  return (
+    <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-800 text-xs">
+        <div className="flex items-center gap-2">
+            <Bell className="w-4 h-4" />
+            <span>¿Quieres recibir notificaciones de nuevos leads?</span>
+        </div>
+        <button 
+            onClick={requestPermission}
+            className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+            Activar
+        </button>
+    </div>
+  );
 };

@@ -808,19 +808,7 @@ export default function CrmFullWhatsApp() {
 
       {/* Browser Notification Bar */}
       <div className="mb-3 shrink-0">
-        <BrowserNotificationManager
-          permission={permission}
-          isSupported={isNotificationSupported}
-          soundEnabled={soundEnabled}
-          isWorkerActive={isWorkerActive}
-          isPushSubscribed={isPushSubscribed}
-          onRequestPermission={requestPermission}
-          onToggleSound={toggleSound}
-          onSendTestNotification={sendTestNotification}
-          onSimulateInbound={handleSimulateInboundLead}
-          onOpenPushModal={() => setIsPushModalOpen(true)}
-          simulating={simulatingInbound}
-        />
+        <BrowserNotificationManager />
       </div>
 
       {/* Navigation Sub-Tabs */}
