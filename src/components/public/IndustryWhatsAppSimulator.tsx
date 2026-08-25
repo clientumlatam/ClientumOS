@@ -19,6 +19,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useLanguage } from '../../lib/i18n';
+import heroBannerImg from '../../assets/images/hero_ai_banner_1787699276417.jpg';
 
 interface IndustryScenario {
   id: string;
@@ -251,10 +252,22 @@ export function IndustryWhatsAppSimulator() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto my-8">
-      {/* Outer wrapper */}
-      <div className="w-full bg-slate-950/30 border border-slate-800/50 rounded-3xl p-6 sm:p-8 backdrop-blur-sm shadow-xl">
-        <div className="text-center max-w-2xl mx-auto mb-8">
+    <div className="w-full max-w-5xl mx-auto my-8 relative">
+      {/* Outer wrapper with integrated Hero Banner */}
+      <div className="relative w-full rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl border border-blue-500/20 overflow-hidden bg-slate-950/80">
+        {/* Background Image with Gradient Overlay */}
+        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+          <img
+            src={heroBannerImg}
+            alt="Clientum AI Background Banner"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover object-center opacity-30 scale-105 filter blur-[1px] transition-transform duration-1000"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/90 to-slate-950" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        </div>
+
+        <div className="text-center max-w-2xl mx-auto mb-8 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             <span>{isPortuguese ? 'Simulador Interativo Multi-Indústria' : 'Simulador Interactivo Multi-Rubro'}</span>
