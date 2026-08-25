@@ -318,3 +318,46 @@ export async function sendLoginNotificationEmail(toEmail: string, ip?: string, u
     return false;
   }
 }
+
+// ── 5. FORMULARIO DE CONTACTO ──────────────────────────────────────────────
+export async function sendContactFormEmail({
+  name,
+  email,
+  subject,
+  message,
+}: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<boolean> {
+  const transport = createMailTransport();
+  const creds = loadSmtpCredentials();
+  if (!transport || !creds.user) return false;
+
+  const html = buildClientumEmailHtml({
+    badgeText: "Formulario de Contacto",
+    title: "Nueva consulta en ClientumOS",
+    subtitle: `De: ${name} (${email})`,
+    bodyHtml: `
+      <p style="margin:0 0 16px;"><strong>Asunto:</strong> ${subject}</p>
+      <div style="background-color:#132030;padding:16px;border-radius:8px;">
+        <p style="margin:0;color:#CBD5E1;">${message}</p>
+      </div>
+    `,
+  });
+
+  try {
+    await transport.sendMail({
+      from: `"Clientum Contacto" <${creds.user}>`,
+      to: creds.user, // Send to the admin/configured email
+      subject: `Nueva consulta: ${subject}`,
+      html,
+      text: `Nombre: ${name}\nEmail: ${email}\nAsunto: ${subject}\n\nMensaje:\n${message}`,
+    });
+    return true;
+  } catch (err) {
+    console.error("Error sending contact email:", err);
+    return false;
+  }
+}

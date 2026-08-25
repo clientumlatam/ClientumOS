@@ -14,7 +14,7 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import webpush from "web-push";
 import { loadSmtpCredentials } from "./src/lib/smtp.js";
-import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, createMailTransport } from "./server_lib/mailer.js";
+import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, sendContactFormEmail, createMailTransport } from "./server_lib/mailer.js";
 
 dotenv.config();
 
@@ -448,6 +448,19 @@ app.post("/api/auth/logout", (req: AuthRequest, res: AuthResponse) => {
     res.clearCookie("connect.sid");
     return res.json({ ok: true });
   });
+});
+
+app.post("/api/contact", async (req, res) => {
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ error: "Todos los campos son requeridos." });
+  }
+  const success = await sendContactFormEmail({ name, email, subject, message });
+  if (success) {
+    return res.json({ ok: true });
+  } else {
+    return res.status(500).json({ error: "Error enviando el mensaje." });
+  }
 });
 
 const memoryAuditLogs: any[] = [];

@@ -83,6 +83,7 @@ import { PdfExportButton } from "./PdfExportButton";
 import { LanguageSelector } from "./LanguageSelector";
 import { useLanguage } from "../lib/i18n";
 import ChatbotWidget from "./ChatbotWidget";
+import { ContactForm } from './ContactForm';
 import { InteractiveQuoteWizard } from "./public/InteractiveQuoteWizard";
 import { IndustryWhatsAppSimulator } from "./public/IndustryWhatsAppSimulator";
 import { PricingBillingToggle } from "./public/PricingBillingToggle";
@@ -6464,6 +6465,14 @@ export default function PublicWebsite({
         }}
         onOpenWizard={() => setIsQuoteWizardOpen(true)}
       />
+
+      {/* Contact Form Section */}
+      <div id="contact-form" className="p-8 bg-slate-900 border-t border-slate-800">
+        <h2 className="text-2xl text-white mb-4 text-center">Contacto</h2>
+        <div className="max-w-2xl mx-auto">
+          <ContactForm />
+        </div>
+      </div>
 
       {/* Floating Interactive WhatsApp CTA & Menu */}
       <FloatingWhatsAppButton
