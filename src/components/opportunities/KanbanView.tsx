@@ -71,17 +71,14 @@ export const KanbanView: React.FC = () => {
     }
 
     // Global stage/owner/priority filters
-    if (filterState.stage && filterState.stage !== 'all') {
-      if (Array.isArray(filterState.stage) && !filterState.stage.includes(opp.stage)) return false;
-      if (typeof filterState.stage === 'string' && opp.stage !== filterState.stage) return false;
+    if (filterState.stage && filterState.stage !== 'all' && opp.stage !== filterState.stage) {
+      return false;
     }
-    if (filterState.owner && filterState.owner !== 'all') {
-      if (Array.isArray(filterState.owner) && !filterState.owner.includes(opp.assignedTo)) return false;
-      if (typeof filterState.owner === 'string' && opp.assignedTo !== filterState.owner) return false;
+    if (filterState.owner && filterState.owner !== 'all' && opp.assignedTo !== filterState.owner) {
+      return false;
     }
-    if (filterState.priority && filterState.priority !== 'all') {
-      if (Array.isArray(filterState.priority) && !filterState.priority.includes(opp.priority)) return false;
-      if (typeof filterState.priority === 'string' && opp.priority !== filterState.priority) return false;
+    if (filterState.priority && filterState.priority !== 'all' && opp.priority !== filterState.priority) {
+      return false;
     }
 
     // Multi-Select Owner Filter
@@ -451,11 +448,11 @@ export const KanbanView: React.FC = () => {
 
                 {/* Range Presets */}
                 <div className="flex flex-wrap gap-1">
-                  {([
-                    { label: 'Under $10k', min: '', max: 10000 },
+                  {[
+                    { label: 'Under $10k', min: '' as const, max: 10000 },
                     { label: '$10k - $50k', min: 10000, max: 50000 },
-                    { label: 'Over $50k', min: 50000, max: '' },
-                  ] as Array<{ label: string; min: number | ''; max: number | '' }>).map((preset, idx) => (
+                    { label: 'Over $50k', min: 50000, max: '' as const },
+                  ].map((preset, idx) => (
                     <button
                       key={idx}
                       onClick={() => {

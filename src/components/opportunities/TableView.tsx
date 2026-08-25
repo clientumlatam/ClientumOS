@@ -47,17 +47,14 @@ export const TableView: React.FC = () => {
         return false;
       }
     }
-    if (filterState.stage && filterState.stage !== 'all') {
-      if (Array.isArray(filterState.stage) && !filterState.stage.includes(opp.stage)) return false;
-      if (typeof filterState.stage === 'string' && opp.stage !== filterState.stage) return false;
+    if (filterState.stage && filterState.stage !== 'all' && opp.stage !== filterState.stage) {
+      return false;
     }
-    if (filterState.owner && filterState.owner !== 'all') {
-      if (Array.isArray(filterState.owner) && !filterState.owner.includes(opp.assignedTo)) return false;
-      if (typeof filterState.owner === 'string' && opp.assignedTo !== filterState.owner) return false;
+    if (filterState.owner && filterState.owner !== 'all' && opp.assignedTo !== filterState.owner) {
+      return false;
     }
-    if (filterState.priority && filterState.priority !== 'all') {
-      if (Array.isArray(filterState.priority) && !filterState.priority.includes(opp.priority)) return false;
-      if (typeof filterState.priority === 'string' && opp.priority !== filterState.priority) return false;
+    if (filterState.priority && filterState.priority !== 'all' && opp.priority !== filterState.priority) {
+      return false;
     }
     return true;
   });

@@ -1476,6 +1476,16 @@ export default function PublicWebsite({
             <ArrowUpRight className="w-3.5 h-3.5 text-slate-600" />
           </button>
 
+          {/* Gmail Suite Quick Action */}
+          <button
+            onClick={() => navigate('/gmail')}
+            className="bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs uppercase px-3 py-2 rounded-xl tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border border-red-200 shadow-sm"
+            title="Abrir Clientum Gmail Suite"
+          >
+            <Mail className="w-3.5 h-3.5 text-red-600" />
+            <span>Gmail</span>
+          </button>
+
           {/* Dedicated Login / Registro Button linking to Twenty CRM */}
           <a
             href="https://crm.clientum.com.ar"
@@ -1589,12 +1599,23 @@ export default function PublicWebsite({
               <LanguageSelector variant="pill" />
             </div>
 
+            <button
+              onClick={() => {
+                navigate('/gmail');
+                setMobileMenuOpen(false);
+              }}
+              className="mt-3 w-full bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-xs uppercase py-3 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 border border-red-200 shadow-sm cursor-pointer"
+            >
+              <Mail className="w-4 h-4 text-red-600" />
+              <span>Clientum Gmail Suite</span>
+            </button>
+
             <a
               href="https://crm.clientum.com.ar"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMobileMenuOpen(false)}
-              className="mt-3 w-full bg-gradient-to-r from-[#1A3461] to-[#0A2558] text-white font-extrabold text-xs uppercase py-3 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 shadow-md border border-blue-500/30 cursor-pointer"
+              className="mt-2 w-full bg-gradient-to-r from-[#1A3461] to-[#0A2558] text-white font-extrabold text-xs uppercase py-3 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 shadow-md border border-blue-500/30 cursor-pointer"
             >
               <LogIn className="w-4 h-4 text-emerald-400" />
               <span>Login / Registro CRM</span>

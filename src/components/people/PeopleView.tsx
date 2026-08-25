@@ -5,6 +5,7 @@ import {
   Phone,
   Building2,
   MapPin,
+  Globe,
   Plus,
   Trash2,
   Sparkles,

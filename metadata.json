@@ -1,6 +1,6 @@
 {
   "name": "Clientum · Sitio Público & CRM Dashboard",
-  "description": "Plataforma dual Clientum: Sitio web público corporativo con catálogo de servicios, cotizador y academia LMS, junto con la aplicación privada de Dashboard CRM, ERP, facturación AFIP, chatbot WhatsApp IA y autenticación con roles.",
+  "description": "Plataforma dual Clientum: Sitio web público corporativo con catálogo de servicios, cotizador y academia LMS, junto con la aplicación privada de Dashboard CRM, ERP, facturación AFIP, chatbot WhatsApp IA, integración con Gmail & Google Workspace y autenticación con roles.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

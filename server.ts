@@ -463,6 +463,40 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
+app.post("/api/gmail/ai-assist", async (req, res) => {
+  try {
+    const { action, emailContent, subject, sender, promptTone } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: "Gemini API key is not configured." });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    let prompt = "";
+
+    if (action === "summarize") {
+      prompt = `Summarize the following email concisely in bullet points, highlighting any key action items or deadlines:\n\nSubject: ${subject || "N/A"}\nFrom: ${sender || "N/A"}\n\nContent:\n${emailContent}`;
+    } else if (action === "reply") {
+      prompt = `Generate a high-converting, professional, and courteous email response with a ${promptTone || "professional"} tone to the following email:\n\nSubject: ${subject || "N/A"}\nFrom: ${sender || "N/A"}\n\nContent:\n${emailContent}\n\nProvide only the email reply body with appropriate greeting and sign-off.`;
+    } else if (action === "improve") {
+      prompt = `Improve and polish this email draft to make it compelling, clear, and professional:\n\nSubject: ${subject || ""}\nDraft:\n${emailContent}`;
+    } else {
+      prompt = `Help with this email task:\n${emailContent}`;
+    }
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    const outputText = response.text || "";
+    res.json({ result: outputText });
+  } catch (error: any) {
+    console.error("Gmail AI Assist Error:", error);
+    res.status(500).json({ error: error.message || "Failed to generate AI email assistance" });
+  }
+});
+
 const memoryAuditLogs: any[] = [];
 
 function logAction(req: any, action: string, details: string) {

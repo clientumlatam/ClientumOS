@@ -196,7 +196,7 @@ export const TasksView: React.FC = () => {
                       <button
                         onClick={() => {
                           if (task.targetType && task.targetId) {
-                            setSelectedRecord({ type: task.targetType as 'opportunity' | 'company' | 'person' | 'task', id: task.targetId });
+                            setSelectedRecord({ type: task.targetType as any, id: task.targetId });
                           }
                         }}
                         className="flex items-center gap-1 text-slate-300 hover:text-blue-400 bg-[#191e2b] px-2 py-0.5 rounded border border-[#272f44] transition-colors"
