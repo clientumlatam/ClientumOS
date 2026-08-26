@@ -1687,7 +1687,7 @@ export default function PublicWebsite({
                 {/* ═══════════════════════════════════════════════════════
                     HERO
                 ═══════════════════════════════════════════════════════ */}
-                <section className="relative bg-slate-900 text-white py-24 px-6 md:px-12 flex items-center overflow-hidden min-h-[640px]">
+                <section className="relative bg-slate-900 text-white py-24 px-6 md:px-12 flex overflow-hidden min-h-[640px]">
                   <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#0d1f3c] via-slate-900 to-[#122442]"></div>
                   {/* Subtle Grid Backdrop Overlay */}
                   <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30 z-0"></div>
