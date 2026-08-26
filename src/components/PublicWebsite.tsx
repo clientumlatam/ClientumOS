@@ -1128,54 +1128,42 @@ export default function PublicWebsite({
     { id: "ecommerce", label: "Desarrollo E-Commerce", desc: isPortuguese ? "Lojas virtuais integradas a CRM e estoque" : "Tiendas online integradas con CRM y stock", icon: ShoppingCart, color: "text-orange-500 bg-orange-50", query: "ecommerce" },
   ], [isPortuguese]);
 
-  /* ─── Mega-menu groups (desktop only) ─── */
+  /* ─── Mega-menu groups (desktop only) — 3 Pilares Estratégicos ─── */
   const SOLUTIONS_GROUPS = useMemo(() => [
     {
-      key: "crm",
-      title: isPortuguese ? "Consultoria & Funil CRM" : "Consultoría & Pipeline CRM",
+      key: "automatizacion_ia",
+      title: isPortuguese ? "1. Automação & IA" : "1. Automatización & IA",
+      accent: "border-emerald-500",
+      headerColor: "text-emerald-700",
+      items: [
+        { id: "chatbot",        label: "Chatbot WhatsApp IA 24/7", desc: isPortuguese ? "Atendimento comercial autônomo com IA" : "Atención comercial automatizada con IA y Meta API", icon: Bot, color: "text-green-600 bg-green-50" },
+        { id: "asistente_ia",   label: "Consultoría en Inteligencia Artificial", desc: isPortuguese ? "Modelos LLM e estratégia de IA para sua empresa" : "Estrategia e implementación de modelos de IA", icon: Sparkles, color: "text-violet-600 bg-violet-50" },
+        { id: "automatizacion", label: isPortuguese ? "Automação de Processos & Outreach" : "Automatización de Procesos & Outreach", desc: isPortuguese ? "Campanhas no WhatsApp e fluxos automáticos" : "Campañas masivas de WhatsApp y secuencias", icon: Radio, color: "text-amber-600 bg-amber-50" },
+        { id: "leads",          label: isPortuguese ? "Prospecção B2B com Maps IA" : "Prospección B2B Maps IA", desc: isPortuguese ? "Captura geolocalizada de empresas com IA" : "Búsqueda geolocalizada de prospectos comerciales", icon: Compass, color: "text-indigo-600 bg-indigo-50" },
+      ],
+    },
+    {
+      key: "sistemas_integraciones",
+      title: isPortuguese ? "2. Sistemas & Integrações" : "2. Sistemas & Integraciones",
       accent: "border-blue-500",
       headerColor: "text-blue-700",
       items: [
-        { id: "crm_inteligente", label: "Implementación CRM", desc: isPortuguese ? "Kanban de oportunidades e gestão de vendas" : "Configuración de embudos y gestión de deals", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
-        { id: "leads",           label: isPortuguese ? "Prospecção Maps IA" : "Prospección Maps IA", desc: isPortuguese ? "Descubra empresas por região com Gemini AI" : "Búsqueda geolocalizada de prospectos B2B", icon: Compass, color: "text-violet-500 bg-violet-50" },
-        { id: "leads",           label: "Lead Scoring MEDDIC", desc: isPortuguese ? "Qualificação de oportunidades B2B" : "Metodología de calificación de cuentas clave", icon: Target, color: "text-indigo-500 bg-indigo-50" },
-        { id: "reportes",        label: "Business Intelligence", desc: isPortuguese ? "CAC, LTV e taxas de conversão em tempo real" : "KPIs comerciales, CAC, LTV y conversión", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
+        { id: "crm_inteligente", label: "CRM Pipeline & Oportunidades", desc: isPortuguese ? "Funil comercial visual e gestão de clientes" : "Pipeline Kanban, cotizaciones y gestión de clientes", icon: Briefcase, color: "text-blue-600 bg-blue-50" },
+        { id: "integraciones",   label: isPortuguese ? "60+ Integrações de APIs & ERP" : "Integraciones API Gateway & ERP", desc: isPortuguese ? "Conexão de sistemas legados, banco de dados e APIs" : "Conexión de sistemas, webhooks y bases de datos", icon: Workflow, color: "text-teal-600 bg-teal-50" },
+        { id: "afip",            label: isPortuguese ? "Faturamento Eletrônico AFIP" : "Facturación AFIP Automática", desc: isPortuguese ? "Emissão e controle fiscal integrado com CAE" : "Emisión automática y sincronización fiscal AFIP", icon: FileText, color: "text-blue-700 bg-blue-50" },
+        { id: "desarrollo_web",  label: isPortuguese ? "Desenvolvimento Web & E-Commerce" : "Desarrollo Web & E-Commerce", desc: isPortuguese ? "Sites modernos de alta conversão e lojas virtuais" : "Sitios corporativos rápidos y tiendas conectadas", icon: Code2, color: "text-slate-700 bg-slate-100" },
       ],
     },
     {
-      key: "email",
-      title: isPortuguese ? "Automação & WhatsApp IA" : "Automatización & WhatsApp IA",
-      accent: "border-amber-500",
-      headerColor: "text-amber-700",
+      key: "consultoria_bi",
+      title: isPortuguese ? "3. Consultoria & BI" : "3. Consultoría & BI",
+      accent: "border-indigo-500",
+      headerColor: "text-indigo-700",
       items: [
-        { id: "chatbot",        label: "Chatbot WhatsApp 24/7", desc: isPortuguese ? "Atendimento comercial com inteligência artificial" : "Atención comercial automatizada con IA", icon: Bot, color: "text-green-500 bg-green-50" },
-        { id: "automatizacion", label: isPortuguese ? "Campanhas & Outreach" : "Campañas & Outreach", desc: isPortuguese ? "Drip email e broadcast em massa no WhatsApp" : "Campañas masivas de WhatsApp y secuencias", icon: Radio, color: "text-amber-500 bg-amber-50" },
-        { id: "automatizacion", label: isPortuguese ? "Agente SDR Automático" : "Agente SDR Automático", desc: isPortuguese ? "Prospecção e follow-up automático com IA" : "Prospección y seguimiento comercial con IA", icon: Zap, color: "text-orange-500 bg-orange-50" },
-        { id: "portal_cliente", label: isPortuguese ? "Portais de Autoatendimento" : "Portales de Autoatención", desc: isPortuguese ? "Autoatendimento, tickets e acompanhamento" : "Portales de autogestión para clientes B2B", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
-      ],
-    },
-    {
-      key: "ia",
-      title: isPortuguese ? "Marketing & IA Aplicada" : "Growth Marketing & IA",
-      accent: "border-violet-500",
-      headerColor: "text-violet-700",
-      items: [
-        { id: "asistente_ia", label: "Consultoría IA Gemini 2.5", desc: isPortuguese ? "Estratégia e automação personalizada de IA" : "Asesoría estratégica de adopción de IA", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
-        { id: "asistente_ia", label: isPortuguese ? "Estratégias Go-to-Market" : "Estrategias Go-to-Market", desc: isPortuguese ? "Planos de expansão comercial e posicionamento" : "Planes de lanzamiento y posicionamiento", icon: Megaphone, color: "text-rose-500 bg-rose-50" },
-        { id: "asistente_ia", label: "AI Copy & Contenido", desc: isPortuguese ? "Cópias de alta conversão para anúncios e e-mails" : "Redacción publicitaria para anuncios y ventas", icon: FileText, color: "text-blue-500 bg-blue-50" },
-        { id: "reportes",     label: isPortuguese ? "Consultoria SEO Completa" : "Posicionamiento SEO", desc: isPortuguese ? "Palavras-chave, auditoria e visibilidade" : "Auditoría, keywords y visibilidad en Google", icon: TrendingUp, color: "text-emerald-500 bg-emerald-50" },
-      ],
-    },
-    {
-      key: "platform",
-      title: isPortuguese ? "Desenvolvimento Web & Integrações" : "Desarrollo Web & Integraciones",
-      accent: "border-slate-400",
-      headerColor: "text-slate-700",
-      items: [
-        { id: "desarrollo_web",label: isPortuguese ? "Desenvolvimento Web" : "Desarrollo Web & Landings", desc: isPortuguese ? "Sites modernos focados em conversão" : "Sitios modernos de alta conversión y velocidad", icon: Code2, color: "text-slate-600 bg-slate-100" },
-        { id: "integraciones", label: isPortuguese ? "60+ Integrações de APIs" : "Integraciones API & ERP", desc: isPortuguese ? "Conexão fluida de sistemas e bancos de dados" : "Conexión de sistemas, webhooks y bases de datos", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
-        { id: "afip",          label: isPortuguese ? "Faturamento Eletrônico AFIP" : "Facturación AFIP Automática", desc: isPortuguese ? "Emissão e controle fiscal integrado" : "Integración directa de comprobantes y CAE", icon: FileText, color: "text-blue-700 bg-blue-50" },
-        { id: "mercadopago",   label: isPortuguese ? "Cobranças Mercado Pago" : "Pasarelas MercadoPago", desc: isPortuguese ? "Assinaturas e links de pagamento automáticos" : "Suscripciones y checkout automatizado", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
+        { id: "reportes",       label: "Business Intelligence & KPIs", desc: isPortuguese ? "Dashboards em tempo real, CAC, LTV e métricas" : "Dashboards ejecutivos, CAC, LTV y métricas en tiempo real", icon: BarChart2, color: "text-fuchsia-600 bg-fuchsia-50" },
+        { id: "portal_cliente", label: isPortuguese ? "Portais B2B & Autoatendimento" : "Portales B2B & Autoatención", desc: isPortuguese ? "Autoatendimento, tickets e acompanhamento de contas" : "Portales de autogestión para clientes corporativos", icon: LayoutGrid, color: "text-teal-600 bg-teal-50" },
+        { id: "mercadopago",    label: isPortuguese ? "Sistemas de Cobrança & Checkout" : "Cobranzas & Pasarelas de Pago", desc: isPortuguese ? "MercadoPago, links e débitos automáticos" : "MercadoPago, suscripciones y links de pago", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
+        { id: "asociacion",     label: isPortuguese ? "Programa de Parcerias & Afiliados" : "Partners & Alianzas Estratégicas", desc: isPortuguese ? "Soluções integradas com parceiros certificados" : "Implementación conjunta y alianzas tecnológicas", icon: Handshake, color: "text-violet-600 bg-violet-50" },
       ],
     },
   ], [isPortuguese]);
@@ -1210,11 +1198,11 @@ export default function PublicWebsite({
 
   const menuConfig = useMemo(() => [
     { id: "inicio",     label: isPortuguese ? "Início" : "Inicio",        type: "link"     as const },
-    { id: "servicios",  label: isPortuguese ? "Serviços" : "Servicios",   type: "megamenu" as const, children: SOLUTIONS_ITEMS, groups: SOLUTIONS_GROUPS },
+    { id: "servicios",  label: isPortuguese ? "Serviços (3 Pilares)" : "Servicios",   type: "megamenu" as const, children: SOLUTIONS_ITEMS, groups: SOLUTIONS_GROUPS },
     { id: "industrias", label: isPortuguese ? "Indústrias" : "Industrias",     type: "link"     as const },
     { id: "casos",      label: isPortuguese ? "Casos de Sucesso" : "Casos de Éxito", type: "link"     as const },
+    { id: "planes",     label: isPortuguese ? "Preços & Planos" : "Precios & Planes", type: "link"     as const },
     { id: "recursos",   label: isPortuguese ? "Recursos" : "Recursos",       type: "dropdown" as const, children: RECURSOS_ITEMS },
-    { id: "planes",     label: isPortuguese ? "Preços" : "Precios",        type: "link"     as const },
     { id: "empresa",    label: isPortuguese ? "Empresa" : "Empresa",        type: "dropdown" as const, children: EMPRESA_ITEMS },
   ], [SOLUTIONS_ITEMS, SOLUTIONS_GROUPS, RECURSOS_ITEMS, EMPRESA_ITEMS, isPortuguese]);
 
@@ -1476,6 +1464,16 @@ export default function PublicWebsite({
             <ArrowUpRight className="w-3.5 h-3.5 text-slate-600" />
           </button>
 
+          {/* CRM Suite Quick Action */}
+          <button
+            onClick={() => navigate('/crm')}
+            className="bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-xs uppercase px-3 py-2 rounded-xl tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border border-blue-200 shadow-sm"
+            title="Abrir Clientum CRM & ERP Suite"
+          >
+            <Briefcase className="w-3.5 h-3.5 text-blue-600" />
+            <span>CRM OS</span>
+          </button>
+
           {/* Gmail Suite Quick Action */}
           <button
             onClick={() => navigate('/gmail')}
@@ -1486,18 +1484,16 @@ export default function PublicWebsite({
             <span>Gmail</span>
           </button>
 
-          {/* Dedicated Login / Registro Button linking to Twenty CRM */}
-          <a
-            href="https://crm.clientum.com.ar"
-            target="_blank"
-            rel="noopener noreferrer"
+          {/* Dedicated Login / Registro Button linking to CRM OS */}
+          <button
+            onClick={() => navigate('/crm')}
             className="bg-gradient-to-r from-[#1A3461] to-[#0A2558] hover:from-[#234580] hover:to-[#0f3475] text-white font-extrabold text-xs uppercase px-4 py-2 rounded-xl tracking-wider transition-all flex items-center gap-2 shadow-md border border-blue-500/30 hover:scale-[1.02] cursor-pointer group"
-            title="Acceder a Twenty CRM (https://crm.clientum.com.ar)"
+            title="Acceder a la Consola y Suite ClientumCRM"
           >
             <LogIn className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
             <span>Login / Registro</span>
             <ArrowUpRight className="w-3 h-3 text-emerald-400/80" />
-          </a>
+          </button>
         </div>
  
         {/* Mobile Hamburger Button */}
@@ -1610,17 +1606,17 @@ export default function PublicWebsite({
               <span>Clientum Gmail Suite</span>
             </button>
 
-            <a
-              href="https://crm.clientum.com.ar"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMobileMenuOpen(false)}
+            <button
+              onClick={() => {
+                navigate('/crm');
+                setMobileMenuOpen(false);
+              }}
               className="mt-2 w-full bg-gradient-to-r from-[#1A3461] to-[#0A2558] text-white font-extrabold text-xs uppercase py-3 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 shadow-md border border-blue-500/30 cursor-pointer"
             >
               <LogIn className="w-4 h-4 text-emerald-400" />
-              <span>Login / Registro CRM</span>
+              <span>Login / Registro CRM OS</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
-            </a>
+            </button>
 
             <button
               onClick={() => {
@@ -1684,71 +1680,57 @@ export default function PublicWebsite({
             {/* INICIO TAB */}
             {activeTab === "inicio" && (
               <div className="flex flex-col">
-                {/* ═══════════════════════════════════════════════════════
-                    HERO
-                ═══════════════════════════════════════════════════════ */}
-                <section className="relative bg-slate-900 text-white py-24 px-6 md:px-12 flex overflow-hidden min-h-[640px]">
-                  <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#0d1f3c] via-slate-900 to-[#122442]"></div>
-                  {/* Subtle Grid Backdrop Overlay */}
-                  <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30 z-0"></div>
-                  
-                  <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
+                {/* ════════════════════════════════════════════════════�                    <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative z-10">
                     <div className="lg:col-span-7 flex flex-col items-start gap-6">
                       <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 text-[10px] font-extrabold uppercase px-4 py-1.5 rounded-full tracking-widest flex items-center gap-2 font-mono">
                         <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                        {isPortuguese ? "Agência de Crescimento & Tecnologia para PMEs" : "Agencia de Crecimiento & Consultoría PyME"}
+                        {isPortuguese ? "Automação & IA para PyMEs em 5 Dias" : "Automatización & IA para PyMEs"}
                       </span>
-                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tight leading-[1.05]">
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-display font-black tracking-tight leading-[1.1] text-white">
                         {brochureData?.cover?.slogan ? (
                           <span>{brochureData.cover.slogan}</span>
                         ) : (
                           <>
-                            {isPortuguese ? "Serviços especializados para" : "Servicios estratégicos para"}<br />
-                            {isPortuguese ? "escalar sua empresa, " : "escalar tu empresa, "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400">
-                              {isPortuguese ? "com tecnologia e IA." : "con tecnología e IA."}
+                            {isPortuguese ? "Automatizamos as vendas e a gestão da sua " : "Automatizamos las ventas y la gestión de tu "}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
+                              {isPortuguese ? "PyME com IA em 5 dias." : "PyME con IA en 5 días."}
                             </span>
                           </>
                         )}
                       </h1>
                       <p className="text-slate-300 text-sm md:text-base max-w-xl leading-relaxed">
                         {brochureData?.cover?.sub || (isPortuguese
-                          ? "Consultoria comercial, Chatbots WhatsApp com IA, E-Commerce, CRM, Business Intelligence, Marketing Digital e Automações — a equipe da Clientum cuidando do seu crescimento."
-                          : "Consultoría comercial, Chatbots WhatsApp con IA, E-Commerce, CRM, Business Intelligence, Marketing Digital y Automatizaciones — el equipo de Clientum impulsando tu negocio."
+                          ? "Chatbots no WhatsApp 24/7 conectados ao seu CRM, faturamento fiscal automático e prospecção com inteligência artificial para que sua empresa venda mais sem aumentar custos operacionais."
+                          : "Chatbots de WhatsApp 24/7 conectados a tu CRM, facturación electrónica automática y prospección con inteligencia artificial para que vendas más sin sumar horas operativas."
                         )}
                       </p>
-                      <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-                        <button
-                          onClick={() => setIsQuoteWizardOpen(true)}
-                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl cursor-pointer transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
-                        >
-                          <Sparkles className="w-4 h-4" />
-                          <span>{isPortuguese ? "Cotador Interativo & PDF" : "Cotizador Interactivo & PDF"}</span>
-                        </button>
+                      <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                         <button
                           onClick={() => setIsExpressAuditOpen(true)}
-                          className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider px-5 py-3.5 rounded-xl border border-slate-700 transition-all cursor-pointer flex items-center gap-2 shadow-md"
+                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider px-6 py-4 rounded-xl cursor-pointer transition-all shadow-xl shadow-emerald-500/25 flex items-center gap-2 hover:scale-[1.02]"
                         >
-                          <Search className="w-4 h-4 text-emerald-400" />
-                          <span>{isPortuguese ? "Auditoria Express IA" : "Auditoría Express IA"}</span>
+                          <Sparkles className="w-4 h-4" />
+                          <span>{isPortuguese ? "Solicitar Diagnóstico Gratuito" : "Solicitar Diagnóstico Gratuito"}</span>
                         </button>
                         <button
-                          onClick={() => setActiveTab("servicios")}
-                          className={`bg-gradient-to-r ${theme.btnGradient} text-white font-bold text-xs uppercase tracking-wider px-5 py-3.5 rounded-xl cursor-pointer transition-all shadow-md shadow-blue-900/30 flex items-center gap-2`}
+                          onClick={() => setIsQuoteWizardOpen(true)}
+                          className="bg-[#0A2558] hover:bg-[#133878] text-white font-bold text-xs uppercase tracking-wider px-5 py-4 rounded-xl border border-blue-500/30 transition-all cursor-pointer flex items-center gap-2 shadow-md"
                         >
-                          {isPortuguese ? "Ver Serviços" : "Ver Servicios"} <ArrowRight className="w-4 h-4 text-emerald-400" />
+                          <FileText className="w-4 h-4 text-emerald-400" />
+                          <span>{isPortuguese ? "Cotador & Proposta PDF" : "Cotizador & Propuesta PDF"}</span>
                         </button>
                         <button
                           onClick={() => setIsBrochureModalOpen(true)}
-                          className="bg-white/10 hover:bg-white/15 text-white font-bold text-xs uppercase tracking-wider px-5 py-3.5 rounded-xl border border-white/15 transition-all cursor-pointer flex items-center gap-2"
+                          className="text-slate-300 hover:text-white font-semibold text-xs px-4 py-4 rounded-xl hover:bg-white/5 transition-all cursor-pointer flex items-center gap-1.5"
                         >
-                          <Download className="w-4 h-4 text-emerald-400" /> Brochure PDF
+                          <Download className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Brochure PDF</span>
                         </button>
                       </div>
                       <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
                         {(isPortuguese
-                          ? ["Sem contrato de fidelidade", "Implementação em 5 dias", "Suporte em português 24/7"]
-                          : ["Sin contrato mínimo", "Implementado en 5 días", "Soporte en español 24/7"]
+                          ? ["Sem contrato de fidelidade", "Garantia de 5 dias", "Suporte humano e IA 24/7"]
+                          : ["Sin contratos de permanencia", "Puesta en marcha en 5 días", "Soporte y consultoría 24/7"]
                         ).map((t) => (
                           <span key={t} className="flex items-center gap-1.5 text-slate-400 text-xs">
                             <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />{t}
@@ -1757,17 +1739,17 @@ export default function PublicWebsite({
                       </div>
                     </div>
 
-                    <div className="lg:col-span-5 bg-slate-950/80 border border-slate-800 p-8 rounded-2xl shadow-2xl relative">
-                      <div className="absolute top-0 right-0 transform translate-x-3 -translate-y-3 bg-emerald-500 text-slate-950 text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-md shadow-md font-mono">
-                        {isPortuguese ? "Ao Vivo" : "En Vivo"}
+                    <div className="lg:col-span-5 bg-slate-950/90 border border-slate-800 p-7 sm:p-8 rounded-2xl shadow-2xl relative">
+                      <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2.5 bg-emerald-500 text-slate-950 text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-md shadow-md font-mono">
+                        {isPortuguese ? "Sem Custo" : "Gratuito"}
                       </div>
-                      <h3 className="font-display font-bold text-lg text-white mb-1">
-                        {isPortuguese ? "Solicite um Orçamento Gratuito" : "Solicitá un Presupuesto Gratuito"}
+                      <h3 className="font-display font-bold text-base sm:text-lg text-white mb-1">
+                        {isPortuguese ? "Diagnóstico Rápido de Automação" : "Diagnóstico Rápido de Automatización"}
                       </h3>
-                      <p className="text-slate-400 text-[11px] mb-6">
+                      <p className="text-slate-400 text-[11px] mb-5 leading-relaxed">
                         {isPortuguese
-                          ? "Preencha seus dados e a equipe da Clientum enviará uma demo personalizada para o seu negócio."
-                          : "Cargá tus datos y el equipo de Clientum te enviará una demo adaptada a tu escala."}
+                          ? "Receba uma análise técnica em 24hs com as 3 principais automações para sua PyME."
+                          : "Recibí en 24 hs el plan exacto con las 3 automatizaciones de mayor retorno para tu negocio."}
                       </p>
                       <form onSubmit={handleDemoSubmit} className="flex flex-col gap-3">
                         <div>
@@ -1804,14 +1786,29 @@ export default function PublicWebsite({
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{isPortuguese ? "Solução de Interesse" : "Servicio de Interés"}</label>
+                            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{isPortuguese ? "Setor da Empresa" : "Rubro de tu Empresa"}</label>
                             <select
                               className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg p-2.5 text-xs focus:border-blue-600 focus:outline-none"
                               value={demoForm.rubro}
                               onChange={(e) => setDemoForm({ ...demoForm, rubro: e.target.value })}
                             >
-                              <option value="E-Commerce">{isPortuguese ? "E-Commerce Web" : "E-Commerce Web"}</option>
-                              <option value="ERP-CRM">{isPortuguese ? "ERP & CRM Integrado" : "ERP & CRM Integrado"}</option>
+                              <option value="Distribuidora / Mayorista">{isPortuguese ? "Distribuição & Atacado" : "Distribuidora / Mayorista"}</option>
+                              <option value="Agro & Insumos">{isPortuguese ? "Agronegócio & Insumos" : "Agroindustria & Insumos"}</option>
+                              <option value="Salud y Clínicas">{isPortuguese ? "Saúde & Clínicas" : "Salud & Clínicas"}</option>
+                              <option value="Inmobiliaria">{isPortuguese ? "Imobiliária & Construtora" : "Inmobiliaria & Real Estate"}</option>
+                              <option value="E-Commerce">{isPortuguese ? "E-Commerce & Varejo" : "E-Commerce Web & Tiendas"}</option>
+                              <option value="Servicios B2B / Profesional">{isPortuguese ? "Serviços B2B & Consultoria" : "Servicios B2B & Consultoría"}</option>
+                            </select>
+                          </div>
+                        </div>
+                        <button
+                          type="submit"
+                          className="mt-2 w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-lg text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                        >
+                          {isPortuguese ? "Solicitar Diagnóstico Gratuito" : "Solicitar Diagnóstico Gratuito"}
+                        </button>
+                      </form>
+                    </div>value="ERP-CRM">{isPortuguese ? "ERP & CRM Integrado" : "ERP & CRM Integrado"}</option>
                               <option value="Consultoria">{isPortuguese ? "Consultoria Estratégica" : "Consultoría General"}</option>
                               <option value="Ciberseguridad">{isPortuguese ? "Cibersegurança & Nuvem" : "Ciberseguridad"}</option>
                             </select>
@@ -2490,9 +2487,9 @@ export default function PublicWebsite({
 
             {/* SERVICIOS Y CONSULTORIA TAB */}
             {activeTab === "servicios" && (
-              <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
+              <div className="px-6 py-12 flex flex-col gap-16">
                 <div className="text-center max-w-2xl mx-auto">
-                  <span className="text-emerald-600 font-mono text-xs uppercase tracking-widest font-bold">
+                    <span className="text-emerald-600 font-mono text-xs uppercase tracking-widest font-bold">
                     {isPortuguese ? "Nossos Serviços de Agência" : "Servicios de la Agencia"}
                   </span>
                   <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tight mt-2">
@@ -6050,12 +6047,11 @@ export default function PublicWebsite({
                 </div>
               </div>
             )}
-
           </motion.div>
         </AnimatePresence>
       </main>
 
-      {/* ── PYMES ARGENTINAS EN ACCIÓN (Footer Showcase) ── */}
+
       <div className="bg-slate-900 border-t border-slate-800 text-white py-12 px-6">
         <div className="max-w-6xl mx-auto">
           <ArgentinePymesSection

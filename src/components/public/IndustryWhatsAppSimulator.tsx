@@ -16,7 +16,9 @@ import {
   RefreshCw,
   ExternalLink,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Truck,
+  Package
 } from 'lucide-react';
 import { useLanguage } from '../../lib/i18n';
 import heroBannerImg from '../../assets/images/hero_ai_banner_1787699276417.jpg';
@@ -35,6 +37,59 @@ interface IndustryScenario {
 }
 
 const INDUSTRIES: IndustryScenario[] = [
+  {
+    id: 'distribuidoras',
+    name: 'Distribuidoras & Mayoristas',
+    namePt: 'Distribuidoras & Atacado',
+    icon: Truck,
+    botName: 'Distribuidora Central IA',
+    avatarBg: 'bg-blue-600',
+    initialMessage: '📦 ¡Hola! Soy el asistente comercial de Distribuidora Central. ¿Deseas consultar lista de precios mayorista, estado de despacho de tu pedido o solicitar catálogo con descuentos por bulto cerrado?',
+    initialMessagePt: '📦 Olá! Sou o assistente comercial da Distribuidora Central. Deseja consultar tabela de preços no atacado, status de entrega ou catálogo com descontos por volume?',
+    quickReplies: [
+      { label: '📋 Lista Precios Mayorista', labelPt: '📋 Tabela de Preços Atacado', prompt: 'Quiero descargar la lista de precios actualizada en PDF y condiciones de cuenta corriente.' },
+      { label: '🚚 Estado de Entrega', labelPt: '🚚 Rastrear Entrega', prompt: 'Quiero consultar el estado de mi remito de entrega para la zona norte.' },
+      { label: '🧾 Facturación AFIP', labelPt: '🧾 Faturamento Fiscal', prompt: 'Necesito factura A con CUIT y comprobante con CAE para mi pedido de ayer.' }
+    ],
+    aiContext: (text) => {
+      const low = text.toLowerCase();
+      if (low.includes('lista') || low.includes('precio') || low.includes('descuento') || low.includes('mayorista') || low.includes('tabela')) {
+        return '¡Te adjunto las condiciones mayoristas! 📋\n\n• Descuento del 18% en compras superiores a 5 bultos cerrados.\n• Plazo de pago: 15 y 30 días con cuenta corriente aprobada.\n• Despacho sin cargo en compras > $250.000 ARS.\n\n¿Deseas que un asesor te active la cuenta mayorista hoy mismo?';
+      }
+      if (low.includes('entrega') || low.includes('remito') || low.includes('despacho') || low.includes('camion') || low.includes('rastrear')) {
+        return '🚚 Tu pedido #DS-9120 está en ruta con nuestro camión de reparto. Tiempo estimado de arribo a tu depósito: hoy entre las 14:00 y 16:30 hs. ¿Necesitas avisar alguna instrucción de descarga?';
+      }
+      if (low.includes('factura') || low.includes('afip') || low.includes('cuit') || low.includes('cae')) {
+        return '🧾 La Factura Electrónica A con CAE fue emitida automáticamente y enviada a tu correo registrado. También puedes descargarla desde nuestro portal de clientes.';
+      }
+      return 'Consulta registrada en el sistema de distribución. Un asesor comercial te responderá en menos de 2 minutos.';
+    }
+  },
+  {
+    id: 'agro',
+    name: 'Agro & Insumos',
+    namePt: 'Agronegócio & Insumos',
+    icon: Package,
+    botName: 'AgroSoluciones IA',
+    avatarBg: 'bg-lime-700',
+    initialMessage: '🌾 ¡Hola! Asistente técnico de AgroSoluciones. ¿Deseas cotizar insumos para campaña (fertilizantes, semillas, agroquímicos), consultar disponibilidad por lote o coordinar entrega en campo?',
+    initialMessagePt: '🌾 Olá! Assistente técnico da AgroSoluções. Deseja cotar insumos para safra (fertilizantes, sementes, defensivos) ou entrega na fazenda?',
+    quickReplies: [
+      { label: '🌱 Cotizar Semillas & Fértil', labelPt: '🌱 Cotar Sementes & Adubo', prompt: 'Quiero cotización por hectárea de fertilizantes y semillas de maíz/soja con flete a campo.' },
+      { label: '💵 Financiamiento Campaña', labelPt: '💵 Financiamento Safra', prompt: '¿Qué opciones de canje cereal o pago a cosecha tienen vigentes?' },
+      { label: '🚜 Trazabilidad de Lote', labelPt: '🚜 Rastreabilidade de Lote', prompt: 'Necesito certificados de origen y lote de los fitosanitarios entregados.' }
+    ],
+    aiContext: (text) => {
+      const low = text.toLowerCase();
+      if (low.includes('cotizar') || low.includes('semilla') || low.includes('fertilizante') || low.includes('hectarea') || low.includes('adubo')) {
+        return '🌱 Cotización orientativa de campaña:\n\n• Pack Maíz Alto Rendimiento: USD $145/ha (incluye cura-semilla)\n• Fertilizante Fosfatado / UREA: Consultar precio pizarra Rosario con entrega a granel.\n\n¿Para cuántas hectáreas planeas sembrar en tu establecimiento?';
+      }
+      if (low.includes('canje') || low.includes('pago') || low.includes('cosecha') || low.includes('cereal') || low.includes('financiacion')) {
+        return 'Contamos con modalidades flexibles:\n\n✔️ Canje disponible disponible con entrega de cereal a fijar\n✔️ Tarjetas agropecuarias (Galicia Rural, AgroNación, Santander Agro) con tasa preferencial\n✔️ Crédito directo a cosecha Mayo 2026.';
+      }
+      return 'Requerimiento técnico registrado. El ingeniero agrónomo de tu zona te contactará en 15 minutos con la receta técnica.';
+    }
+  },
   {
     id: 'salud',
     name: 'Salud & Clínicas',
@@ -187,13 +242,26 @@ const INDUSTRIES: IndustryScenario[] = [
   }
 ];
 
-export function IndustryWhatsAppSimulator() {
+interface SimulatorProps {
+  initialIndustryId?: string;
+  onOpenWizard?: () => void;
+  onOpenAudit?: () => void;
+}
+
+export function IndustryWhatsAppSimulator({ initialIndustryId, onOpenWizard, onOpenAudit }: SimulatorProps) {
   const { isPortuguese } = useLanguage();
-  const [selectedIndustry, setSelectedIndustry] = useState<string>('salud');
+  const [selectedIndustry, setSelectedIndustry] = useState<string>(initialIndustryId || 'distribuidoras');
   const [messages, setMessages] = useState<Array<{ id: string; sender: 'bot' | 'user'; text: string; time: string }>>([]);
   const [inputVal, setInputVal] = useState<string>('');
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Sync if prop changes
+  useEffect(() => {
+    if (initialIndustryId) {
+      setSelectedIndustry(initialIndustryId);
+    }
+  }, [initialIndustryId]);
 
   const currentIndustry = INDUSTRIES.find(i => i.id === selectedIndustry) || INDUSTRIES[0];
 
@@ -236,7 +304,7 @@ export function IndustryWhatsAppSimulator() {
         { id: botMsgId, sender: 'bot', text: botReplyText, time: botTimeStr }
       ]);
       setIsTyping(false);
-    }, 1200);
+    }, 1100);
   };
 
   const handleResetChat = () => {
@@ -299,53 +367,44 @@ export function IndustryWhatsAppSimulator() {
                     : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/60'
                 }`}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className="w-4 h-4 text-emerald-400" />
                 <span>{isPortuguese ? ind.namePt : ind.name}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Simulated Smartphone Screen */}
-        <div className="max-w-md mx-auto bg-[#0b141a] rounded-[2.5rem] border-[6px] border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col h-[520px]">
-          {/* WhatsApp Header */}
-          <div className="bg-[#1f2c34] px-4 py-3 text-white flex items-center justify-between shadow-md shrink-0">
+        {/* WhatsApp Phone Mockup Frame */}
+        <div className="max-w-md mx-auto bg-[#111b21] rounded-3xl border-4 border-slate-700 shadow-2xl overflow-hidden flex flex-col h-[520px]">
+          {/* Top Bar (WhatsApp Header) */}
+          <div className="bg-[#202c33] text-white px-4 py-3 flex items-center justify-between border-b border-slate-700/60 shrink-0">
             <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-full ${currentIndustry.avatarBg} text-white font-bold flex items-center justify-center text-sm shadow-inner`}>
+              <div className={`w-9 h-9 rounded-full ${currentIndustry.avatarBg} text-white flex items-center justify-center font-bold text-sm shadow-sm`}>
                 <Bot className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-bold text-xs flex items-center gap-1.5">
-                  <span>{currentIndustry.botName}</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <div className="flex items-center gap-1.5">
+                  <h4 className="font-bold text-xs text-white leading-tight">{currentIndustry.botName}</h4>
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 </div>
-                <div className="text-[10px] text-emerald-400 flex items-center gap-1">
-                  <span>En línea 24/7 (Oficial Meta Cloud API)</span>
-                </div>
+                <p className="text-[10px] text-emerald-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>online · en vivo</span>
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleResetChat}
-                title="Reiniciar conversación"
-                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-700/60 transition-colors cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <button
+              onClick={handleResetChat}
+              title="Reiniciar chat"
+              className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-700/60 transition-colors cursor-pointer"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* WhatsApp Chat Area */}
-          <div className="flex-1 p-3.5 overflow-y-auto space-y-3 bg-[radial-gradient(#1f2c34_1px,transparent_1px)] [background-size:16px_16px] bg-[#0b141a]">
-            {/* Security banner */}
-            <div className="text-center">
-              <span className="inline-flex items-center gap-1 bg-[#182229]/90 border border-slate-800 text-[9px] text-slate-400 px-3 py-1 rounded-lg">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                Los mensajes están cifrados de extremo a extremo y procesados con IA segura.
-              </span>
-            </div>
-
+          {/* Chat Messages Body */}
+          <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-[#0b141a] bg-[radial-gradient(#1f2c34_1px,transparent_1px)] [background-size:16px_16px]">
             {messages.map((m) => (
               <div
                 key={m.id}
@@ -439,16 +498,27 @@ export function IndustryWhatsAppSimulator() {
             </p>
           </div>
 
-          <a
-            href="https://wa.me/5492984510883?text=Hola%20Clientum!%20Probé%20el%20simulador%20de%20WhatsApp%20y%20quiero%20cotizar%20un%20bot%20para%20mi%20negocio"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shrink-0 cursor-pointer"
-          >
-            <PhoneCall className="w-4 h-4" />
-            <span>{isPortuguese ? 'Falar com Consultor no WhatsApp' : 'Probar en WhatsApp Real'}</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <div className="flex flex-wrap gap-2.5">
+            {onOpenAudit && (
+              <button
+                onClick={onOpenAudit}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all border border-slate-700 shadow-md cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{isPortuguese ? 'Diagnóstico Gratuito' : 'Diagnóstico Gratuito'}</span>
+              </button>
+            )}
+            <a
+              href="https://wa.me/5492984510883?text=Hola%20Clientum!%20Probé%20el%20simulador%20de%20WhatsApp%20y%20quiero%20cotizar%20un%20bot%20para%20mi%20negocio"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shrink-0 cursor-pointer"
+            >
+              <PhoneCall className="w-4 h-4" />
+              <span>{isPortuguese ? 'Falar no WhatsApp Real' : 'Probar en WhatsApp Real'}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
       </div>
     </div>

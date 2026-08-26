@@ -148,6 +148,8 @@ export function WhatsAppWebhooksConfig() {
   const [healthData, setHealthData] = useState<WebhookHealthData | null>(null);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string; details?: string } | null>(null);
   const [handshakeResult, setHandshakeResult] = useState<{ ok: boolean; challenge?: string; latency?: number; message?: string } | null>(null);
+  const [tokenValidationStatus, setTokenValidationStatus] = useState<'verified' | 'error' | 'validating' | 'idle'>('verified');
+  const [tokenValidationMessage, setTokenValidationMessage] = useState<string | null>(null);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [autoRefreshLogs, setAutoRefreshLogs] = useState(true);
@@ -412,6 +414,8 @@ export function WhatsAppWebhooksConfig() {
     setCheckingHealth(true);
     setVerifyingHandshake(true);
     setHandshakeResult(null);
+    setTokenValidationStatus('validating');
+    setTokenValidationMessage(null);
     const start = performance.now();
     const testChallenge = `hub_challenge_${Math.random().toString(36).substring(2, 10)}`;
 
@@ -438,6 +442,8 @@ export function WhatsAppWebhooksConfig() {
             latency,
             message: `✓ ¡Callback URL y Verify Token 100% Saludables! El servidor validó el token y respondió al challenge en ${latency}ms.`
           });
+          setTokenValidationStatus('verified');
+          setTokenValidationMessage(`Token verificado exitosamente por handshake GET (Challenge 200 OK en ${latency}ms).`);
           setConfig(prev => ({
             ...prev,
             webhookStatus: 'verified_active',
@@ -450,6 +456,8 @@ export function WhatsAppWebhooksConfig() {
             latency,
             message: `Callback URL respondió con status 200 pero el challenge no coincidió ("${text}" vs "${testChallenge}").`
           });
+          setTokenValidationStatus('error');
+          setTokenValidationMessage('Error de conexión: El challenge devuelto por el servidor no coincide con el token esperado.');
         }
       } else {
         const errJson = await handshakeRes.json().catch(() => ({ error: 'Error desconocido' }));
@@ -458,16 +466,24 @@ export function WhatsAppWebhooksConfig() {
           latency,
           message: `Fallo en verificación (HTTP ${handshakeRes.status}): ${errJson.error || 'Token inválido'}. Asegurate de guardar primero el Verify Token en el servidor.`
         });
+        setTokenValidationStatus('error');
+        setTokenValidationMessage(`Error de conexión (HTTP ${handshakeRes.status}): ${errJson.error || 'Token no coincide con el servidor'}.`);
       }
     } catch (err: any) {
       setHandshakeResult({
         ok: false,
         message: `Error de conexión al verificar el Callback URL: ${err.message}`
       });
+      setTokenValidationStatus('error');
+      setTokenValidationMessage(`Error de conexión: ${err.message}`);
     } finally {
       setVerifyingHandshake(false);
       setCheckingHealth(false);
     }
+  };
+
+  const handleValidateMetaToken = () => {
+    handleCheckHealthAndHandshake();
   };
 
   // Test Connection to Callback URL / Health check
@@ -728,20 +744,30 @@ export function WhatsAppWebhooksConfig() {
               </span>
             </div>
 
-            {/* 2. Verify Token Health Pill */}
+            {/* 2. Verify Token Health Pill with 'Verificado' or 'Error de conexión' indicator */}
             <div className="p-2.5 bg-[#0A101F] border border-slate-800 rounded-xl flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2 min-w-0">
                 <Key className="w-4 h-4 text-sky-400 shrink-0" />
                 <div className="truncate">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Verify Token</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Verify Token (Meta)</span>
                   <span className="font-mono text-sky-300 text-[11px] truncate block">
                     {config.verifyToken ? `${config.verifyToken.slice(0, 16)}...` : 'Sin configurar'}
                   </span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md border border-sky-500/20 shrink-0">
-                {config.verifyToken ? '✓ Sincronizado' : 'Faltante'}
-              </span>
+              {tokenValidationStatus === 'validating' ? (
+                <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/30 shrink-0 flex items-center gap-1">
+                  <Activity className="w-3 h-3 animate-spin" /> Validando...
+                </span>
+              ) : tokenValidationStatus === 'verified' || config.webhookStatus === 'verified_active' ? (
+                <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-md border border-emerald-500/40 shrink-0 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Verificado
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-rose-300 bg-rose-500/20 px-2.5 py-0.5 rounded-md border border-rose-500/40 shrink-0 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3 text-rose-400" /> Error de conexión
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -984,34 +1010,65 @@ export function WhatsAppWebhooksConfig() {
                   {/* Verify Token Status */}
                   <div className="flex items-start gap-3 border-t sm:border-t-0 sm:border-l border-slate-800/80 pt-3 sm:pt-0 sm:pl-4">
                     <div className="mt-1">
-                      {config.webhookStatus === 'verified_active' || healthData?.checks?.verifyTokenSynced ? (
+                      {tokenValidationStatus === 'verified' || config.webhookStatus === 'verified_active' ? (
                         <span className="flex h-3 w-3 relative">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                         </span>
-                      ) : config.verifyToken ? (
-                        <span className="flex h-3 w-3 rounded-full bg-amber-500 animate-pulse"></span>
+                      ) : tokenValidationStatus === 'validating' ? (
+                        <span className="flex h-3 w-3 rounded-full bg-amber-500 animate-ping"></span>
                       ) : (
                         <span className="flex h-3 w-3 rounded-full bg-rose-500"></span>
                       )}
                     </div>
-                    <div>
-                      <h5 className="text-xs font-bold text-slate-300">Verify Token (Sincronización)</h5>
-                      <p className="text-[11px] mt-0.5 font-semibold">
-                        {config.webhookStatus === 'verified_active' || healthData?.checks?.verifyTokenSynced ? (
-                          <span className="text-emerald-400">✓ Conectado / Sincronizado</span>
-                        ) : config.verifyToken ? (
-                          <span className="text-amber-400">⚠ Pendiente de Handshake</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <h5 className="text-xs font-bold text-slate-300">Validación de Verify Token (Meta)</h5>
+                        {tokenValidationStatus === 'validating' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                            <Activity className="w-3 h-3 animate-spin text-amber-400" /> Validando...
+                          </span>
+                        ) : tokenValidationStatus === 'verified' || config.webhookStatus === 'verified_active' ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Verificado
+                          </span>
                         ) : (
-                          <span className="text-rose-400">✗ Error (Sin configurar)</span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1">
+                            <AlertCircle className="w-3.5 h-3.5 text-rose-400" /> Error de conexión
+                          </span>
                         )}
-                      </p>
+                      </div>
                       <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                        Controla que las firmas del handshake coincidan carácter por carácter.
+                        Comprobación bidireccional entre el token del servidor y la firma del handshake de Meta.
                       </p>
                     </div>
                   </div>
                 </div>
+
+                {/* Validation Message Notification */}
+                {tokenValidationMessage && (
+                  <div className={`p-3 rounded-xl text-xs flex items-start gap-2.5 border ${
+                    tokenValidationStatus === 'verified'
+                      ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                      : 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+                  }`}>
+                    {tokenValidationStatus === 'verified' ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold">{tokenValidationMessage}</p>
+                      <p className="text-[10px] opacity-75 mt-0.5">Estado: {tokenValidationStatus === 'verified' ? 'Verificado' : 'Error de conexión'}</p>
+                    </div>
+                    <button
+                      onClick={() => setTokenValidationMessage(null)}
+                      className="text-slate-400 hover:text-white text-xs px-1 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
 
                 {/* Connection Test Result Alert */}
                 {connectionTestResult && (
@@ -1092,18 +1149,30 @@ export function WhatsAppWebhooksConfig() {
                       {copiedField === 'token' ? '¡Copiado!' : 'Copiar Token'}
                     </button>
                   </div>
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                     <p className="text-[11px] text-slate-400">
                       Debe coincidir carácter por carácter con el Verify Token ingresado en el panel de Meta.
                     </p>
-                    <button
-                      onClick={handleCheckHealthAndHandshake}
-                      disabled={verifyingHandshake || !config.verifyToken.trim()}
-                      className="px-3 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shrink-0"
-                    >
-                      <Activity className={`w-3.5 h-3.5 ${verifyingHandshake ? 'animate-spin' : 'text-sky-400'}`} />
-                      {verifyingHandshake ? 'Probando...' : 'Probar Verificación Handshake'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {tokenValidationStatus === 'verified' && (
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Verificado
+                        </span>
+                      )}
+                      {tokenValidationStatus === 'error' && (
+                        <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/30 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 text-rose-400" /> Error de conexión
+                        </span>
+                      )}
+                      <button
+                        onClick={handleValidateMetaToken}
+                        disabled={verifyingHandshake || !config.verifyToken.trim()}
+                        className="px-3 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-200 border border-sky-500/40 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 shadow-xs"
+                      >
+                        <Activity className={`w-3.5 h-3.5 ${verifyingHandshake ? 'animate-spin' : 'text-sky-400'}`} />
+                        {verifyingHandshake ? 'Validando token...' : 'Validar Token de Meta'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 

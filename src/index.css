@@ -1,6 +1,36 @@
 @import 'leaflet/dist/leaflet.css';
 @import "tailwindcss";
 
+:root {
+  --bg-app: #0f172a;
+  --text-app: #f1f5f9;
+}
+
+.light {
+  --bg-app: #ffffff;
+  --text-app: #000000;
+}
+
+/* High Contrast Light Mode Styles */
+.light body {
+  background-color: var(--bg-app);
+  color: var(--text-app);
+}
+
+.light header {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.light .bg-slate-900 {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.light .text-slate-100 {
+  color: #000000;
+}
+
 @media print {
   html, body, #root, .flex, .flex-col, main {
     height: auto !important;

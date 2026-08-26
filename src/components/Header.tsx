@@ -37,6 +37,9 @@ import { PublicFeatureModal } from './PublicFeatureModal';
 import { SyncStatus } from './SyncStatus';
 import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '../lib/i18n';
+import { ThemeToggle } from './ThemeToggle';
+import { GettingStartedTour } from './GettingStartedTour';
+import { InAppNotificationBell } from './InAppNotificationBell';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -62,6 +65,7 @@ export function Header({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isPublicModalOpen, setIsPublicModalOpen] = useState(false);
   const [publicModalTab, setPublicModalTab] = useState<string>('soluciones');
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -266,6 +270,19 @@ export function Header({
           {/* Language Selector (ES-AR / PT-BR) */}
           <LanguageSelector variant="header" />
 
+          <ThemeToggle />
+
+          <InAppNotificationBell />
+
+          <button
+            onClick={() => setIsTourOpen(true)}
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600/10 to-emerald-600/10 border border-emerald-500/30 hover:border-emerald-500/60 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all cursor-pointer"
+            title="Iniciar Tour Guiado de Primeros Pasos"
+          >
+            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            <span>Tour Guiado</span>
+          </button>
+
           <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700">
             <Coins className="w-3.5 h-3.5 text-slate-400" />
             <select
@@ -322,6 +339,15 @@ export function Header({
         onNavigateTab={(tab) => {
           setActiveTab(tab);
           setIsPublicModalOpen(false);
+        }}
+      />
+
+      {/* Getting Started Interactive Tour */}
+      <GettingStartedTour
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        onComplete={() => {
+          localStorage.setItem('clientum_tour_completed', 'true');
         }}
       />
     </>

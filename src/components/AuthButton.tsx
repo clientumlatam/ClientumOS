@@ -29,6 +29,23 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  const syncCrmStorage = (sessionUser: SessionUser | null) => {
+    if (sessionUser) {
+      localStorage.setItem('clientum_is_authenticated', 'true');
+      sessionStorage.setItem('clientum_is_authenticated', 'true');
+      localStorage.setItem('clientum_crm_current_user', JSON.stringify({
+        id: String(sessionUser.id || 'usr_1'),
+        name: sessionUser.username || 'Usuario Clientum',
+        email: sessionUser.username?.includes('@') ? sessionUser.username : `${sessionUser.username}@clientum.com.ar`,
+        role: sessionUser.role === 'admin' ? 'Super Admin' : 'Sales Executive',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
+      }));
+    } else {
+      localStorage.removeItem('clientum_is_authenticated');
+      sessionStorage.removeItem('clientum_is_authenticated');
+    }
+  };
+
   const fetchSession = async () => {
     try {
       const res = await fetch('/api/auth/me', {
@@ -40,6 +57,7 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
           const data = await res.json();
           if (data?.user) {
             setUser(data.user);
+            syncCrmStorage(data.user);
             return;
           }
         }
@@ -283,6 +301,7 @@ export function AuthButton({ compact = false, onLoginSuccess }: AuthButtonProps)
       setLoading(true);
       await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
       setUser(null);
+      syncCrmStorage(null);
       window.dispatchEvent(new Event('auth-changed'));
     } catch (err) {
       console.error('[AuthButton] Error logging out:', err);

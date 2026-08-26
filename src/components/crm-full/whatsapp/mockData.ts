@@ -206,28 +206,37 @@ export const INITIAL_CONVERSATIONS: WaConversationExtended[] = [
 
 export const INITIAL_MESSAGES: Record<number, WaMessageExtended[]> = {
   1: [
+    { id: 98, conversation_id: 1, direction: 'inbound', content: 'Buenas tardes, vimos la demo de Clientum en la Expo Agro y nos interesó la trazabilidad.', sent_by: 'human', created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+    { id: 99, conversation_id: 1, direction: 'outbound', content: '¡Hola! Gracias por contactarnos. Nuestro equipo comercial para el Alto Valle está a disposición.', sent_by: 'human', sender_name: 'Matías Gómez', created_at: new Date(Date.now() - 86400000 * 5 + 1800000).toISOString() },
+    { id: 100, conversation_id: 1, direction: 'inbound', content: '¿Tienen módulos para empaque de peras y manzanas con facturación electrónica?', sent_by: 'human', created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
     { id: 101, conversation_id: 1, direction: 'inbound', content: 'Hola, queremos integrar la cotización automática para frutas y empaque.', sent_by: 'human', created_at: new Date(Date.now() - 600000).toISOString() },
     { id: 102, conversation_id: 1, direction: 'outbound', content: '¡Hola Roberto! Soy Santi del equipo de Clientum. Tenemos el módulo ERP especializado para trazabilidad agropecuaria y cotización multimoneda. ¿Te gustaría ver un brochure en PDF adaptado?', sent_by: 'bot', created_at: new Date(Date.now() - 300000).toISOString() },
     { id: 103, conversation_id: 1, direction: 'inbound', content: 'Excelente, envíamelo por favor. Somos 12 personas en el área comercial.', sent_by: 'human', created_at: new Date(Date.now() - 60000).toISOString() },
   ],
   2: [
+    { id: 199, conversation_id: 2, direction: 'inbound', content: 'Hola, consulto si el sistema emite remitos electrónicos con código QR.', sent_by: 'human', created_at: new Date(Date.now() - 86400000 * 4).toISOString() },
+    { id: 200, conversation_id: 2, direction: 'outbound', content: 'Buenas tardes. Sí, emitimos remitos y facturas A/B con CAE de AFIP en milisegundos.', sent_by: 'human', sender_name: 'Laura Benítez', created_at: new Date(Date.now() - 86400000 * 4 + 600000).toISOString() },
     { id: 201, conversation_id: 2, direction: 'inbound', content: '¿Tienen integración con AFIP y factura electrónica en el ERP?', sent_by: 'human', created_at: new Date(Date.now() - 300000).toISOString() },
     { id: 202, conversation_id: 2, direction: 'outbound', content: '¡Hola Laura! Sí, Clientum cuenta con conexión nativa por WebServices con AFIP para Facturas A, B, C y remitos electrónicos, además de conciliación bancaria automática. ¿Querés agendar una demo guiada?', sent_by: 'bot', created_at: new Date(Date.now() - 290000).toISOString() },
   ],
   3: [
+    { id: 299, conversation_id: 3, direction: 'inbound', content: 'Estimados, necesitamos presupuesto para 25 licencias en Cuyo.', sent_by: 'human', created_at: new Date(Date.now() - 86400000 * 6).toISOString() },
     { id: 301, conversation_id: 3, direction: 'inbound', content: 'Hola, queremos consultar precios para el plan Enterprise.', sent_by: 'human', created_at: new Date(Date.now() - 7200000).toISOString() },
     { id: 302, conversation_id: 3, direction: 'outbound', content: 'Hola Esteban, te atiende Matías de Clientum. Te paso el detalle de la propuesta personalizada para 25 puestos.', sent_by: 'human', created_at: new Date(Date.now() - 4000000).toISOString() },
     { id: 303, conversation_id: 3, direction: 'inbound', content: 'Quedamos en contacto para la demo del jueves', sent_by: 'human', created_at: new Date(Date.now() - 3600000).toISOString() },
   ],
   4: [
+    { id: 400, conversation_id: 4, direction: 'inbound', content: 'Boa tarde! Vimos seu sistema no Rio de Janeiro.', sent_by: 'human', created_at: new Date(Date.now() - 86400000 * 3).toISOString() },
     { id: 401, conversation_id: 4, direction: 'inbound', content: 'Olá! Queremos automatizar as reservas e atendimento pelo WhatsApp no Brasil.', sent_by: 'human', created_at: new Date(Date.now() - 7200000).toISOString() },
     { id: 402, conversation_id: 4, direction: 'outbound', content: 'Olá! Que ótimo falar com você. Nossa sede em Arraial do Cabo atende todo o mercado brasileiro com integração direta ao WhatsApp Cloud API e PIX. Posso te enviar nossa apresentação?', sent_by: 'bot', created_at: new Date(Date.now() - 7180000).toISOString() },
   ],
   5: [
+    { id: 499, conversation_id: 5, direction: 'inbound', content: 'Hola, ¿tienen lista de precios para distribuidoras de alimentos?', sent_by: 'human', created_at: new Date(Date.now() - 86400000 * 7).toISOString() },
     { id: 501, conversation_id: 5, direction: 'inbound', content: 'Buenas tardes, necesitamos catálogo con precios mayoristas para reposición semanal.', sent_by: 'human', created_at: new Date(Date.now() - 14400000).toISOString() },
     { id: 502, conversation_id: 5, direction: 'outbound', content: '¡Buenas tardes! Bienvenido a Clientum Distribución. El bot está preparando la lista con descuentos por escala.', sent_by: 'bot', created_at: new Date(Date.now() - 14300000).toISOString() }
   ],
   6: [
+    { id: 599, conversation_id: 6, direction: 'inbound', content: 'Buenas, consulto si se conecta con sistema de turnos de clínica médica.', sent_by: 'human', created_at: new Date(Date.now() - 86400000 * 4).toISOString() },
     { id: 601, conversation_id: 6, direction: 'inbound', content: '¿El bot puede confirmar turnos médicos de manera automática y enviar recordatorios?', sent_by: 'human', created_at: new Date(Date.now() - 18000000).toISOString() },
     { id: 602, conversation_id: 6, direction: 'outbound', content: '¡Hola Dr. Rossi! Sí, sincroniza con agendas médicas y envía recordatorios automáticos 24hs antes por WhatsApp.', sent_by: 'human', created_at: new Date(Date.now() - 17900000).toISOString() }
   ]

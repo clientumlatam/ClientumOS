@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   MessageSquare,
   Send,
@@ -38,7 +38,11 @@ import {
   Radio,
   ChevronDown,
   Layers,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Calendar,
+  CalendarRange,
+  X,
+  ArrowDown
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { BulkWhatsAppModal, BulkContactItem } from '../BulkWhatsAppModal';
@@ -172,6 +176,17 @@ export default function CrmFullWhatsApp() {
   const [simulatingInbound, setSimulatingInbound] = useState(false);
   const [isPushModalOpen, setIsPushModalOpen] = useState(false);
 
+  // Date Range Filter state for Conversation List / Detailed Chat
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [datePreset, setDatePreset] = useState<'all' | 'today' | '7d' | '30d' | 'custom'>('all');
+  const [showDateFilterInputs, setShowDateFilterInputs] = useState<boolean>(false);
+
+  // Auto-scroll manual detection state
+  const [isUserScrolledUp, setIsUserScrolledUp] = useState(false);
+  const [unreadWhileScrolled, setUnreadWhileScrolled] = useState(0);
+  const isUserScrolledUpRef = useRef<boolean>(false);
+
   // Native & Background Push Service Worker Hook
   const {
     permission,
@@ -200,6 +215,57 @@ export default function CrmFullWhatsApp() {
   const prevSelectedIdRef = useRef<number | null>(null);
   const agentSwitcherRef = useRef<HTMLDivElement>(null);
 
+  // Filter messages by selected date range
+  const filteredMessages = useMemo(() => {
+    if (!startDate && !endDate) return messages;
+    return messages.filter(msg => {
+      if (!msg.created_at) return true;
+      const msgDate = new Date(msg.created_at);
+      if (isNaN(msgDate.getTime())) return true;
+      const msgDateStr = msgDate.toISOString().split('T')[0];
+      if (startDate && msgDateStr < startDate) return false;
+      if (endDate && msgDateStr > endDate) return false;
+      return true;
+    });
+  }, [messages, startDate, endDate]);
+
+  const handleDatePresetSelect = (preset: 'all' | 'today' | '7d' | '30d' | 'custom') => {
+    setDatePreset(preset);
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    if (preset === 'all') {
+      setStartDate('');
+      setEndDate('');
+      setShowDateFilterInputs(false);
+    } else if (preset === 'today') {
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+      setShowDateFilterInputs(false);
+    } else if (preset === '7d') {
+      const past7 = new Date();
+      past7.setDate(now.getDate() - 7);
+      setStartDate(past7.toISOString().split('T')[0]);
+      setEndDate(todayStr);
+      setShowDateFilterInputs(false);
+    } else if (preset === '30d') {
+      const past30 = new Date();
+      past30.setDate(now.getDate() - 30);
+      setStartDate(past30.toISOString().split('T')[0]);
+      setEndDate(todayStr);
+      setShowDateFilterInputs(false);
+    } else if (preset === 'custom') {
+      setShowDateFilterInputs(true);
+    }
+  };
+
+  const handleClearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
+    setDatePreset('all');
+    setShowDateFilterInputs(false);
+  };
+
   useEffect(() => {
     loadAccounts();
     loadAgents();
@@ -227,6 +293,20 @@ export default function CrmFullWhatsApp() {
     }
   };
 
+  // Scroll listener on messages container: detect if user manually scrolled up
+  const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const distanceFromBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+    // Threshold of 80px: if user is >80px above the bottom, they are reading history
+    const scrolledUp = distanceFromBottom > 80;
+    setIsUserScrolledUp(scrolledUp);
+    isUserScrolledUpRef.current = scrolledUp;
+    if (!scrolledUp) {
+      setUnreadWhileScrolled(0);
+    }
+  };
+
+  // Refined auto-scroll: pauses automatic scrolling when user is scrolled up reading old messages
   useEffect(() => {
     if (!selected || loadingMsgs) return;
 
@@ -236,19 +316,29 @@ export default function CrmFullWhatsApp() {
     if (isNewConversation) {
       prevSelectedIdRef.current = selected.id;
       prevMessagesCountRef.current = messages.length;
+      setIsUserScrolledUp(false);
+      isUserScrolledUpRef.current = false;
+      setUnreadWhileScrolled(0);
       const timeoutId = setTimeout(() => {
         scrollToBottom('auto');
       }, 50);
       return () => clearTimeout(timeoutId);
     } else if (isNewMessage) {
+      const addedCount = messages.length - prevMessagesCountRef.current;
       prevMessagesCountRef.current = messages.length;
-      const timeoutId = setTimeout(() => {
-        scrollToBottom('smooth');
-      }, 50);
-      return () => clearTimeout(timeoutId);
-    }
 
-    prevMessagesCountRef.current = messages.length;
+      // If user is currently scrolling up to read older history, PAUSE auto-scroll!
+      if (isUserScrolledUpRef.current) {
+        setUnreadWhileScrolled(prev => prev + addedCount);
+      } else {
+        const timeoutId = setTimeout(() => {
+          scrollToBottom('smooth');
+        }, 50);
+        return () => clearTimeout(timeoutId);
+      }
+    } else {
+      prevMessagesCountRef.current = messages.length;
+    }
   }, [messages, selected, loadingMsgs]);
 
   const loadAccounts = async () => {
@@ -586,16 +676,19 @@ export default function CrmFullWhatsApp() {
     doc.setFontSize(9);
     doc.setTextColor(148, 163, 184);
     doc.text(`Contacto: ${selected.contact_name || selected.phone} (${selected.phone})`, 14, 22);
-    doc.text(`Asesor Asignado: ${selected.assigned_agent_name || 'Sin Asignar'} · Exportado: ${new Date().toLocaleString('es-AR')}`, 14, 28);
+    const dateFilterInfo = (startDate || endDate)
+      ? ` · Rango Fechas: ${startDate || 'Inicio'} hasta ${endDate || 'Hoy'}`
+      : '';
+    doc.text(`Asesor Asignado: ${selected.assigned_agent_name || 'Sin Asignar'} · Exportado: ${new Date().toLocaleString('es-AR')}${dateFilterInfo}`, 14, 28);
 
     let currentY = 45;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(15, 23, 42);
-    doc.text('Historial de Mensajes', 14, currentY);
+    doc.text(`Historial de Mensajes (${filteredMessages.length} mensaje${filteredMessages.length === 1 ? '' : 's'})`, 14, currentY);
     currentY += 8;
 
-    messages.forEach((msg) => {
+    filteredMessages.forEach((msg) => {
       if (currentY > 270) {
         doc.addPage();
         currentY = 20;
@@ -1017,6 +1110,85 @@ export default function CrmFullWhatsApp() {
               </div>
             </div>
 
+            {/* Date Range Filter Selector */}
+            <div className="p-2.5 border-b border-[#1E293B] bg-[#070c18]/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <CalendarRange className="w-3.5 h-3.5 text-emerald-400" />
+                  Rango de Fechas
+                </span>
+                {(startDate || endDate) && (
+                  <button
+                    onClick={handleClearDateFilter}
+                    className="text-[10px] text-rose-400 hover:text-rose-300 flex items-center gap-0.5 font-semibold cursor-pointer"
+                    title="Quitar filtro de fechas"
+                  >
+                    <X className="w-3 h-3" /> Limpiar
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Presets */}
+              <div className="flex items-center gap-1 overflow-x-auto pb-0.5 text-[10px]">
+                {[
+                  { id: 'all', label: 'Todos' },
+                  { id: 'today', label: 'Hoy' },
+                  { id: '7d', label: '7 días' },
+                  { id: '30d', label: '30 días' },
+                  { id: 'custom', label: 'Personalizado' },
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => handleDatePresetSelect(p.id as any)}
+                    className={`px-2 py-1 rounded-lg font-medium transition-all shrink-0 cursor-pointer ${
+                      datePreset === p.id
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold shadow-xs'
+                        : 'bg-[#050B14] text-slate-400 hover:text-slate-200 border border-slate-800'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Date Pickers */}
+              {(showDateFilterInputs || datePreset === 'custom' || startDate || endDate) && (
+                <div className="grid grid-cols-2 gap-1.5 pt-1">
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-slate-400 mb-0.5">Desde</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={e => {
+                        setStartDate(e.target.value);
+                        setDatePreset('custom');
+                      }}
+                      className="w-full bg-[#050B14] border border-[#1E293B] rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-slate-400 mb-0.5">Hasta</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={e => {
+                        setEndDate(e.target.value);
+                        setDatePreset('custom');
+                      }}
+                      className="w-full bg-[#050B14] border border-[#1E293B] rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(startDate || endDate) && (
+                <div className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20 flex items-center justify-between">
+                  <span>Filtrando: {startDate || 'Inicio'} → {endDate || 'Hoy'}</span>
+                  <span className="font-mono text-[9px] text-emerald-300">({filteredMessages.length} msgs)</span>
+                </div>
+              )}
+            </div>
+
             {/* Conversations List */}
             <div className="flex-1 overflow-y-auto divide-y divide-[#1E293B]/40">
               {loading ? (
@@ -1196,15 +1368,53 @@ export default function CrmFullWhatsApp() {
                 </div>
 
                 {/* Message stream */}
-                <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#050B14]/40">
+                <div
+                  ref={messagesContainerRef}
+                  onScroll={handleMessagesScroll}
+                  className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#050B14]/40 relative"
+                >
+                  {/* Active Date Range Filter Banner */}
+                  {(startDate || endDate) && (
+                    <div className="sticky top-0 z-20 mb-3 p-2.5 bg-[#0A101F]/95 backdrop-blur-md border border-emerald-500/30 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2 text-emerald-300 shadow-lg">
+                      <div className="flex items-center gap-2">
+                        <CalendarRange className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>
+                          Filtrando por fecha: <strong className="text-white">{startDate || 'Inicio'}</strong> → <strong className="text-white">{endDate || 'Hoy'}</strong>
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 rounded-full font-mono text-emerald-300 font-bold">
+                          {filteredMessages.length} de {messages.length} mensajes
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleClearDateFilter}
+                        className="text-[11px] text-slate-300 hover:text-white flex items-center gap-1 font-semibold px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+                      >
+                        <X className="w-3 h-3" /> Quitar filtro
+                      </button>
+                    </div>
+                  )}
+
                   {loadingMsgs ? (
                     <div className="flex items-center justify-center h-full">
                       <RefreshCw className="w-5 h-5 text-slate-500 animate-spin" />
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="text-center text-slate-500 text-xs py-12">Sin mensajes registrados</div>
+                  ) : filteredMessages.length === 0 ? (
+                    <div className="text-center py-12 px-4 space-y-3">
+                      <CalendarRange className="w-8 h-8 text-slate-600 mx-auto" />
+                      <p className="text-xs font-semibold text-slate-300">
+                        No hay mensajes entre {startDate || 'el inicio'} y {endDate || 'hoy'}.
+                      </p>
+                      <button
+                        onClick={handleClearDateFilter}
+                        className="px-3 py-1.5 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        Ver todos los mensajes ({messages.length})
+                      </button>
+                    </div>
                   ) : (
-                    messages.map(msg => (
+                    filteredMessages.map(msg => (
                       <div key={msg.id} className={`flex gap-2 ${msg.direction === 'outbound' ? 'justify-end' : 'justify-start'}`}>
                         {msg.direction === 'inbound' && (
                           <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0 mt-1 border border-slate-700">
@@ -1248,6 +1458,33 @@ export default function CrmFullWhatsApp() {
                       </div>
                     ))
                   )}
+
+                  {/* Manual scroll paused floating indicator */}
+                  {isUserScrolledUp && (
+                    <div className="sticky bottom-2 flex justify-center z-30 pointer-events-none">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          scrollToBottom('smooth');
+                          setIsUserScrolledUp(false);
+                          isUserScrolledUpRef.current = false;
+                          setUnreadWhileScrolled(0);
+                        }}
+                        className="pointer-events-auto bg-[#0b1324] hover:bg-slate-800 text-white border border-emerald-500/50 shadow-2xl px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all animate-bounce cursor-pointer"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>
+                          {unreadWhileScrolled > 0
+                            ? `${unreadWhileScrolled} nuevo${unreadWhileScrolled > 1 ? 's' : ''} mensaje${unreadWhileScrolled > 1 ? 's' : ''} recibido${unreadWhileScrolled > 1 ? 's' : ''} (Scroll pausado)`
+                            : 'Desplazar al último mensaje'}
+                        </span>
+                        {unreadWhileScrolled > 0 && (
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+
                   <div ref={messagesEndRef} />
                 </div>
 
