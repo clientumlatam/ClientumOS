@@ -6,6 +6,7 @@ import { GmailManager } from './components/gmail/GmailManager';
 import DashboardApp from './dashboard/src/App';
 import { IndustryLandingPage } from './components/public/IndustryLandingPage';
 import { IndustryDirectoryPage } from './components/public/IndustryDirectoryPage';
+import { PublicStorefrontPage } from './components/public/PublicStorefrontPage';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { ThemeContextProvider } from './lib/ThemeContext';
 
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/dashboard/*" element={<DashboardApp />} />
         
         {/* Industry Landing Pages & SEO Verticals */}
+        <Route path="/tienda/:slug" element={<PublicStorefrontPage />} />
         <Route path="/industrias" element={<IndustryDirectoryPage />} />
         <Route path="/industria/:slug" element={<IndustryLandingPage />} />
         <Route path="/agro" element={<IndustryLandingPage customSlug="agro" />} />

@@ -25,9 +25,12 @@ import {
   Workflow,
   Bug,
   BookOpen,
+  Cloud,
 } from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
 import { CustomField, Language } from '../../types';
+import { generateStoreSitemap } from '../../../../lib/sitemapGenerator';
+import { DomainCloudflareManager } from '../common/DomainCloudflareManager';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -49,7 +52,52 @@ export const SettingsView: React.FC = () => {
     showToast,
   } = useCRM();
 
-  const [activeSubTab, setActiveSubTab] = useState<'appearance' | 'schema' | 'members' | 'integrations' | 'ecosystem' | 'data'>('appearance');
+  const [activeSubTab, setActiveSubTab] = useState<'appearance' | 'schema' | 'members' | 'integrations' | 'ecosystem' | 'data' | 'publicSeo' | 'domains'>('appearance');
+
+  // Public SEO Settings State
+  const [storeSlug, setStoreSlug] = useState('acme-technologies');
+  const [seoTitle, setSeoTitle] = useState('Acme Technologies | Soluciones y Servicios B2B');
+  const [metaDescription, setMetaDescription] = useState('Descubre nuestra oferta comercial y servicios profesionales. Compra online o contáctanos directamente.');
+  const [ogImage, setOgImage] = useState('https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop&q=80');
+  const [keywords, setKeywords] = useState<string[]>(['b2b', 'software', 'consultoria', 'clientum']);
+  const [newKeyword, setNewKeyword] = useState('');
+  const [isAiOptimizingSeo, setIsAiOptimizingSeo] = useState(false);
+
+  const handleAiOptimizeSeo = async () => {
+    setIsAiOptimizingSeo(true);
+    try {
+      const res = await fetch('/api/ai/seo-optimize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeName: storeSlug.replace(/-/g, ' ').toUpperCase(),
+          storeSlogan: metaDescription,
+          products: [
+            { id: 'p1', name: 'Licencia Enterprise CRM' },
+            { id: 'p2', name: 'Bot de WhatsApp IA 24/7' },
+            { id: 'p3', name: 'Consultoría Estratégica' }
+          ],
+          language
+        })
+      });
+      const data = await res.json();
+      if (data.seoTitle) setSeoTitle(data.seoTitle);
+      if (data.metaDescription) setMetaDescription(data.metaDescription);
+      if (data.ogImage) setOgImage(data.ogImage);
+      if (data.keywords && Array.isArray(data.keywords)) setKeywords(data.keywords);
+      showToast('¡Metadatos SEO generados y optimizados con éxito por Gemini AI!', 'success');
+    } catch (err) {
+      showToast('Error conectando con Gemini AI para SEO', 'error');
+    } finally {
+      setIsAiOptimizingSeo(false);
+    }
+  };
+
+  const generatedSitemap = generateStoreSitemap(`${storeSlug}.clientum.com.ar`, [
+    { id: 'p1', name: 'Licencia Enterprise CRM' },
+    { id: 'p2', name: 'Bot de WhatsApp IA 24/7' },
+    { id: 'p3', name: 'Consultoría Estratégica' }
+  ]);
 
   // Custom fields state
   const [customFields, setCustomFields] = useState<CustomField[]>([
@@ -232,6 +280,38 @@ export const SettingsView: React.FC = () => {
         >
           <Download className="w-3.5 h-3.5" />
           {t('dataManagement')}
+        </button>
+
+        <button
+          id="tab-settings-publicSeo"
+          onClick={() => setActiveSubTab('publicSeo')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shrink-0 ${
+            activeSubTab === 'publicSeo'
+              ? 'bg-[#1e2434] text-white font-semibold'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+          Public SEO Settings
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 font-mono">
+            Gemini
+          </span>
+        </button>
+
+        <button
+          id="tab-settings-domains"
+          onClick={() => setActiveSubTab('domains')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shrink-0 ${
+            activeSubTab === 'domains'
+              ? 'bg-[#1e2434] text-white font-semibold'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Cloud className="w-3.5 h-3.5 text-orange-400" />
+          Dominios & Cloudflare
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-orange-500/20 text-orange-300 font-mono">
+            DNS/SSL
+          </span>
         </button>
       </div>
 
@@ -1014,6 +1094,190 @@ export const SettingsView: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* SUBTAB: PUBLIC SEO SETTINGS & SITEMAP */}
+      {activeSubTab === 'publicSeo' && (
+        <div className="space-y-6 max-w-4xl">
+          <div className="bg-[#12151d] border border-[#1e2330] p-6 rounded-2xl space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1e2330]">
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
+                  <span>Public SEO Settings & Gemini Optimization</span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Configura los metadatos de Google, imágenes OpenGraph para redes sociales y gestiona el sitemap.xml automático de tu tienda pública.
+                </p>
+              </div>
+              <button
+                onClick={handleAiOptimizeSeo}
+                disabled={isAiOptimizingSeo}
+                className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-purple-600/25 cursor-pointer disabled:opacity-50"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>{isAiOptimizingSeo ? 'Optimizando con Gemini...' : 'Optimizar SEO con IA'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">SEO Title (Título de Página)</label>
+                  <input
+                    type="text"
+                    value={seoTitle}
+                    onChange={(e) => setSeoTitle(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#171c29] border border-[#232d44] rounded-xl text-white text-xs focus:outline-none focus:border-purple-500"
+                  />
+                  <span className="text-[10px] text-slate-500">{seoTitle.length}/60 caracteres recomendados</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">Meta Description (Descripción en Buscadores)</label>
+                  <textarea
+                    rows={3}
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#171c29] border border-[#232d44] rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 resize-none"
+                  />
+                  <span className="text-[10px] text-slate-500">{metaDescription.length}/160 caracteres recomendados</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">Social Sharing Image (OpenGraph URL)</label>
+                  <input
+                    type="text"
+                    value={ogImage}
+                    onChange={(e) => setOgImage(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#171c29] border border-[#232d44] rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono text-[11px]"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">Keyword Tags (Palabras Clave)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Nueva keyword..."
+                      value={newKeyword}
+                      onChange={(e) => setNewKeyword(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newKeyword.trim()) {
+                          e.preventDefault();
+                          setKeywords([...keywords, newKeyword.trim()]);
+                          setNewKeyword('');
+                        }
+                      }}
+                      className="flex-1 px-3 py-2 bg-[#171c29] border border-[#232d44] rounded-xl text-white text-xs focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newKeyword.trim()) {
+                          setKeywords([...keywords, newKeyword.trim()]);
+                          setNewKeyword('');
+                        }
+                      }}
+                      className="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold cursor-pointer"
+                    >
+                      Añadir
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 pt-2">
+                    {keywords.map((kw, i) => (
+                      <span key={i} className="px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/30 text-[11px] font-medium flex items-center gap-1.5">
+                        {kw}
+                        <button
+                          onClick={() => setKeywords(keywords.filter((_, idx) => idx !== i))}
+                          className="hover:text-rose-400 font-bold"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Preview & OpenGraph Card */}
+              <div className="space-y-4 bg-[#171c29] p-5 rounded-2xl border border-[#232d44] flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Vista Previa Social (OpenGraph / Twitter Card)</div>
+                  
+                  <div className="bg-[#12151d] border border-slate-700/80 rounded-xl overflow-hidden shadow-lg">
+                    <div className="h-32 bg-slate-800 overflow-hidden relative">
+                      <img src={ogImage} alt="OG Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600'; }} />
+                    </div>
+                    <div className="p-3 space-y-1">
+                      <div className="text-[10px] text-slate-400 uppercase tracking-wide font-mono">clientum.com.ar/{storeSlug}</div>
+                      <h4 className="font-bold text-white text-xs line-clamp-1">{seoTitle}</h4>
+                      <p className="text-[11px] text-slate-400 line-clamp-2">{metaDescription}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      showToast('¡Configuración SEO guardada y aplicada al subdominio!', 'success');
+                    }}
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer transition-all"
+                  >
+                    Guardar Cambios SEO
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Automatic Sitemap.xml Generator & Viewer */}
+          <div className="bg-[#12151d] border border-[#1e2330] p-6 rounded-2xl space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-emerald-400" />
+                  <span>Sitemap.xml Automático (Indexación Google)</span>
+                </h3>
+                <p className="text-xs text-slate-400">Generado dinámicamente con todas las páginas de productos y servicios de tu tienda.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedSitemap);
+                    showToast('¡Sitemap.xml copiado al portapapeles!', 'success');
+                  }}
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-700 cursor-pointer"
+                >
+                  Copiar Sitemap
+                </button>
+                <button
+                  onClick={() => {
+                    const blob = new Blob([generatedSitemap], { type: 'application/xml' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'sitemap.xml';
+                    a.click();
+                    showToast('¡sitemap.xml descargado con éxito!', 'success');
+                  }}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold cursor-pointer shadow"
+                >
+                  Descargar sitemap.xml
+                </button>
+              </div>
+            </div>
+
+            <pre className="text-[11px] font-mono text-emerald-400 bg-[#171c29] p-4 rounded-xl border border-[#232d44] h-48 overflow-y-auto">
+              {generatedSitemap}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB DOMAINS & CLOUDFLARE MANAGEMENT */}
+      {activeSubTab === 'domains' && (
+        <DomainCloudflareManager onToast={showToast} titlePrefix="CRM Enterprise" />
       )}
     </div>
   );

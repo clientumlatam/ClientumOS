@@ -121,6 +121,8 @@ export interface Activity {
 }
 
 export type ActiveTab = 
+  | 'gettingStarted'
+  | 'publicStore'
   | 'opportunities' 
   | 'companies' 
   | 'people' 

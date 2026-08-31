@@ -27,6 +27,8 @@ import { CustomObjectsView } from './components/custom/CustomObjectsView';
 import { WorkflowsView } from './components/workflows/WorkflowsView';
 import { CSVStudioView } from './components/csv/CSVStudioView';
 import { BrochureView } from './components/power/BrochureView';
+import { GettingStartedView } from './components/gettingStarted/GettingStartedView';
+import { PublicStoreView } from './components/publicStore/PublicStoreView';
 import { RecordDrawer } from './components/common/RecordDrawer';
 import { CommandPalette } from './components/common/CommandPalette';
 import { NewRecordModal } from './components/common/NewRecordModal';
@@ -44,6 +46,8 @@ const MainContent: React.FC = () => {
       <Navbar />
 
       <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-[#0a0c10]">
+        {activeTab === 'gettingStarted' && <GettingStartedView />}
+        {activeTab === 'publicStore' && <PublicStoreView />}
         {activeTab === 'opportunities' && (
           viewMode === 'kanban' ? <KanbanView /> : <TableView />
         )}
