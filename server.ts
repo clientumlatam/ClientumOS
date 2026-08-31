@@ -15,6 +15,7 @@ import crypto from "crypto";
 import webpush from "web-push";
 import { loadSmtpCredentials } from "./src/lib/smtp.js";
 import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, sendContactFormEmail, createMailTransport } from "./server_lib/mailer.js";
+import { generateCompleteClientumSitemap } from "./src/lib/sitemapGenerator.js";
 
 dotenv.config();
 
@@ -457,6 +458,20 @@ app.post("/api/auth/logout", (req: AuthRequest, res: AuthResponse) => {
     res.clearCookie("connect.sid");
     return res.json({ ok: true });
   });
+});
+
+app.get("/sitemap.xml", (req: AuthRequest, res: AuthResponse) => {
+  try {
+    const protocol = req.headers["x-forwarded-proto"] || "https";
+    const host = req.headers.host || "clientum.com.ar";
+    const baseUrl = `${protocol}://${host}`;
+    const xml = generateCompleteClientumSitemap(baseUrl);
+    res.header("Content-Type", "application/xml; charset=utf-8");
+    return res.send(xml);
+  } catch (err) {
+    console.error("Error generating sitemap:", err);
+    return res.status(500).send("Error generating sitemap");
+  }
 });
 
 app.post("/api/contact", async (req, res) => {

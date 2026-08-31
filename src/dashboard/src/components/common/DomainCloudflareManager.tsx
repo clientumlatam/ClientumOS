@@ -1227,7 +1227,17 @@ export const DomainCloudflareManager: React.FC<DomainCloudflareManagerProps> = (
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <a
+                  href="/sitemap.xml"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+                  title="Descargar sitemap.xml completo de todo el ecosistema (industrias, tienda y CRM)"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>Descargar sitemap.xml</span>
+                </a>
                 <button
                   onClick={handleBatchHealthScan}
                   disabled={isBatchScanning}

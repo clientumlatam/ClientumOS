@@ -31,6 +31,9 @@ import { useCRM } from '../../context/CRMContext';
 import { CustomField, Language } from '../../types';
 import { generateStoreSitemap } from '../../../../lib/sitemapGenerator';
 import { DomainCloudflareManager } from '../common/DomainCloudflareManager';
+import { VisualSitemapGraph } from '../common/VisualSitemapGraph';
+import { PublicSiteSeoAudit } from '../common/PublicSiteSeoAudit';
+import { SeoMetadataManager } from '../common/SeoMetadataManager';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -52,7 +55,7 @@ export const SettingsView: React.FC = () => {
     showToast,
   } = useCRM();
 
-  const [activeSubTab, setActiveSubTab] = useState<'appearance' | 'schema' | 'members' | 'integrations' | 'ecosystem' | 'data' | 'publicSeo' | 'domains'>('appearance');
+  const [activeSubTab, setActiveSubTab] = useState<'appearance' | 'schema' | 'members' | 'integrations' | 'ecosystem' | 'data' | 'publicSeo' | 'domains' | 'seoGraph' | 'seoAudit' | 'seoManager'>('appearance');
 
   // Public SEO Settings State
   const [storeSlug, setStoreSlug] = useState('acme-technologies');
@@ -312,6 +315,45 @@ export const SettingsView: React.FC = () => {
           <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-orange-500/20 text-orange-300 font-mono">
             DNS/SSL
           </span>
+        </button>
+
+        <button
+          id="tab-settings-seoGraph"
+          onClick={() => setActiveSubTab('seoGraph')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shrink-0 ${
+            activeSubTab === 'seoGraph'
+              ? 'bg-[#1e2434] text-white font-semibold'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Globe className="w-3.5 h-3.5 text-blue-400" />
+          Sitemap Graph
+        </button>
+
+        <button
+          id="tab-settings-seoAudit"
+          onClick={() => setActiveSubTab('seoAudit')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shrink-0 ${
+            activeSubTab === 'seoAudit'
+              ? 'bg-[#1e2434] text-white font-semibold'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5 text-purple-400" />
+          SEO Audit
+        </button>
+
+        <button
+          id="tab-settings-seoManager"
+          onClick={() => setActiveSubTab('seoManager')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shrink-0 ${
+            activeSubTab === 'seoManager'
+              ? 'bg-[#1e2434] text-white font-semibold'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+          Meta Manager
         </button>
       </div>
 
@@ -1278,6 +1320,21 @@ export const SettingsView: React.FC = () => {
       {/* SUBTAB DOMAINS & CLOUDFLARE MANAGEMENT */}
       {activeSubTab === 'domains' && (
         <DomainCloudflareManager onToast={showToast} titlePrefix="CRM Enterprise" />
+      )}
+
+      {/* SUBTAB SEO GRAPH */}
+      {activeSubTab === 'seoGraph' && (
+        <VisualSitemapGraph onToast={showToast} />
+      )}
+
+      {/* SUBTAB SEO AUDIT */}
+      {activeSubTab === 'seoAudit' && (
+        <PublicSiteSeoAudit onToast={showToast} />
+      )}
+
+      {/* SUBTAB SEO MANAGER */}
+      {activeSubTab === 'seoManager' && (
+        <SeoMetadataManager onToast={showToast} />
       )}
     </div>
   );

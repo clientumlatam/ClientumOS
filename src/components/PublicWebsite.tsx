@@ -95,6 +95,7 @@ import { FaqSection } from "./public/FaqSection";
 import { MobileBottomNav } from "./public/MobileBottomNav";
 import { FloatingWhatsAppButton } from "./public/FloatingWhatsAppButton";
 import { PymeTeamsGallery } from "./public/PymeTeamsGallery";
+import { ClientumCrmLanding } from "./public/ClientumCrmLanding";
 import pymeTeamMeetingImg from "../assets/images/pyme_team_meeting_1787518635370.jpg";
 import pymeCommercialSalesImg from "../assets/images/pyme_commercial_sales_1787518652661.jpg";
 import pymeAgroLogisticsImg from "../assets/images/pyme_agro_logistics_1787518669322.jpg";
@@ -5059,103 +5060,10 @@ export default function PublicWebsite({
 
             {/* ── FUNCIONES: CRM INTELIGENTE ── */}
             {activeTab === "crm_inteligente" && (
-              <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                  <div>
-                    <span className="text-blue-600 font-mono text-xs uppercase tracking-widest font-bold">CRM Inteligente</span>
-                    <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tight mt-1">
-                      Nunca más perdas<br />una venta
-                    </h1>
-                    <p className="text-slate-500 text-sm mt-4 leading-relaxed">
-                      Gestioná contactos, leads y deals en un pipeline visual. Con seguimiento automático y alertas para que nada se te escape.
-                    </p>
-                    <ul className="mt-6 flex flex-col gap-3 text-xs text-slate-600">
-                      {["Sin tarjeta de crédito", "Fácil de usar", "Soporte incluido"].map((item) => (
-                        <li key={item} className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0" />{item}</li>
-                      ))}
-                    </ul>
-                    <div className="flex gap-3 mt-8">
-                      <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis</button>
-                    </div>
-                  </div>
-                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                    <h4 className="font-bold text-slate-950 text-sm mb-4">Pipeline de ventas</h4>
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      {["Prospecto", "Contactado", "Propuesta", "Negociación", "Ganado"].map((stage) => (
-                        <div key={stage} className="flex-1 min-w-[80px] bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
-                          <div className="text-[10px] font-bold text-slate-700">{stage}</div>
-                          <div className="w-6 h-6 bg-[#1A3461]/10 rounded-full mx-auto mt-2"></div>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-slate-400 text-center mt-3">Arrastrá y soltá entre etapas</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { title: "Contactos y empresas unificados", desc: "Todos tus clientes, prospectos y empresas en un solo lugar con historial completo de interacciones." },
-                    { title: "Pipeline visual de ventas", desc: "Arrastrá deals entre etapas, asigná responsables y establecé fechas límite en segundos." },
-                    { title: "Seguimiento automático", desc: "El sistema te alerta cuando un deal lleva días sin actividad para que nunca pierdas una oportunidad." },
-                    { title: "Integración con WhatsApp y AFIP", desc: "Cada conversación y factura queda vinculada al deal correspondiente sin trabajo manual." },
-                  ].map((f) => (
-                    <div key={f.title} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                      <h4 className="font-bold text-slate-900 text-sm mb-2">{f.title}</h4>
-                      <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
-                    </div>
-                  ))}
-                </div>
-                {/* Módulos disponibles — implementación ERP/CRM completa */}
-                <div>
-                  <div className="text-center mb-10">
-                    <span className="text-blue-600 font-mono text-[10px] uppercase tracking-widest font-bold">Implementaciones ERP / CRM</span>
-                    <h2 className="text-2xl font-display font-black text-slate-950 tracking-tight mt-2">Módulos disponibles</h2>
-                    <p className="text-slate-500 text-xs max-w-2xl mx-auto mt-3 leading-relaxed">
-                      Un software completamente modular: activás sólo las funciones que tu empresa necesita. Se ejecuta 100% en la nube, accesible desde cualquier lugar con conexión a internet.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {[
-                      { group: "CRM & Ventas", icon: Briefcase, items: ["Seguimiento de clientes y terceros con historial completo", "Gestión de presupuestos, pedidos y contratos", "Tickets de soporte con creación automática desde email"] },
-                      { group: "Gestión de terceros", icon: Users, items: ["Clientes, proveedores y contactos unificados", "Categorías, niveles de precio y notas por tercero", "Notificaciones automáticas ante cambios de estado"] },
-                      { group: "Contratos y facturación", icon: FileText, items: ["Contratos de servicios periódicos con alertas de vencimiento", "Facturación electrónica integrada con AFIP", "Links de pago online (Paypal, Stripe, PayZen)"] },
-                      { group: "Finanzas", icon: BarChart2, items: ["Gestión de IVA, IRPF y cargas sociales", "Cuentas bancarias y domiciliaciones automáticas", "Estadísticas financieras y de márgenes de venta"] },
-                      { group: "Gestión documental", icon: LayoutGrid, items: ["Almacenamiento centralizado vinculado a cada entidad", "Presupuestos, pedidos, facturas y terceros conectados", "Búsqueda rápida por relación ficha–documento"] },
-                      { group: "Recursos Humanos", icon: Users, items: ["Gestión de usuarios, grupos y permisos granulares", "Vacaciones, salarios y hojas de horas", "Gestión de miembros para clubs y asociaciones"] },
-                      { group: "Productividad", icon: CheckSquare, items: ["Proyectos con márgenes de beneficio en tiempo real", "Agenda compartida con registro automático de acciones", "Desarrollo de reportes a medida con exportación a Excel"] },
-                      { group: "Manufactura", icon: Package, items: ["Listas de materiales (BOM) y órdenes de fabricación", "Control de stock virtual en tiempo real", "Gestión de lotes y series de producción"] },
-                      { group: "Omnicanal", icon: ShoppingCart, items: ["Dashboard con indicadores y alertas configurables", "Punto de venta (TPV) integrado con la facturación", "Sincronización de stock con Prestashop, WooCommerce, etc."] },
-                      { group: "Administración e integración", icon: Settings, items: ["Parametrización flexible, backups y tareas programadas", "Programación a medida según necesidades del negocio", "Migración de datos desde tu sistema anterior"] },
-                    ].map(({ group, icon: Icon, items }) => (
-                      <div key={group} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Icon className="w-4 h-4 text-blue-500" />
-                          <h4 className="font-bold text-slate-900 text-sm">{group}</h4>
-                        </div>
-                        <ul className="flex flex-col gap-1.5">
-                          {items.map((it) => (
-                            <li key={it} className="text-[11px] text-slate-500 leading-relaxed flex items-start gap-1.5">
-                              <Check className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />{it}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* PyME Argentina en Acción */}
-                <ArgentinePymeDetailBanner
-                  item={ARGENTINE_PYMES_DATA.terbay}
-                  title="Pipelines y Seguimiento en Equipos Comerciales"
-                  description="Inmobiliarias, distribuidoras y firmas de servicios estructuran sus oportunidades comerciales y cierres con el CRM inteligente de Clientum."
-                />
-
-                <div className="bg-[#1A3461] text-white rounded-2xl p-8 text-center">
-                  <h3 className="text-lg font-display font-bold">Organizá tu pipeline hoy</h3>
-                  <p className="text-xs text-slate-300 mt-2">Probalo 14 días gratis y cerrá más ventas desde la primera semana.</p>
-                  <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis →</button>
-                </div>
-              </div>
+              <ClientumCrmLanding 
+                onNavigateTab={(t) => { setActiveTab(t); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
+                onOpenAuthModal={() => setIsAuthModalOpen(true)} 
+              />
             )}
 
             {/* ── FUNCIONES: ASISTENTE IA ── */}

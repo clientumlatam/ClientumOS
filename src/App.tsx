@@ -3,10 +3,12 @@ import { Routes, Route, Link } from 'react-router-dom';
 import PublicWebsite from './components/PublicWebsite';
 import { AboutUs } from './components/AboutUs';
 import { GmailManager } from './components/gmail/GmailManager';
+import { PublicDomainManagerPage } from './pages/PublicDomainManagerPage';
 import DashboardApp from './dashboard/src/App';
 import { IndustryLandingPage } from './components/public/IndustryLandingPage';
 import { IndustryDirectoryPage } from './components/public/IndustryDirectoryPage';
 import { PublicStorefrontPage } from './components/public/PublicStorefrontPage';
+import { ClientumCrmLanding } from './components/public/ClientumCrmLanding';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { ThemeContextProvider } from './lib/ThemeContext';
 
@@ -25,6 +27,7 @@ export default function App() {
         <Route path="/dashboard/*" element={<DashboardApp />} />
         
         {/* Industry Landing Pages & SEO Verticals */}
+        <Route path="/clientum-crm" element={<ClientumCrmLanding />} />
         <Route path="/tienda/:slug" element={<PublicStorefrontPage />} />
         <Route path="/industrias" element={<IndustryDirectoryPage />} />
         <Route path="/industria/:slug" element={<IndustryLandingPage />} />
@@ -65,6 +68,8 @@ export default function App() {
             </div>
           }
         />
+        <Route path="/dominios" element={<PublicDomainManagerPage />} />
+        <Route path="/cloudflare" element={<PublicDomainManagerPage />} />
         <Route path="*" element={publicWebsiteElement} />
       </Routes>
     </ThemeContextProvider>
