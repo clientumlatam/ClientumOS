@@ -40,7 +40,7 @@ try {
 
   // 5. Build the API server to server.cjs
   console.log('⚙️ Compiling API Server (server.cjs)...');
-  const esbuildCmd = `npx esbuild apps/api/src/index.ts --bundle --platform=node --target=node20 --outfile=dist/server.cjs --external:express --external:pg --external:dotenv --external:bcryptjs --external:cors --external:express-session --external:connect-pg-simple --external:nodemailer --external:web-push --external:@google/genai`;
+  const esbuildCmd = `npx esbuild apps/api/src/index.ts --bundle --platform=node --target=node20 --outfile=dist/server.cjs --external:express --external:pg --external:dotenv --external:bcryptjs --external:cors --external:express-session --external:connect-pg-simple --external:nodemailer --external:web-push --external:@google/genai --external:vite`;
   execSync(esbuildCmd, { stdio: 'inherit', cwd: __dirname });
 
   console.log('✅ Build orchestration complete!');
