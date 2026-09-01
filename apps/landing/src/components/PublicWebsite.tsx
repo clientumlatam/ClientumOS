@@ -1681,7 +1681,9 @@ export default function PublicWebsite({
             {/* INICIO TAB */}
             {activeTab === "inicio" && (
               <div className="flex flex-col">
-                {/* ════════════════════════════════════════════════════�                    <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative z-10">
+                {/* ═══ HERO ═══ */}
+<section className="relative bg-slate-950 overflow-hidden pt-32 pb-20 px-6">
+                  <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative z-10">
                     <div className="lg:col-span-7 flex flex-col items-start gap-6">
                       <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 text-[10px] font-extrabold uppercase px-4 py-1.5 rounded-full tracking-widest flex items-center gap-2 font-mono">
                         <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
@@ -1799,17 +1801,7 @@ export default function PublicWebsite({
                               <option value="Inmobiliaria">{isPortuguese ? "Imobiliária & Construtora" : "Inmobiliaria & Real Estate"}</option>
                               <option value="E-Commerce">{isPortuguese ? "E-Commerce & Varejo" : "E-Commerce Web & Tiendas"}</option>
                               <option value="Servicios B2B / Profesional">{isPortuguese ? "Serviços B2B & Consultoria" : "Servicios B2B & Consultoría"}</option>
-                            </select>
-                          </div>
-                        </div>
-                        <button
-                          type="submit"
-                          className="mt-2 w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-lg text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
-                        >
-                          {isPortuguese ? "Solicitar Diagnóstico Gratuito" : "Solicitar Diagnóstico Gratuito"}
-                        </button>
-                      </form>
-                    </div>value="ERP-CRM">{isPortuguese ? "ERP & CRM Integrado" : "ERP & CRM Integrado"}</option>
+                              <option value="ERP-CRM">{isPortuguese ? "ERP & CRM Integrado" : "ERP & CRM Integrado"}</option>
                               <option value="Consultoria">{isPortuguese ? "Consultoria Estratégica" : "Consultoría General"}</option>
                               <option value="Ciberseguridad">{isPortuguese ? "Cibersegurança & Nuvem" : "Ciberseguridad"}</option>
                             </select>
@@ -1828,63 +1820,6 @@ export default function PublicWebsite({
 
                 {/* ═══ LIVE SOCIAL PROOF & KEY PERFORMANCE METRICS ═══ */}
                 <SocialProofBar />
-
-                {/* ═══ PANELES DESTACADOS (legado Viaweb) ═══ */}
-                <section className="bg-slate-50 border-b border-slate-200 py-16 px-6">
-                  <div className="max-w-6xl mx-auto flex flex-col gap-10">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {[
-                        { icon: Briefcase, eyebrow: "Software de Gestión", desc: "Un software completo para gestionar todos sus negocios. Sistemas integrados de gestión necesarios para las distintas áreas de su empresa en una única plataforma.", tab: "crm_inteligente" },
-                        { icon: Code2, eyebrow: "E-Commerce", desc: "Desarrollo de sitios web con tecnología omnicanal. Digitalización de su negocio con herramientas analíticas, marketing y diseño.", tab: "desarrollo_web" },
-                        { icon: BarChart2, eyebrow: "Business Intelligence", desc: "Seguimiento de las principales métricas de negocio y gestión. Puesta en marcha de campañas efectivas orientadas a objetivos planteados.", tab: "reportes" },
-                      ].map(({ icon: Icon, eyebrow, desc, tab }) => (
-                        <div key={eyebrow} className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col gap-3 shadow-xs hover:shadow-md transition-all">
-                          <div className="w-9 h-9 rounded-xl bg-[#1A3461]/10 flex items-center justify-center">
-                            <Icon className="w-4 h-4 text-[#1A3461]" />
-                          </div>
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#1A3461]">{eyebrow}</span>
-                          <p className="text-[11px] text-slate-500 leading-relaxed flex-1">{desc}</p>
-                          <button
-                            onClick={() => { setActiveTab(tab); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                            className="text-xs font-bold text-[#1A3461] hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer mt-1"
-                          >
-                            Ver más <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-[#1A3461] text-white rounded-2xl p-8 flex flex-col gap-3">
-                        <span className="text-emerald-400 font-mono text-[10px] uppercase tracking-widest font-bold">Nube Viaweb</span>
-                        <h3 className="text-lg font-display font-black tracking-tight">¿Está preparada tu empresa para migrar a la nube?</h3>
-                        <p className="text-slate-300 text-xs leading-relaxed">Hacé tu Autodiagnóstico Cloud sin costo.</p>
-                        <button
-                          onClick={() => {
-                            setDemoForm({ ...demoForm, mensaje: "Hola, quiero hacer el Autodiagnóstico Cloud sin costo para evaluar la migración de mi empresa a la nube." });
-                            setActiveTab("contacto");
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                          className="mt-2 self-start bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-2"
-                        >
-                          Hacelo ahora <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <div className="bg-slate-900 text-white rounded-2xl p-8 flex flex-col gap-3 relative overflow-hidden">
-                        <span className="absolute top-4 right-4 bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono uppercase tracking-wider">Próximamente</span>
-                        <span className="text-emerald-400 font-mono text-[10px] uppercase tracking-widest font-bold">Ciclo de charlas</span>
-                        <h3 className="text-lg font-display font-black tracking-tight">La transformación digital en tiempos de incertidumbre</h3>
-                        <p className="text-slate-300 text-xs leading-relaxed">Ciclo de charlas sobre transformación digital para empresas.</p>
-                        <button
-                          onClick={() => { setActiveTab("academia"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                          className="mt-2 self-start bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-2"
-                        >
-                          Ingresá ahora <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </section>
 
                 {/* ═══ POR QUÉ CLIENTUM ═══ */}
                 <section className="bg-white border-b border-slate-200 py-20 px-6">
@@ -1978,6 +1913,80 @@ export default function PublicWebsite({
                   </div>
                 </section>
 
+                {/* ───────── ECOSISTEMA HUB ───────── */}
+                <section className="bg-slate-900 text-white py-20 px-6">
+                  <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-12">
+                      <span className="text-emerald-400 font-mono text-[10px] uppercase font-bold tracking-widest">Comunidad & Recursos</span>
+                      <h2 className="text-2xl font-display font-black tracking-tight mt-2">El Ecosistema Clientum</h2>
+                      <p className="text-slate-400 text-xs mt-2 max-w-xl mx-auto">Capacitación, red de partners, contenidos y soporte: todo lo que necesitás para crecer.</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {[
+                        {
+                          id: "academia", icon: GraduationCap, accent: "from-indigo-600 to-violet-600",
+                          label: "Academia Clientum",
+                          desc: "Cursos gratuitos de CRM, automatización y ventas para tu equipo.",
+                          cta: "Ir a la Academia"
+                        },
+                        {
+                          id: "asociacion", icon: Users, accent: "from-violet-600 to-pink-600",
+                          label: "Programa de Partners",
+                          desc: "Sumate a la red de revendedores y afiliados. Comisiones del 30% recurrente.",
+                          cta: "Ver Programa"
+                        },
+                        {
+                          id: "blog", icon: BookOpen, accent: "from-rose-600 to-orange-500",
+                          label: "Recursos & Blog",
+                          desc: "Tácticas de ventas, marketing digital y automatizaciones para PyMEs.",
+                          cta: "Leer Artículos"
+                        },
+                        {
+                          id: "casos", icon: Building, accent: "from-emerald-600 to-teal-500",
+                          label: "Casos de Éxito",
+                          desc: "Cómo distribuidoras, estudios y comercios escalaron con Clientum.",
+                          cta: "Ver Historias"
+                        },
+                        {
+                          id: "clientes", icon: Users, accent: "from-cyan-600 to-blue-500",
+                          label: "Nuestros Clientes",
+                          desc: "Las empresas de la Patagonia y Argentina que ya trabajan con Clientum.",
+                          cta: "Ver Clientes"
+                        },
+                        {
+                          id: "nosotros", icon: Compass, accent: "from-blue-600 to-cyan-500",
+                          label: "Sobre Clientum",
+                          desc: "Nuestro equipo, cultura y por qué más de 35 empresas e instituciones del Alto Valle nos eligieron.",
+                          cta: "Conocernos"
+                        },
+                        {
+                          id: "ayuda", icon: HelpCircle, accent: "from-slate-600 to-slate-500",
+                          label: "Centro de Ayuda",
+                          desc: "FAQs, tutoriales y soporte técnico especializado en español.",
+                          cta: "Obtener Soporte"
+                        },
+                      ].map(({ id, icon: Icon, accent, label, desc, cta }) => (
+                        <button
+                          key={id}
+                          onClick={() => { setActiveTab(id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          className="group text-left bg-slate-950/60 border border-slate-800 hover:border-slate-600 rounded-2xl p-6 transition-all cursor-pointer flex flex-col gap-4 hover:bg-slate-800/60"
+                        >
+                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center shadow-lg`}>
+                            <Icon className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-sm text-white tracking-tight">{label}</h3>
+                            <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">{desc}</p>
+                          </div>
+                          <span className="text-[11px] font-bold text-slate-400 group-hover:text-emerald-400 flex items-center gap-1 transition-colors">
+                            {cta} <ArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
                 {/* ═══ SOCIAL PROOF STRIP ═══ */}
                 <section className="bg-slate-950 border-b border-slate-800/60 py-5 px-6">
                   <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-y-3 gap-x-0 md:divide-x md:divide-slate-800/60">
@@ -2008,43 +2017,6 @@ export default function PublicWebsite({
 
                 {/* ═══ TRUST, SECURITY, INFRASTRUCTURE & SLA GUARANTEES ═══ */}
                 <TrustAndSlaSection />
-
-                {/* ═══ PRIMARY PILLARS ═══ */}
-                <section className="bg-slate-50 border-b border-slate-200 py-20 px-6">
-                  <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-12">
-                      <span className="text-emerald-600 font-mono text-[10px] uppercase font-bold tracking-widest">{isPortuguese ? "Serviços Principais" : "Servicios Principales"}</span>
-                      <h2 className="text-2xl font-display font-black text-slate-900 tracking-tight mt-2">Nuestros Servicios Más Contratados</h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {(brochureData?.services?.slice(0, 3) || []).map((service, idx) => {
-                      const accents = [
-                        { num: "bg-emerald-50 text-emerald-700 border border-emerald-200", hover: "hover:border-emerald-200" },
-                        { num: "bg-blue-50 text-blue-700 border border-blue-200",     hover: "hover:border-blue-200" },
-                        { num: "bg-violet-50 text-violet-700 border border-violet-200", hover: "hover:border-violet-200" },
-                      ];
-                      const a = accents[idx % accents.length];
-                      return (
-                        <div key={idx} className={`bg-white rounded-2xl border border-slate-200 ${a.hover} p-7 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between group`}>
-                          <div>
-                            <div className={`w-12 h-12 ${a.num} rounded-2xl flex items-center justify-center font-black text-lg mb-5`}>
-                              0{idx + 1}
-                            </div>
-                            <h3 className="font-bold text-base text-slate-900 tracking-tight mb-3 leading-snug">{service.title}</h3>
-                            <p className="text-xs text-slate-500 leading-relaxed">{service.desc}</p>
-                          </div>
-                          <button
-                            onClick={() => { setActiveTab("servicios"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                            className="text-[#1A3461] hover:text-emerald-600 text-xs font-bold flex items-center gap-1.5 mt-5 self-start cursor-pointer transition-all group-hover:gap-2.5"
-                          >
-                            Ver más <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                    </div>
-                  </div>
-                </section>
 
                 {/* ═══ PYMES ARGENTINAS EN ACCIÓN (FOTOS REALES DE EQUIPOS) ═══ */}
                 <section className="bg-white border-b border-slate-200 py-20 px-6">
@@ -2265,43 +2237,39 @@ export default function PublicWebsite({
                 {/* ═══ GALERÍA INTERACTIVA DE EQUIPOS PYME EN ACCIÓN ═══ */}
                 <PymeTeamsGallery onContactClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
 
-                {/* Big List section: Lealtad, Versatilidad, Personalidad */}
-                <section className="bg-slate-900 text-white py-16 px-6">
-                  <div className="max-w-4xl mx-auto">
+                {/* ═══ PRIMARY PILLARS ═══ */}
+                <section className="bg-slate-50 border-b border-slate-200 py-20 px-6">
+                  <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-12">
-                      <h2 className="text-2xl font-display font-black tracking-tight">Nuestra Cultura Corporativa</h2>
-                      <p className="text-slate-400 text-xs mt-2">Los tres pilares esenciales bajo los cuales construimos código y forjamos relaciones duraderas.</p>
+                      <span className="text-emerald-600 font-mono text-[10px] uppercase font-bold tracking-widest">{isPortuguese ? "Serviços Principais" : "Servicios Principales"}</span>
+                      <h2 className="text-2xl font-display font-black text-slate-900 tracking-tight mt-2">Nuestros Servicios Más Contratados</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl">
-                        <div className="w-10 h-10 bg-blue-900/40 text-blue-400 rounded-full flex items-center justify-center mb-4">
-                          <CheckCircle2 className="w-5 h-5" />
+                    {(brochureData?.services?.slice(0, 3) || []).map((service, idx) => {
+                      const accents = [
+                        { num: "bg-emerald-50 text-emerald-700 border border-emerald-200", hover: "hover:border-emerald-200" },
+                        { num: "bg-blue-50 text-blue-700 border border-blue-200",     hover: "hover:border-blue-200" },
+                        { num: "bg-violet-50 text-violet-700 border border-violet-200", hover: "hover:border-violet-200" },
+                      ];
+                      const a = accents[idx % accents.length];
+                      return (
+                        <div key={idx} className={`bg-white rounded-2xl border border-slate-200 ${a.hover} p-7 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between group`}>
+                          <div>
+                            <div className={`w-12 h-12 ${a.num} rounded-2xl flex items-center justify-center font-black text-lg mb-5`}>
+                              0{idx + 1}
+                            </div>
+                            <h3 className="font-bold text-base text-slate-900 tracking-tight mb-3 leading-snug">{service.title}</h3>
+                            <p className="text-xs text-slate-500 leading-relaxed">{service.desc}</p>
+                          </div>
+                          <button
+                            onClick={() => { setActiveTab("servicios"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                            className="text-[#1A3461] hover:text-emerald-600 text-xs font-bold flex items-center gap-1.5 mt-5 self-start cursor-pointer transition-all group-hover:gap-2.5"
+                          >
+                            Ver más <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                        <h4 className="font-bold text-sm tracking-tight text-white mb-2">Lealtad</h4>
-                        <p className="text-[11px] text-slate-400 leading-relaxed">
-                          Comprometidos a largo plazo con el éxito de nuestros clientes. Tu infraestructura tecnológica y tus secretos comerciales están seguros con nosotros.
-                        </p>
-                      </div>
-
-                      <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl">
-                        <div className="w-10 h-10 bg-indigo-900/40 text-indigo-400 rounded-full flex items-center justify-center mb-4">
-                          <Compass className="w-5 h-5" />
-                        </div>
-                        <h4 className="font-bold text-sm tracking-tight text-white mb-2">Versatilidad</h4>
-                        <p className="text-[11px] text-slate-400 leading-relaxed">
-                          Ofrecemos servicios sumamente personalizables. Nos adaptamos a diferentes industrias, escalas de facturación y requerimientos reglamentarios AFIP.
-                        </p>
-                      </div>
-
-                      <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl">
-                        <div className="w-10 h-10 bg-emerald-900/40 text-emerald-400 rounded-full flex items-center justify-center mb-4">
-                          <Users className="w-5 h-5" />
-                        </div>
-                        <h4 className="font-bold text-sm tracking-tight text-white mb-2">Personalidad</h4>
-                        <p className="text-[11px] text-slate-400 leading-relaxed">
-                          No somos un robot empaquetador. Nos encanta sentarnos a tomar mate o coordinar videollamadas, prestando atención humana y detallista a cada lead.
-                        </p>
-                      </div>
+                      );
+                    })}
                     </div>
                   </div>
                 </section>
@@ -2367,76 +2335,100 @@ export default function PublicWebsite({
                   </div>
                 </section>
 
-                {/* ───────── ECOSISTEMA HUB ───────── */}
-                <section className="bg-slate-900 text-white py-20 px-6">
-                  <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-12">
-                      <span className="text-emerald-400 font-mono text-[10px] uppercase font-bold tracking-widest">Comunidad & Recursos</span>
-                      <h2 className="text-2xl font-display font-black tracking-tight mt-2">El Ecosistema Clientum</h2>
-                      <p className="text-slate-400 text-xs mt-2 max-w-xl mx-auto">Capacitación, red de partners, contenidos y soporte: todo lo que necesitás para crecer.</p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* ═══ PANELES DESTACADOS (legado Viaweb) ═══ */}
+                <section className="bg-slate-50 border-b border-slate-200 py-16 px-6">
+                  <div className="max-w-6xl mx-auto flex flex-col gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {[
-                        {
-                          id: "academia", icon: GraduationCap, accent: "from-indigo-600 to-violet-600",
-                          label: "Academia Clientum",
-                          desc: "Cursos gratuitos de CRM, automatización y ventas para tu equipo.",
-                          cta: "Ir a la Academia"
-                        },
-                        {
-                          id: "asociacion", icon: Users, accent: "from-violet-600 to-pink-600",
-                          label: "Programa de Partners",
-                          desc: "Sumate a la red de revendedores y afiliados. Comisiones del 30% recurrente.",
-                          cta: "Ver Programa"
-                        },
-                        {
-                          id: "blog", icon: BookOpen, accent: "from-rose-600 to-orange-500",
-                          label: "Recursos & Blog",
-                          desc: "Tácticas de ventas, marketing digital y automatizaciones para PyMEs.",
-                          cta: "Leer Artículos"
-                        },
-                        {
-                          id: "casos", icon: Building, accent: "from-emerald-600 to-teal-500",
-                          label: "Casos de Éxito",
-                          desc: "Cómo distribuidoras, estudios y comercios escalaron con Clientum.",
-                          cta: "Ver Historias"
-                        },
-                        {
-                          id: "clientes", icon: Users, accent: "from-cyan-600 to-blue-500",
-                          label: "Nuestros Clientes",
-                          desc: "Las empresas de la Patagonia y Argentina que ya trabajan con Clientum.",
-                          cta: "Ver Clientes"
-                        },
-                        {
-                          id: "nosotros", icon: Compass, accent: "from-blue-600 to-cyan-500",
-                          label: "Sobre Clientum",
-                          desc: "Nuestro equipo, cultura y por qué más de 35 empresas e instituciones del Alto Valle nos eligieron.",
-                          cta: "Conocernos"
-                        },
-                        {
-                          id: "ayuda", icon: HelpCircle, accent: "from-slate-600 to-slate-500",
-                          label: "Centro de Ayuda",
-                          desc: "FAQs, tutoriales y soporte técnico especializado en español.",
-                          cta: "Obtener Soporte"
-                        },
-                      ].map(({ id, icon: Icon, accent, label, desc, cta }) => (
-                        <button
-                          key={id}
-                          onClick={() => { setActiveTab(id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                          className="group text-left bg-slate-950/60 border border-slate-800 hover:border-slate-600 rounded-2xl p-6 transition-all cursor-pointer flex flex-col gap-4 hover:bg-slate-800/60"
-                        >
-                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center shadow-lg`}>
-                            <Icon className="w-5 h-5 text-white" />
+                        { icon: Briefcase, eyebrow: "Software de Gestión", desc: "Un software completo para gestionar todos sus negocios. Sistemas integrados de gestión necesarios para las distintas áreas de su empresa en una única plataforma.", tab: "crm_inteligente" },
+                        { icon: Code2, eyebrow: "E-Commerce", desc: "Desarrollo de sitios web con tecnología omnicanal. Digitalización de su negocio con herramientas analíticas, marketing y diseño.", tab: "desarrollo_web" },
+                        { icon: BarChart2, eyebrow: "Business Intelligence", desc: "Seguimiento de las principales métricas de negocio y gestión. Puesta en marcha de campañas efectivas orientadas a objetivos planteados.", tab: "reportes" },
+                      ].map(({ icon: Icon, eyebrow, desc, tab }) => (
+                        <div key={eyebrow} className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col gap-3 shadow-xs hover:shadow-md transition-all">
+                          <div className="w-9 h-9 rounded-xl bg-[#1A3461]/10 flex items-center justify-center">
+                            <Icon className="w-4 h-4 text-[#1A3461]" />
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-sm text-white tracking-tight">{label}</h3>
-                            <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">{desc}</p>
-                          </div>
-                          <span className="text-[11px] font-bold text-slate-400 group-hover:text-emerald-400 flex items-center gap-1 transition-colors">
-                            {cta} <ArrowRight className="w-3.5 h-3.5" />
-                          </span>
-                        </button>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#1A3461]">{eyebrow}</span>
+                          <p className="text-[11px] text-slate-500 leading-relaxed flex-1">{desc}</p>
+                          <button
+                            onClick={() => { setActiveTab(tab); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                            className="text-xs font-bold text-[#1A3461] hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer mt-1"
+                          >
+                            Ver más <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-[#1A3461] text-white rounded-2xl p-8 flex flex-col gap-3">
+                        <span className="text-emerald-400 font-mono text-[10px] uppercase tracking-widest font-bold">Nube Viaweb</span>
+                        <h3 className="text-lg font-display font-black tracking-tight">¿Está preparada tu empresa para migrar a la nube?</h3>
+                        <p className="text-slate-300 text-xs leading-relaxed">Hacé tu Autodiagnóstico Cloud sin costo.</p>
+                        <button
+                          onClick={() => {
+                            setDemoForm({ ...demoForm, mensaje: "Hola, quiero hacer el Autodiagnóstico Cloud sin costo para evaluar la migración de mi empresa a la nube." });
+                            setActiveTab("contacto");
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="mt-2 self-start bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-2"
+                        >
+                          Hacelo ahora <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="bg-slate-900 text-white rounded-2xl p-8 flex flex-col gap-3 relative overflow-hidden">
+                        <span className="absolute top-4 right-4 bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-2 py-0.5 rounded-full font-mono uppercase tracking-wider">Próximamente</span>
+                        <span className="text-emerald-400 font-mono text-[10px] uppercase tracking-widest font-bold">Ciclo de charlas</span>
+                        <h3 className="text-lg font-display font-black tracking-tight">La transformación digital en tiempos de incertidumbre</h3>
+                        <p className="text-slate-300 text-xs leading-relaxed">Ciclo de charlas sobre transformación digital para empresas.</p>
+                        <button
+                          onClick={() => { setActiveTab("academia"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          className="mt-2 self-start bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-2"
+                        >
+                          Ingresá ahora <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Big List section: Lealtad, Versatilidad, Personalidad */}
+                <section className="bg-slate-900 text-white py-16 px-6">
+                  <div className="max-w-4xl mx-auto">
+                    <div className="text-center mb-12">
+                      <h2 className="text-2xl font-display font-black tracking-tight">Nuestra Cultura Corporativa</h2>
+                      <p className="text-slate-400 text-xs mt-2">Los tres pilares esenciales bajo los cuales construimos código y forjamos relaciones duraderas.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl">
+                        <div className="w-10 h-10 bg-blue-900/40 text-blue-400 rounded-full flex items-center justify-center mb-4">
+                          <CheckCircle2 className="w-5 h-5" />
+                        </div>
+                        <h4 className="font-bold text-sm tracking-tight text-white mb-2">Lealtad</h4>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                          Comprometidos a largo plazo con el éxito de nuestros clientes. Tu infraestructura tecnológica y tus secretos comerciales están seguros con nosotros.
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl">
+                        <div className="w-10 h-10 bg-indigo-900/40 text-indigo-400 rounded-full flex items-center justify-center mb-4">
+                          <Compass className="w-5 h-5" />
+                        </div>
+                        <h4 className="font-bold text-sm tracking-tight text-white mb-2">Versatilidad</h4>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                          Ofrecemos servicios sumamente personalizables. Nos adaptamos a diferentes industrias, escalas de facturación y requerimientos reglamentarios AFIP.
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl">
+                        <div className="w-10 h-10 bg-emerald-900/40 text-emerald-400 rounded-full flex items-center justify-center mb-4">
+                          <Users className="w-5 h-5" />
+                        </div>
+                        <h4 className="font-bold text-sm tracking-tight text-white mb-2">Personalidad</h4>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                          No somos un robot empaquetador. Nos encanta sentarnos a tomar mate o coordinar videollamadas, prestando atención humana y detallista a cada lead.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </section>
