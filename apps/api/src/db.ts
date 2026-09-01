@@ -31,3 +31,23 @@ try {
 }
 
 export { pgPool };
+
+/**
+ * Ejecuta una consulta SQL en la base de datos Neon / PostgreSQL.
+ */
+export const query = async (text: string, params?: any[]) => {
+  return await pgPool.query(text, params);
+};
+
+/**
+ * Verifica la salud de la conexión a la base de datos.
+ */
+export const checkDbConnection = async (): Promise<boolean> => {
+  try {
+    const res = await pgPool.query("SELECT NOW()");
+    return res && res.rows && res.rows.length > 0;
+  } catch (error) {
+    console.warn("[Database] Comprobacion de salud fallida:", error);
+    return false;
+  }
+};

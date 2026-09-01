@@ -361,3 +361,54 @@ export async function sendContactFormEmail({
     return false;
   }
 }
+
+/**
+ * Verifica si la conexión SMTP es válida.
+ */
+export async function verifySmtpConnection(): Promise<boolean> {
+  const transport = createMailTransport();
+  if (!transport) return false;
+  try {
+    await transport.verify();
+    return true;
+  } catch (error) {
+    console.warn("[Mailer] Error verificando conexion SMTP:", error);
+    return false;
+  }
+}
+
+/**
+ * Helper para envio generico de correo transaccional
+ */
+export async function sendTransactionalEmail({
+  to,
+  subject,
+  html,
+  text,
+  fromName,
+}: {
+  to: string | string[];
+  subject: string;
+  html: string;
+  text?: string;
+  fromName?: string;
+}): Promise<{ success: boolean; messageId?: string }> {
+  const transport = createMailTransport();
+  const creds = loadSmtpCredentials();
+  if (!transport || !creds.user) {
+    throw new Error("Servicio SMTP no configurado.");
+  }
+
+  const fromAddress = creds.user;
+  const sender = fromName ? `"${fromName}" <${fromAddress}>` : fromAddress;
+
+  const info = await transport.sendMail({
+    from: sender,
+    to: Array.isArray(to) ? to.join(", ") : to,
+    subject,
+    text: text || "Por favor, habilita HTML para ver este correo.",
+    html,
+  });
+
+  return { success: true, messageId: info.messageId };
+}

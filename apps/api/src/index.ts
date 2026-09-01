@@ -14,7 +14,9 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import webpush from "web-push";
 import { loadSmtpCredentials, generateCompleteClientumSitemap } from "@clientum/types";
-import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, sendContactFormEmail, createMailTransport } from "./mailer.js";
+import { sendPasswordResetEmail, sendPasswordResetSuccessEmail, sendWelcomeEmail, sendLoginNotificationEmail, sendContactFormEmail, createMailTransport, verifySmtpConnection } from "./mailer.js";
+import { checkDbConnection } from "./db.js";
+import { sendWhatsAppMessage } from "./whatsapp.js";
 import "express-session";
 
 dotenv.config();
@@ -274,6 +276,201 @@ function requireCrmToken(req: AuthRequest, res: AuthResponse, next: AuthNext) {
   }
   next();
 }
+
+// ============================================================================
+// HEALTHCHECK & SYSTEM STATUS
+// ============================================================================
+app.get("/api/health", async (_req: AuthRequest, res: AuthResponse) => {
+  const [dbStatus, mailerStatus] = await Promise.all([
+    checkDbConnection().catch(() => false),
+    verifySmtpConnection().catch(() => false),
+  ]);
+
+  const allHealthy = dbStatus && mailerStatus;
+  const statusCode = allHealthy ? 200 : 200; // Return 200 with details for robust health monitoring
+
+  res.status(statusCode).json({
+    status: allHealthy ? "ok" : "degraded",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+    version: "1.0.0",
+    dependencies: {
+      database: dbStatus ? "connected" : "disconnected",
+      smtp_mailer: mailerStatus ? "connected" : "disconnected",
+      gemini_ai: process.env.GEMINI_API_KEY ? "configured" : "missing_key",
+      whatsapp_meta: process.env.META_WA_ACCESS_TOKEN ? "configured" : "unconfigured",
+    },
+  });
+});
+
+// ============================================================================
+// PROXY SEGURO PARA GOOGLE GEMINI AI
+// ============================================================================
+app.post("/api/ai/generate", async (req: AuthRequest, res: AuthResponse) => {
+  try {
+    const { prompt, model = "gemini-2.5-flash", systemInstruction } = req.body || {};
+
+    if (!prompt || typeof prompt !== "string") {
+      return res.status(400).json({ error: "Falta el parámetro requerido: prompt" });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({
+        error: "GEMINI_API_KEY no está configurada en las variables de entorno.",
+      });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    const requestConfig: any = {};
+    if (systemInstruction) {
+      requestConfig.systemInstruction = systemInstruction;
+    }
+
+    const response = await ai.models.generateContent({
+      model: model || "gemini-2.5-flash",
+      contents: prompt,
+      config: requestConfig,
+    });
+
+    return res.json({
+      success: true,
+      text: response.text,
+      model_used: model,
+    });
+  } catch (error: any) {
+    console.error("[AI Proxy] Error generando contenido con Gemini:", error);
+    return res.status(500).json({
+      error: "Fallo al orquestar la solicitud con IA",
+      details: error?.message || "Error desconocido",
+    });
+  }
+});
+
+// ============================================================================
+// WEBHOOKS DE META WHATSAPP CLOUD API
+// ============================================================================
+const verifyMetaSignature = (req: AuthRequest): boolean => {
+  const appSecret = process.env.META_WA_APP_SECRET;
+  const signatureHeader = req.header("x-hub-signature-256");
+  const rawBody: Buffer | undefined = (req as any).rawBody;
+
+  if (!appSecret) {
+    // Si no está configurado el secret en dev, omitimos la validación estricta
+    if (process.env.NODE_ENV === "development") return true;
+    return false;
+  }
+  if (!signatureHeader || !rawBody) {
+    return false;
+  }
+
+  try {
+    const expectedHash = crypto
+      .createHmac("sha256", appSecret)
+      .update(rawBody)
+      .digest("hex");
+    const expectedSignature = `sha256=${expectedHash}`;
+
+    const receivedBuffer = Buffer.from(signatureHeader);
+    const expectedBuffer = Buffer.from(expectedSignature);
+
+    if (receivedBuffer.length !== expectedBuffer.length) return false;
+    return crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
+  } catch {
+    return false;
+  }
+};
+
+// Verificación inicial del Webhook (GET)
+app.get("/api/whatsapp/webhook", (req: AuthRequest, res: AuthResponse) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  const verifyToken = process.env.META_WA_VERIFY_TOKEN || "clientum_webhook_secret_2026";
+
+  if (mode && token) {
+    if (mode === "subscribe" && token === verifyToken) {
+      console.log("[WhatsApp Webhook] Verificado exitosamente por Meta.");
+      return res.status(200).send(challenge);
+    } else {
+      console.error("[WhatsApp Webhook] Token de verificación incorrecto.");
+      return res.sendStatus(403);
+    }
+  }
+  return res.sendStatus(400);
+});
+
+// Recepción de mensajes y eventos de WhatsApp (POST)
+app.post("/api/whatsapp/webhook", (req: AuthRequest, res: AuthResponse) => {
+  if (!verifyMetaSignature(req)) {
+    console.error("[WhatsApp Webhook] Firma HMAC inválida — request rechazado.");
+    return res.sendStatus(401);
+  }
+
+  const body = req.body;
+  // Responder inmediatamente con 200 OK a Meta
+  res.sendStatus(200);
+
+  if (body?.object === "whatsapp_business_account") {
+    body.entry?.forEach((entry: any) => {
+      entry.changes?.forEach((change: any) => {
+        const message = change.value?.messages?.[0];
+        const contact = change.value?.contacts?.[0];
+
+        if (message && message.type === "text") {
+          const senderPhone = message.from;
+          const senderName = contact?.profile?.name || "Prospecto";
+          const messageText = message.text?.body;
+
+          console.log(`[WhatsApp Inbound] De: ${senderName} (${senderPhone}) | Texto: "${messageText}"`);
+
+          // Procesar asíncronamente con IA
+          setImmediate(async () => {
+            try {
+              const apiKey = process.env.GEMINI_API_KEY;
+              if (apiKey && messageText) {
+                const ai = new GoogleGenAI({ apiKey });
+                const aiResp = await ai.models.generateContent({
+                  model: "gemini-2.5-flash",
+                  contents: `Mensaje de prospecto: "${messageText}". Responde cordialmente como asesor de ClientumOS ayudando con CRM, automatización e IA para su negocio de forma concisa.`,
+                  config: {
+                    systemInstruction: `Eres el asesor comercial inteligente de ClientumOS (Agencia de Automatización, CRM e Inteligencia Artificial para PyMEs de Latinoamérica).
+Tu objetivo es responder amablemente, entender las necesidades del negocio y ofrecer una demo o cotización.
+Sé conciso, profesional y persuasivo. Máximo 2 párrafos cortos.`,
+                  },
+                });
+
+                const replyText = aiResp.text || "¡Hola! Gracias por comunicarte con Clientum. Un asesor te responderá a la brevedad.";
+                console.log(`[WhatsApp Outbound AI] Enviando respuesta a ${senderPhone}...`);
+                await sendWhatsAppMessage(senderPhone, replyText).catch((e) => {
+                  console.warn("[WhatsApp Outbound AI] Error enviando mensaje:", e.message);
+                });
+              }
+            } catch (err: any) {
+              console.error("[WhatsApp Webhook] Error en procesamiento con IA:", err.message);
+            }
+          });
+        }
+      });
+    });
+  }
+});
+
+// Envío directo manual de mensajes de WhatsApp
+app.post("/api/whatsapp/send", requireAuth, async (req: AuthRequest, res: AuthResponse) => {
+  try {
+    const { to, message } = req.body || {};
+    if (!to || !message) {
+      return res.status(400).json({ error: "Parámetros 'to' y 'message' son requeridos." });
+    }
+
+    const result = await sendWhatsAppMessage(to, message);
+    return res.json({ success: true, result });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || "Fallo al enviar mensaje por WhatsApp" });
+  }
+});
 
 app.post("/api/auth/register", async (req: AuthRequest, res: AuthResponse) => {
   try {
