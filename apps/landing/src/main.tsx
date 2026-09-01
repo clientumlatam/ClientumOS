@@ -4,6 +4,14 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 import { LanguageProvider } from '@clientum/ui';
+import { registerServiceWorker } from './services/pushNotificationService';
+
+// Initialize Service Worker for background caching & push notifications
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    registerServiceWorker();
+  });
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -14,3 +22,4 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>,
 );
+

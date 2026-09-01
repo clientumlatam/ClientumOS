@@ -8625,6 +8625,42 @@ app.post("/api/push/send-test", async (req: AuthRequest, res: AuthResponse) => {
   }
 });
 
+// 5b. Broadcast Push Notification to all subscribed devices
+app.post("/api/push/broadcast", async (req: AuthRequest, res: AuthResponse) => {
+  try {
+    const { title, body, icon, badge, url, tag, actions } = req.body || {};
+    if (!title || !body) {
+      return res.status(400).json({ error: "Título y cuerpo son requeridos para broadcast." });
+    }
+
+    const payload = {
+      title,
+      body,
+      icon: icon || "/favicon.svg",
+      badge: badge || "/favicon.svg",
+      tag: tag || "broadcast-" + Date.now(),
+      data: {
+        url: url || "/?tab=whatsapp",
+        timestamp: Date.now()
+      },
+      actions: actions || [
+        { action: "open_chat", title: "💬 Abrir" },
+        { action: "dismiss", title: "Cerrar" }
+      ]
+    };
+
+    const result = await broadcastPushNotification(payload);
+    return res.json({
+      ok: true,
+      message: `Notificación transmitida a ${result.totalSubscribers} dispositivo(s).`,
+      ...result
+    });
+  } catch (err: any) {
+    console.error("[WebPush Broadcast Error]:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // 6. Inbound WhatsApp Lead Webhook (dispatches push to all sellers/agents)
 app.post("/api/push/whatsapp-inbound", async (req: AuthRequest, res: AuthResponse) => {
   try {

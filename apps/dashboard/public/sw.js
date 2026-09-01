@@ -45,8 +45,7 @@ self.addEventListener('push', (event) => {
   };
   let actions = [
     { action: 'open_chat', title: '💬 Abrir Chat' },
-    { action: 'view_lead', title: '👤 Ver Prospecto' },
-    { action: 'quick_reply', title: '⚡ Responder' },
+    { action: 'quick_reply', title: '⚡ Respuesta Rápida' },
   ];
 
   if (event.data) {
@@ -107,8 +106,8 @@ self.addEventListener('push', (event) => {
     image: image,
     tag: tag,
     renotify: true,
-    requireInteraction: true, // Mantiene la notificación visible en pantalla para atención de leads
-    vibrate: [300, 100, 300, 100, 300],
+    requireInteraction: true, // Keep on screen so user doesn't miss urgent leads
+    vibrate: [250, 100, 250, 100, 250],
     data: customData,
     actions: actions,
   };
@@ -116,45 +115,10 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(title, notificationOptions)
       .then(() => {
-        // Actualizar el App Badge en el sistema operativo / navegador si está soportado
+        // Update App Badge if supported
         if ('setAppBadge' in self.navigator) {
           return self.navigator.setAppBadge(1).catch(() => {});
         }
-      })
-  );
-});
-
-// ── 3b. Push Subscription Change / VAPID Key Rotation Event ────────────────
-self.addEventListener('pushsubscriptionchange', (event) => {
-  event.waitUntil(
-    fetch('/api/push/vapid-public-key')
-      .then((res) => res.json())
-      .then((resData) => {
-        if (!resData.publicKey) throw new Error('No public VAPID key');
-        const padding = '='.repeat((4 - (resData.publicKey.length % 4)) % 4);
-        const base64 = (resData.publicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
-        const rawData = atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-          outputArray[i] = rawData.charCodeAt(i);
-        }
-        return self.registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: outputArray,
-        });
-      })
-      .then((newSubscription) => {
-        return fetch('/api/push/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subscription: newSubscription.toJSON(),
-            agentName: 'Asesor Renovado Auto-VAPID'
-          }),
-        });
-      })
-      .catch((err) => {
-        console.warn('[ServiceWorker] Falló la renovación automática de suscripción push:', err);
       })
   );
 });
@@ -165,16 +129,8 @@ self.addEventListener('notificationclick', (event) => {
 
   const customData = event.notification.data || {};
   let targetUrl = customData.url || '/?tab=whatsapp';
-
-  if (event.action === 'view_lead') {
-    if (customData.leadId) {
-      targetUrl = `/?tab=opportunities&leadId=${encodeURIComponent(customData.leadId)}`;
-    } else if (customData.phoneNumber) {
-      targetUrl = `/?tab=contacts&search=${encodeURIComponent(customData.phoneNumber)}`;
-    } else {
-      targetUrl = '/?tab=opportunities';
-    }
-  } else if (customData.chatId) {
+  
+  if (customData.chatId) {
     targetUrl += (targetUrl.includes('?') ? '&' : '?') + `chatId=${encodeURIComponent(customData.chatId)}`;
   }
 
@@ -189,7 +145,7 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If a tab is already open, focus it and notify client via postMessage
+      // If a tab is already open, focus it and notify client
       for (const client of clientList) {
         if ('focus' in client) {
           client.postMessage({
@@ -201,7 +157,7 @@ self.addEventListener('notificationclick', (event) => {
           return client.focus();
         }
       }
-      // If app was completely closed, open a new window directly with deep link
+      // If app was completely closed, open a new window directly
       if (self.clients.openWindow) {
         return self.clients.openWindow(targetUrl);
       }
@@ -213,7 +169,6 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-whatsapp-messages') {
     event.waitUntil(
-      // Broadcast to any active client that sync triggered
       self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
         clients.forEach((client) => {
           client.postMessage({
