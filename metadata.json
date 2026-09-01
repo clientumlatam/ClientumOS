@@ -1,6 +1,6 @@
 {
-  "name": "Clientum · Sitio Público & CRM Dashboard",
-  "description": "Plataforma dual Clientum: Sitio web público corporativo con catálogo de servicios, cotizador y academia LMS, junto con la aplicación privada de Dashboard CRM, ERP, facturación AFIP, chatbot WhatsApp IA, integración con Gmail & Google Workspace y autenticación con roles.",
+  "name": "Remix ClientumOS",
+  "description": "Professional LATAM client dashboard combined with AI Marketing Expert tools for campaign strategy, ad copy generation, SEO audit, and ROI analytics powered by Gemini.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
