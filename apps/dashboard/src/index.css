@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@source "../src";
+@source "../../landing/src";
+@source "../../../packages";
 
 /* ==========================================================================
    CLIENTUM CRM THEME ENGINE
