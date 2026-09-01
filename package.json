@@ -7,16 +7,18 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm --prefix apps/landing run dev",
-    "build": "turbo build",
+    "dev": "tsx apps/api/src/index.ts",
+    "build": "node build.mjs",
+    "start": "node dist/server.cjs",
     "dev:landing": "npm --prefix apps/landing run dev",
     "dev:dashboard": "npm --prefix apps/dashboard run dev",
     "dev:api": "npm --prefix apps/api run dev"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
+    "tsx": "^4.7.2",
     "turbo": "^2.0.0",
-    "typescript": "^5.4.5",
-    "tsx": "^4.7.2"
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",

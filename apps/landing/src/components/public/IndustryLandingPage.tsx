@@ -33,8 +33,8 @@ import {
   getIndustryBySlug,
   getAllIndustrySummaries,
   getRelatedIndustries,
-  IndustryLandingData
 } from '@clientum/ui';
+import type { IndustryLandingData } from '@clientum/ui';
 import { updateDocumentSeo, buildIndustryStructuredData } from '@clientum/ui';
 import { useLanguage } from '@clientum/ui';
 import { IndustryWhatsAppSimulator } from './IndustryWhatsAppSimulator';

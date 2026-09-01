@@ -74,9 +74,9 @@ npm run dev
 ### 4. Scripts principales disponibles en el Monorepo
 | Comando | Descripción |
 | :--- | :--- |
-| `npm run dev` | Inicia el servidor de desarrollo principal en `http://localhost:3000`. |
-| `npm run build` | Compila todos los paquetes y aplicaciones mediante Turborepo. |
-| `npm run dev:landing` | Ejecuta exclusivamente la aplicación frontend `landing`. |
+| `npm run dev` | Inicia el servidor de desarrollo Full-Stack (Vite + Express) en `http://localhost:3000`. |
+| `npm run build` | Orquesta la compilación de Turborepo y empaqueta el backend y frontend en un directorio `dist/` unificado mediante ESBuild. |
+| `npm run start` | Inicia el servidor de producción compilado (`dist/server.cjs`). |
 | `npm run dev:dashboard`| Ejecuta exclusivamente la aplicación `dashboard`. |
 | `npm run dev:api` | Inicia la API backend en TypeScript. |
 

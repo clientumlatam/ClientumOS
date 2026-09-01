@@ -45,11 +45,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/apps/landing/dist ./dist
-RUN npm install -g serve
-
+COPY --from=builder /app/dist ./dist
+RUN npm install express pg dotenv bcryptjs cors express-session connect-pg-simple nodemailer web-push @google/genai
 EXPOSE 3000
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD [\"node\", \"dist/server.cjs\"]
 ```
 
 ---
@@ -73,7 +72,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/crm.tuempresa.com/privkey.pem;
 
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:3000; # Apunta al servidor Express (server.cjs)
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';

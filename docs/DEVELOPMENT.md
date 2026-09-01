@@ -135,6 +135,7 @@ Antes de enviar un Pull Request o desplegar, ejecutar:
 ```bash
 # Validar compilación global
 npm run build
+# Compila el frontend y empaqueta el backend en ./dist/server.cjs
 ```
 
 ---

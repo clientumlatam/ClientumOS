@@ -29,7 +29,7 @@ export {
   getAllIndustrySummaries,
   getRelatedIndustries,
   getAllIndustrySlugs,
-  IndustryLandingData
+  type IndustryLandingData
 } from '@clientum/types';
 
 export * from './utils/seoHelpers';

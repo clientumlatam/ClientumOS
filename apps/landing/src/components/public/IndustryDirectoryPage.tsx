@@ -49,10 +49,10 @@ export function IndustryDirectoryPage() {
   }, [isPortuguese]);
 
   const filteredSummaries = allSummaries.filter(ind => {
-    const q = searchTerm.toLowerCase();
-    const name = (isPortuguese ? ind.namePt : ind.name).toLowerCase();
-    const tagline = (isPortuguese ? ind.taglinePt : ind.tagline).toLowerCase();
-    const keywords = ind.primaryKeywords.join(' ').toLowerCase();
+    const q = (searchTerm || '').toLowerCase();
+    const name = (isPortuguese ? ind.namePt : ind.name)?.toLowerCase() || '';
+    const tagline = (isPortuguese ? ind.taglinePt : ind.tagline)?.toLowerCase() || '';
+    const keywords = (ind.primaryKeywords || []).join(' ').toLowerCase();
     return name.includes(q) || tagline.includes(q) || keywords.includes(q);
   });
 

@@ -98,6 +98,11 @@ export const getAllIndustrySummaries = () => {
     slug: i.slug,
     name: i.name,
     namePt: i.namePt,
+    badge: i.badge,
+    badgePt: i.badgePt,
+    tagline: i.hero.subheadline,
+    taglinePt: i.hero.subheadlinePt,
+    primaryKeywords: i.seo.keywords.split(',').map(k => k.trim()),
     icon: Sprout // Default for mock
   }));
 };

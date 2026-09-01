@@ -405,6 +405,9 @@ app.post("/api/auth/login", async (req: AuthRequest, res: AuthResponse) => {
 
 
 app.post("/api/auth/demo-login", async (req: AuthRequest, res: AuthResponse) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ error: "Demo login is disabled in production." });
+  }
   try {
     const role = (req.body?.role === "user" || req.body?.role === "editor") ? req.body.role : "admin";
     const username = req.body?.username || (role === "admin" ? "admin" : "demo");
@@ -8494,6 +8497,7 @@ async function setupServer() {
   if (!isProd) {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
+      root: path.join(process.cwd(), "apps/landing"),
       server: {
         middlewareMode: true,
       },
