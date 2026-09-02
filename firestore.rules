@@ -1,34 +1,49 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Deny-all por defecto. Nada en el código de la plataforma (Clientum
-    // dashboard) usa el SDK de Firestore actualmente — toda la data real
-    // vive en Postgres/Neon via server.ts. Estas reglas solo protegen el
-    // proyecto Firebase mientras no esté en uso.
-    //
-    // Si en el futuro se implementa "Firestore Cloud Sync" (mencionado en
-    // AiHubTab.tsx pero sin código detrás todavía), reemplazar este bloque
-    // por reglas por colección atadas a auth real, por ejemplo:
-    //
-    // match /companies/{companyId} {
-    //   allow read, write: if request.auth != null
-    //     && request.auth.uid == resource.data.ownerId;
-    // }
-    //
-    // El backend (server.ts) usando el Admin SDK de Firebase (si se llega
-    // a usar) ignora estas reglas por completo, así que escribir desde el
-    // server nunca se ve afectado por este cambio.
+    // Global Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Primitives
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isResourceOwner() { return isSignedIn() && resource.data.userId == request.auth.uid; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // User Profile
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
     }
     
+    // CRM Contacts
     match /contacts/{contactId} {
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isResourceOwner();
     }
     
+    // CRM Opportunities
+    match /opportunities/{opportunityId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isResourceOwner();
+    }
+    
+    // CRM Companies
+    match /companies/{companyId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isResourceOwner();
+    }
+    
+    // CRM Tasks
+    match /tasks/{taskId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isResourceOwner();
+    }
+    
+    // Geolocated Prospects
     match /geolocated_prospects/{prospectId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isSignedIn();
     }
   }
 }

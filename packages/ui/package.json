@@ -12,6 +12,7 @@
     "tailwind-merge": "^2.3.0",
     "framer-motion": "^11.0.0",
     "motion": "^12.0.0",
+    "firebase": "^10.11.1",
     "@clientum/types": "*"
   },
   "devDependencies": {

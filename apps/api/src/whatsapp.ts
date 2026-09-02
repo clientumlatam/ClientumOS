@@ -53,8 +53,24 @@ export const sendWhatsAppMessage = async (
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Error devuelto por Meta WhatsApp API:", data);
-      throw new Error(data.error?.message || "Error desconocido al enviar mensaje por WhatsApp");
+      const error = data.error || {};
+      const errorCode = error.code;
+      const errorSubcode = error.error_subcode;
+      const errorMessage = error.message || "Error desconocido";
+
+      console.error(`[WhatsApp API Error] Status: ${response.status}, Code: ${errorCode}, Subcode: ${errorSubcode}, Message: ${errorMessage}`);
+
+      if (errorCode === 190 || errorCode === 102) {
+        throw new Error(`Token de acceso de Meta expirado o inválido (Error ${errorCode}). Por favor, renová el META_WA_ACCESS_TOKEN.`);
+      } else if (errorCode === 131030) {
+        throw new Error("El número de destino no es válido o no está registrado en WhatsApp.");
+      } else if (errorCode === 131026) {
+        throw new Error("El mensaje no pudo enviarse. Asegurate de que la ventana de 24 horas esté abierta o usá un template.");
+      } else if (errorCode === 33) {
+        throw new Error("Número de teléfono de envío no habilitado o ID incorrecto.");
+      }
+
+      throw new Error(`Meta WhatsApp API Error: ${errorMessage} (Code: ${errorCode})`);
     }
 
     console.log(`[WhatsApp] Mensaje enviado exitosamente a (${recipientPhone}):`, data.messages?.[0]?.id);

@@ -51,19 +51,51 @@
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
-        "googleId": { "type": "string" },
         "name": { "type": "string" },
         "email": { "type": "string" },
         "phone": { "type": "string" },
         "company": { "type": "string" },
-        "jobTitle": { "type": "string" },
-        "notes": { "type": "string" },
-        "photoURL": { "type": "string" },
-        "lastSynced": { "type": "string" },
-        "createdAt": { "type": "string" },
-        "updatedAt": { "type": "string" }
+        "jobTitle": { "type": "string" }
       },
       "required": ["id", "userId", "name"]
+    },
+    "Opportunity": {
+      "title": "Opportunity",
+      "description": "CRM sales opportunity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "amount": { "type": "number" },
+        "stage": { "type": "string" },
+        "probability": { "type": "number" }
+      },
+      "required": ["id", "userId", "name", "amount", "stage"]
+    },
+    "Company": {
+      "title": "Company",
+      "description": "CRM company information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "domain": { "type": "string" }
+      },
+      "required": ["id", "userId", "name"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "CRM task",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "userId", "title"]
     }
   },
   "firestore": {
@@ -78,6 +110,18 @@
     "/contacts/{contactId}": {
       "schema": { "$ref": "#/entities/Contact" },
       "description": "CRM contacts collection"
+    },
+    "/opportunities/{opportunityId}": {
+      "schema": { "$ref": "#/entities/Opportunity" },
+      "description": "CRM opportunities collection"
+    },
+    "/companies/{companyId}": {
+      "schema": { "$ref": "#/entities/Company" },
+      "description": "CRM companies collection"
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "CRM tasks collection"
     }
   }
 }

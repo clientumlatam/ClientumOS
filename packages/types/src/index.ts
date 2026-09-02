@@ -105,6 +105,7 @@ export interface User {
 
 export interface Company {
   id: string;
+  userId?: string;
   name: string;
   domain?: string;
   industry?: string;
@@ -124,6 +125,7 @@ export interface Company {
 
 export interface Person {
   id: string;
+  userId?: string;
   firstName: string;
   lastName: string;
   email?: string;
@@ -146,6 +148,7 @@ export interface Person {
 
 export interface Opportunity {
   id: string;
+  userId?: string;
   name: string;
   amount: number;
   currency?: string;
@@ -169,6 +172,7 @@ export interface Opportunity {
 
 export interface Task {
   id: string;
+  userId?: string;
   title: string;
   description?: string;
   dueDate?: string;

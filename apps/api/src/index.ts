@@ -5,7 +5,7 @@ import express, {
 } from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI, SchemaType as Type } from "@google/generative-ai";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
@@ -321,22 +321,21 @@ app.post("/api/ai/generate", async (req: AuthRequest, res: AuthResponse) => {
       });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new (GoogleGenerativeAI as any)(apiKey);
     const requestConfig: any = {};
     if (systemInstruction) {
       requestConfig.systemInstruction = systemInstruction;
     }
 
-    const response = await ai.models.generateContent({
-      model: model || "gemini-2.5-flash",
-      contents: prompt,
-      config: requestConfig,
-    });
+    const response = await ai.getGenerativeModel({
+      model: model || "gemini-1.5-flash",
+      systemInstruction: systemInstruction,
+    }).generateContent(prompt);
 
     return res.json({
       success: true,
-      text: response.text,
-      model_used: model,
+      text: response.response.text(),
+      model_used: model || "gemini-1.5-flash",
     });
   } catch (error: any) {
     console.error("[AI Proxy] Error generando contenido con Gemini:", error);
@@ -430,18 +429,16 @@ app.post("/api/whatsapp/webhook", (req: AuthRequest, res: AuthResponse) => {
             try {
               const apiKey = process.env.GEMINI_API_KEY;
               if (apiKey && messageText) {
-                const ai = new GoogleGenAI({ apiKey });
-                const aiResp = await ai.models.generateContent({
-                  model: "gemini-2.5-flash",
-                  contents: `Mensaje de prospecto: "${messageText}". Responde cordialmente como asesor de ClientumOS ayudando con CRM, automatización e IA para su negocio de forma concisa.`,
-                  config: {
-                    systemInstruction: `Eres el asesor comercial inteligente de ClientumOS (Agencia de Automatización, CRM e Inteligencia Artificial para PyMEs de Latinoamérica).
+                const ai = new (GoogleGenerativeAI as any)(apiKey);
+                const model = ai.getGenerativeModel({
+                  model: "gemini-1.5-flash",
+                  systemInstruction: `Eres el asesor comercial inteligente de ClientumOS (Agencia de Automatización, CRM e Inteligencia Artificial para PyMEs de Latinoamérica).
 Tu objetivo es responder amablemente, entender las necesidades del negocio y ofrecer una demo o cotización.
 Sé conciso, profesional y persuasivo. Máximo 2 párrafos cortos.`,
-                  },
                 });
+                const aiResp = await model.generateContent(`Mensaje de prospecto: "${messageText}". Responde cordialmente como asesor de ClientumOS ayudando con CRM, automatización e IA para su negocio de forma concisa.`);
 
-                const replyText = aiResp.text || "¡Hola! Gracias por comunicarte con Clientum. Un asesor te responderá a la brevedad.";
+                const replyText = aiResp.response.text() || "¡Hola! Gracias por comunicarte con Clientum. Un asesor te responderá a la brevedad.";
                 console.log(`[WhatsApp Outbound AI] Enviando respuesta a ${senderPhone}...`);
                 await sendWhatsAppMessage(senderPhone, replyText).catch((e) => {
                   console.warn("[WhatsApp Outbound AI] Error enviando mensaje:", e.message);
@@ -695,7 +692,7 @@ app.post("/api/gmail/ai-assist", async (req, res) => {
       return res.status(500).json({ error: "Gemini API key is not configured." });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new (GoogleGenerativeAI as any)(apiKey);
     let prompt = "";
 
     if (action === "summarize") {
@@ -708,12 +705,10 @@ app.post("/api/gmail/ai-assist", async (req, res) => {
       prompt = `Help with this email task:\n${emailContent}`;
     }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
+    const modelObj = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const response = await modelObj.generateContent(prompt);
 
-    const outputText = response.text || "";
+    const outputText = response.response.text() || "";
     res.json({ result: outputText });
   } catch (error: any) {
     console.error("Gmail AI Assist Error:", error);
@@ -1766,8 +1761,8 @@ app.get("/api/auth/me", async (req, res) => {
 });
 
 // Lazy client initialization for safety
-let aiClient: GoogleGenAI | null = null;
-function getAI(): GoogleGenAI | null {
+let aiClient: any | null = null;
+function getAI(): any {
   const key = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_V2 || process.env.GOOGLE_API_KEY;
   if (!key || key === "MY_GEMINI_API_KEY" || key.trim() === "") {
     console.warn("[Gemini API] La clave de IA no está configurada o es de prueba. Las solicitudes usarán el fallback local de alta calidad.");
@@ -1783,7 +1778,7 @@ function getAI(): GoogleGenAI | null {
     delete process.env.GOOGLE_API_KEY;
   }
   if (!aiClient) {
-    aiClient = new GoogleGenAI({
+    aiClient = new (GoogleGenerativeAI as any)({
       apiKey: key,
       httpOptions: {
         headers: {
@@ -1797,7 +1792,7 @@ function getAI(): GoogleGenAI | null {
 
 // Helper function to handle transient model errors, high demand (503), rate limits (429), and automatic fallback
 async function generateContentWithFallback(
-  ai: GoogleGenAI | null,
+  ai: any,
   options: {
     contents: any;
     config?: any;
@@ -5547,7 +5542,7 @@ app.post("/api/agent/ai/gemini", requireAuth, async (req, res) => {
     if (!ai) {
       const keyV2 = process.env.GEMINI_API_KEY_V2;
       if (!keyV2) return res.status(503).json({ error: "GEMINI_API_KEY no configurada" });
-      ai = new GoogleGenAI({ apiKey: keyV2, httpOptions: { headers: { "User-Agent": "aistudio-build" } } });
+      ai = new (GoogleGenerativeAI as any)({ apiKey: keyV2, httpOptions: { headers: { "User-Agent": "aistudio-build" } } });
     }
 
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
@@ -5589,7 +5584,7 @@ app.post("/api/ai/chat", async (req, res) => {
       return res.status(400).json({ error: "messages array requerido" });
     }
 
-    // Convert messages for GoogleGenAI SDK format: [{ role: 'user' | 'model', parts: [{ text: string }] }]
+    // Convert messages for GoogleGenerativeAI SDK format: [{ role: 'user' | 'model', parts: [{ text: string }] }]
     const contents = messages.map((m: any) => ({
       role: m.role === 'model' ? 'model' : 'user',
       parts: [{ text: m.content || "" }]
@@ -5600,7 +5595,7 @@ app.post("/api/ai/chat", async (req, res) => {
     if (!ai) {
       const keyV2 = process.env.GEMINI_API_KEY_V2;
       if (keyV2) {
-        ai = new GoogleGenAI({ apiKey: keyV2, httpOptions: { headers: { "User-Agent": "aistudio-build" } } });
+        ai = new (GoogleGenerativeAI as any)({ apiKey: keyV2, httpOptions: { headers: { "User-Agent": "aistudio-build" } } });
       }
     }
 

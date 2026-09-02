@@ -17,32 +17,8 @@ import {
   User as FirebaseUser,
   Auth,
 } from 'firebase/auth';
-
-// User live Firebase configuration with fallback support
-const getEnv = (name: string) => {
-  if (typeof process !== 'undefined' && process.env && process.env[name]) {
-    return process.env[name];
-  }
-  // @ts-ignore
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[name]) {
-    // @ts-ignore
-    return import.meta.env[name];
-  }
-  return undefined;
-};
-
-export const firebaseConfig = {
-  apiKey: getEnv('VITE_FIREBASE_API_KEY') || "AIzaSyCKnJbv8XaLFICeTSyol10_sTNOGQakxyQ",
-  authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN') || "applied-nation-gmvz5.firebaseapp.com",
-  projectId: getEnv('VITE_FIREBASE_PROJECT_ID') || "applied-nation-gmvz5",
-  storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET') || "applied-nation-gmvz5.firebasestorage.app",
-  messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID') || "316487915762",
-  appId: getEnv('VITE_FIREBASE_APP_ID') || "1:316487915762:web:c5bd11dc90da8a04ac986b",
-  measurementId: getEnv('VITE_FIREBASE_MEASUREMENT_ID') || ""
-};
-
-// Check if live custom credentials are provided
-export const isLiveFirebaseConfigured = true;
+import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import firebaseConfig from '../../../../firebase-applet-config.json';
 
 // Safe cross-platform singleton initialization
 let app: FirebaseApp;
@@ -55,8 +31,70 @@ try {
 
 export { app };
 export const auth: Auth = getAuth(app);
-import { getFirestore } from 'firebase/firestore';
-export const db = getFirestore(app);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Check if live custom credentials are provided
+export const isLiveFirebaseConfigured = true;
+
+// Validate Connection to Firestore
+export async function testFirebaseConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+    console.log("Firebase connection established successfully.");
+  } catch (error) {
+    if(error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration or internet connection.");
+    }
+  }
+}
+
+// Error Handler for Firestore
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 // Safe Analytics initialization
 export let analytics: Analytics | null = null;

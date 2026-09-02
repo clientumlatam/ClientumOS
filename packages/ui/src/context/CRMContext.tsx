@@ -1,6 +1,20 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
 import {
+  collection,
+  onSnapshot,
+  doc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
+  Timestamp,
+} from 'firebase/firestore';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import {
   Activity,
   ActiveTab,
   Company,
@@ -21,6 +35,12 @@ import {
   InvoiceStatus,
   InventoryItem,
   ExpenseItem,
+  auth,
+  db,
+  handleFirestoreError,
+  OperationType,
+  signInWithGoogle,
+  firebaseSignOut,
 } from '@clientum/types';
 import { getTranslation, TranslationKey } from '../i18n/translations';
 import {
@@ -344,17 +364,72 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [newRecordType, setNewRecordType] = useState<'opportunity' | 'company' | 'person' | 'task'>('opportunity');
   const [isAICopilotModalOpen, setIsAICopilotModalOpen] = useState(false);
   const [aiCopilotContext, setAICopilotContext] = useState<{ type?: string; id?: string; name?: string; initialPrompt?: string } | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    try {
-      return sessionStorage.getItem('clientum_is_authenticated') === 'true' || 
-             localStorage.getItem('clientum_is_authenticated') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [gmailAccessToken, setGmailAccessToken] = useState<string | null>(null);
+  const [isFirebaseLoading, setIsFirebaseLoading] = useState(true);
+
+  // Sync Firebase Auth State
+  useEffect(() => {
+    // Test connection on mount
+    import('@clientum/types').then(({ testFirebaseConnection }) => {
+      testFirebaseConnection();
+    }).catch(console.error);
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+        setCurrentUser({
+          id: user.uid,
+          name: user.displayName || user.email?.split('@')[0] || 'User',
+          email: user.email || '',
+          avatar: user.photoURL || undefined,
+          role: 'Commercial Specialist',
+        });
+      } else {
+        setIsAuthenticated(false);
+        // Don't reset currentUser immediately to avoid UI jumps, but update state
+      }
+      setIsFirebaseLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Sync Data from Firestore when Authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser?.id) return;
+
+    const collections = [
+      { name: 'opportunities', setter: setOpportunities, initial: INITIAL_OPPORTUNITIES },
+      { name: 'companies', setter: setCompanies, initial: INITIAL_COMPANIES },
+      { name: 'contacts', setter: setPeople, initial: INITIAL_PEOPLE },
+      { name: 'tasks', setter: setTasks, initial: INITIAL_TASKS },
+    ];
+
+    const unsubscribes = collections.map((col) => {
+      const q = query(
+        collection(db, col.name),
+        where('userId', '==', currentUser.id)
+      );
+
+      return onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) {
+          // If Firestore is empty for this user, we can keep the local demo data or set empty
+          // For now, let's just set empty if they are authenticated but have no data
+          // col.setter(col.initial);
+          col.setter([]);
+        } else {
+          const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as any[];
+          col.setter(data);
+        }
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, col.name);
+      });
+    });
+
+    return () => unsubscribes.forEach(unsub => unsub());
+  }, [isAuthenticated, currentUser?.id]);
 
   const updateCurrentUser = (updates: Partial<User>) => {
     setCurrentUser((prev) => {
@@ -364,63 +439,37 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const login = (email: string, _pass?: string) => {
-    const found = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    const userToSet = found || {
-      id: 'usr-' + Date.now(),
-      name: email.split('@')[0].replace('.', ' ').replace(/^./, (c) => c.toUpperCase()),
-      email,
-      role: 'Commercial Specialist',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    };
-    setCurrentUser(userToSet);
-    
+  const login = async (email: string, _pass?: string) => {
     try {
-      localStorage.setItem('clientum_crm_current_user', JSON.stringify(userToSet));
-      sessionStorage.setItem('clientum_is_authenticated', 'true');
-      localStorage.setItem('clientum_is_authenticated', 'true');
+      const result = await signInWithGoogle();
+      if (result.success && result.user) {
+        setIsAuthenticated(true);
+        setIsAuthModalOpen(false);
+        showToast('¡Bienvenido a Clientum OS!', 'success');
+        if (result.token) setGmailAccessToken(result.token);
+      } else if (result.error) {
+        showToast(result.error, 'error');
+      }
     } catch (error) {
-      console.warn('Storage access denied', error);
+      showToast('Error al iniciar sesión', 'error');
     }
-
-    setIsAuthenticated(true);
-    setActiveTab('opportunities');
-    setIsAuthModalOpen(false);
   };
 
   const register = (name: string, email: string, _pass?: string, _company?: string) => {
-    const newUser: User = {
-      id: 'usr-' + Date.now(),
-      name,
-      email,
-      role: 'Workspace Admin',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    };
-    setCurrentUser(newUser);
-
-    try {
-      localStorage.setItem('clientum_crm_current_user', JSON.stringify(newUser));
-      sessionStorage.setItem('clientum_is_authenticated', 'true');
-      localStorage.setItem('clientum_is_authenticated', 'true');
-    } catch (error) {
-      console.warn('Storage access denied', error);
-    }
-
-    setIsAuthenticated(true);
-    setActiveTab('opportunities');
-    setIsAuthModalOpen(false);
+    // For now, let's redirect to Google Login as it's the primary verified method
+    login(email);
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setGmailAccessToken(null);
+  const logout = async () => {
     try {
-      sessionStorage.removeItem('clientum_is_authenticated');
-      localStorage.removeItem('clientum_is_authenticated');
+      await firebaseSignOut();
+      setIsAuthenticated(false);
+      setGmailAccessToken(null);
+      setIsAuthModalOpen(false);
+      showToast('Sesión cerrada', 'info');
     } catch (error) {
-      console.warn('Storage access denied', error);
+      showToast('Error al cerrar sesión', 'error');
     }
-    setIsAuthModalOpen(false);
   };
 
   const resetPassword = (email: string) => {
@@ -536,14 +585,25 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // --- CRUD OPPORTUNITY ---
   const addOpportunity = (data: Omit<Opportunity, 'id' | 'createdAt' | 'updatedAt'>): Opportunity => {
     const stageConf = STAGES.find((s) => s.id === data.stage);
+    const id = 'opp-' + Date.now();
     const newOpp: Opportunity = {
       ...data,
-      id: 'opp-' + Date.now(),
+      id,
       probability: data.probability ?? stageConf?.probability ?? 50,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      userId: currentUser.id,
     };
-    setOpportunities((prev) => [newOpp, ...prev]);
+
+    if (isAuthenticated) {
+      setDoc(doc(db, 'opportunities', id), {
+        ...newOpp,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }).catch(err => handleFirestoreError(err, OperationType.WRITE, `opportunities/${id}`));
+    } else {
+      setOpportunities((prev) => [newOpp, ...prev]);
+    }
 
     // Add activity
     addActivity({
@@ -561,21 +621,33 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateOpportunity = (id: string, updates: Partial<Opportunity>) => {
-    setOpportunities((prev) =>
-      prev.map((opp) => {
-        if (opp.id === id) {
-          const updated = { ...opp, ...updates, updatedAt: new Date().toISOString() };
-          return updated;
-        }
-        return opp;
-      })
-    );
+    if (isAuthenticated) {
+      updateDoc(doc(db, 'opportunities', id), {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      }).catch(err => handleFirestoreError(err, OperationType.UPDATE, `opportunities/${id}`));
+    } else {
+      setOpportunities((prev) =>
+        prev.map((opp) => {
+          if (opp.id === id) {
+            const updated = { ...opp, ...updates, updatedAt: new Date().toISOString() };
+            return updated;
+          }
+          return opp;
+        })
+      );
+    }
     showToast('Opportunity updated', 'info');
   };
 
   const deleteOpportunity = (id: string) => {
     const opp = opportunities.find((o) => o.id === id);
-    setOpportunities((prev) => prev.filter((o) => o.id !== id));
+    if (isAuthenticated) {
+      deleteDoc(doc(db, 'opportunities', id))
+        .catch(err => handleFirestoreError(err, OperationType.DELETE, `opportunities/${id}`));
+    } else {
+      setOpportunities((prev) => prev.filter((o) => o.id !== id));
+    }
     if (selectedRecord?.id === id) {
       setSelectedRecord(null);
     }
@@ -624,24 +696,44 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // --- CRUD COMPANY ---
   const addCompany = (data: Omit<Company, 'id' | 'createdAt'>): Company => {
+    const id = 'c-' + Date.now();
     const newComp: Company = {
       ...data,
-      id: 'c-' + Date.now(),
+      id,
       createdAt: new Date().toISOString(),
+      userId: currentUser.id,
     };
-    setCompanies((prev) => [newComp, ...prev]);
+    if (isAuthenticated) {
+      setDoc(doc(db, 'companies', id), {
+        ...newComp,
+        createdAt: serverTimestamp(),
+      }).catch(err => handleFirestoreError(err, OperationType.WRITE, `companies/${id}`));
+    } else {
+      setCompanies((prev) => [newComp, ...prev]);
+    }
     showToast(`Company "${newComp.name}" added`, 'success');
     return newComp;
   };
 
   const updateCompany = (id: string, updates: Partial<Company>) => {
-    setCompanies((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    if (isAuthenticated) {
+      updateDoc(doc(db, 'companies', id), {
+        ...updates,
+      }).catch(err => handleFirestoreError(err, OperationType.UPDATE, `companies/${id}`));
+    } else {
+      setCompanies((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    }
     showToast('Company updated', 'info');
   };
 
   const deleteCompany = (id: string) => {
     const comp = companies.find((c) => c.id === id);
-    setCompanies((prev) => prev.filter((c) => c.id !== id));
+    if (isAuthenticated) {
+      deleteDoc(doc(db, 'companies', id))
+        .catch(err => handleFirestoreError(err, OperationType.DELETE, `companies/${id}`));
+    } else {
+      setCompanies((prev) => prev.filter((c) => c.id !== id));
+    }
     if (selectedRecord?.id === id) {
       setSelectedRecord(null);
     }
@@ -650,25 +742,45 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // --- CRUD PERSON ---
   const addPerson = (data: Omit<Person, 'id' | 'createdAt' | 'lastActivityDate'>): Person => {
+    const id = 'p-' + Date.now();
     const newPerson: Person = {
       ...data,
-      id: 'p-' + Date.now(),
+      id,
       createdAt: new Date().toISOString(),
       lastActivityDate: new Date().toISOString(),
+      userId: currentUser.id,
     };
-    setPeople((prev) => [newPerson, ...prev]);
+    if (isAuthenticated) {
+      setDoc(doc(db, 'contacts', id), {
+        ...newPerson,
+        createdAt: serverTimestamp(),
+      }).catch(err => handleFirestoreError(err, OperationType.WRITE, `contacts/${id}`));
+    } else {
+      setPeople((prev) => [newPerson, ...prev]);
+    }
     showToast(`Contact "${newPerson.firstName} ${newPerson.lastName}" created`, 'success');
     return newPerson;
   };
 
   const updatePerson = (id: string, updates: Partial<Person>) => {
-    setPeople((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
+    if (isAuthenticated) {
+      updateDoc(doc(db, 'contacts', id), {
+        ...updates,
+      }).catch(err => handleFirestoreError(err, OperationType.UPDATE, `contacts/${id}`));
+    } else {
+      setPeople((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
+    }
     showToast('Contact updated', 'info');
   };
 
   const deletePerson = (id: string) => {
     const person = people.find((p) => p.id === id);
-    setPeople((prev) => prev.filter((p) => p.id !== id));
+    if (isAuthenticated) {
+      deleteDoc(doc(db, 'contacts', id))
+        .catch(err => handleFirestoreError(err, OperationType.DELETE, `contacts/${id}`));
+    } else {
+      setPeople((prev) => prev.filter((p) => p.id !== id));
+    }
     if (selectedRecord?.id === id) {
       setSelectedRecord(null);
     }
@@ -677,23 +789,43 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // --- CRUD TASK ---
   const addTask = (data: Omit<Task, 'id' | 'createdAt'>): Task => {
+    const id = 't-' + Date.now();
     const newTask: Task = {
       ...data,
-      id: 't-' + Date.now(),
+      id,
       createdAt: new Date().toISOString(),
+      userId: currentUser.id,
     };
-    setTasks((prev) => [newTask, ...prev]);
+    if (isAuthenticated) {
+      setDoc(doc(db, 'tasks', id), {
+        ...newTask,
+        createdAt: serverTimestamp(),
+      }).catch(err => handleFirestoreError(err, OperationType.WRITE, `tasks/${id}`));
+    } else {
+      setTasks((prev) => [newTask, ...prev]);
+    }
     showToast(`Task created: "${newTask.title}"`, 'success');
     return newTask;
   };
 
   const updateTask = (id: string, updates: Partial<Task>) => {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+    if (isAuthenticated) {
+      updateDoc(doc(db, 'tasks', id), {
+        ...updates,
+      }).catch(err => handleFirestoreError(err, OperationType.UPDATE, `tasks/${id}`));
+    } else {
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+    }
     showToast('Task updated', 'info');
   };
 
   const deleteTask = (id: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+    if (isAuthenticated) {
+      deleteDoc(doc(db, 'tasks', id))
+        .catch(err => handleFirestoreError(err, OperationType.DELETE, `tasks/${id}`));
+    } else {
+      setTasks((prev) => prev.filter((t) => t.id !== id));
+    }
     if (selectedRecord?.id === id) {
       setSelectedRecord(null);
     }
@@ -701,20 +833,32 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleTaskStatus = (id: string) => {
-    setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id === id) {
-          const isDone = t.status === 'Completed';
-          const newStatus = isDone ? 'Todo' : 'Completed';
-          return {
-            ...t,
-            status: newStatus,
-            completedAt: isDone ? undefined : new Date().toISOString(),
-          };
-        }
-        return t;
-      })
-    );
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    
+    const isDone = task.status === 'Completed';
+    const newStatus = isDone ? 'Todo' : 'Completed';
+    const updates = {
+      status: newStatus,
+      completedAt: isDone ? undefined : new Date().toISOString(),
+    };
+
+    if (isAuthenticated) {
+      updateDoc(doc(db, 'tasks', id), updates)
+        .catch(err => handleFirestoreError(err, OperationType.UPDATE, `tasks/${id}`));
+    } else {
+      setTasks((prev) =>
+        prev.map((t) => {
+          if (t.id === id) {
+            return {
+              ...t,
+              ...updates,
+            };
+          }
+          return t;
+        })
+      );
+    }
   };
 
   // --- CRUD ACTIVITY ---
