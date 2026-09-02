@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"codium.workspace.maxAmountOfFilesToProcessLimit": 10000000
+	}
+}
