@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "webmail-clientum",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    {
+      "pattern": "webmail.clientum.com.ar",
+      "custom_domain": true
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "webmail-db",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+    }
+  ],
+  "send_email": [
+    {
+      "name": "SEND_EMAIL",
+      "destination_address": "matias@clientum.com.ar",
+      "allowed_destination_addresses": ["matias@clientum.com.ar", "jonathan@clientum.com.ar", "clientumlatam@gmail.com"]
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "production",
+    "APP_TITLE": "Clientum Webmail"
+  }
+}

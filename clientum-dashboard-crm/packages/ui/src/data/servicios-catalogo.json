@@ -1,0 +1,39 @@
+{
+  "servicios": [
+    {
+      "id": "srv-1",
+      "title": "Consultoría & CRM Omnicanal",
+      "cat": "Consultoría",
+      "price": "150000",
+      "description": "Pipeline Drag & Drop a medida, historial unificado de chats y llamadas."
+    },
+    {
+      "id": "srv-2",
+      "title": "Agentes & Chatbot WhatsApp IA",
+      "cat": "Inteligencia Artificial",
+      "price": "180000",
+      "description": "Atención 24/7, entrenamiento de catálogo y FAQs."
+    },
+    {
+      "id": "srv-3",
+      "title": "Integraciones AFIP & ERP",
+      "cat": "Integraciones",
+      "price": "120000",
+      "description": "Conexión directa con AFIP para emisión de facturas electrónicas."
+    }
+  ],
+  "planes": [
+    {
+      "id": "pln-1",
+      "name": "Plan Inicial",
+      "price": "20",
+      "description": "Para emprendedores y pequeños negocios."
+    },
+    {
+      "id": "pln-2",
+      "name": "Plan PyME",
+      "price": "45",
+      "description": "Para comercios con ventas activas."
+    }
+  ]
+}

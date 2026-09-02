@@ -1,0 +1,16 @@
+[
+  {
+    "id": "crs-1",
+    "title": "Marketing Digital para Principiantes",
+    "category": "Marketing",
+    "price": "0",
+    "description": "Curso introductorio y 100% práctico pensado para dueños de PyME."
+  },
+  {
+    "id": "crs-2",
+    "title": "CRM Clientum: Ventas y Pipeline",
+    "category": "Ventas",
+    "price": "0",
+    "description": "Dominá el ciclo de vida del cliente."
+  }
+]

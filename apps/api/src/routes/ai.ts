@@ -44,9 +44,6 @@ async function callGeminiAPI(
   }
 ): Promise<GenerateResponse> {
   try {
-    // Import dynamically to avoid issues if package not installed
-    const { GoogleGenerativeAI } = await import('@google/genai');
-
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return {
@@ -56,7 +53,6 @@ async function callGeminiAPI(
       };
     }
 
-    const client = new GoogleGenerativeAI({ apiKey });
     const model = options?.model || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
     const systemPrompt = options?.systemPrompt || '';

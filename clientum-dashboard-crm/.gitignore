@@ -1,0 +1,16 @@
+# Node & Build Outputs
+node_modules/
+dist/
+build/
+.turbo/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.production
+
+# System Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

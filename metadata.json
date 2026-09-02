@@ -1,6 +1,6 @@
 {
   "name": "Remix ClientumOS",
-  "description": "Professional LATAM client dashboard combined with AI Marketing Expert tools for campaign strategy, ad copy generation, SEO audit, and ROI analytics powered by Gemini.",
+  "description": "Sitio Público y Portal Web de Marketing de ClientumOS para PyMEs y empresas de LATAM con soluciones de automatización, IA, integración AFIP y catálogo de servicios.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

@@ -1,0 +1,14 @@
+# Node / Cloudflare build artifacts
+node_modules/
+.wrangler/
+dist/
+.turbo/
+
+# Secrets and local environment
+.dev.vars
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
