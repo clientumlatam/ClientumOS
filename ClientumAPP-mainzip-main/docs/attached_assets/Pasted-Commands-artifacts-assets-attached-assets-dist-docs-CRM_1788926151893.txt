@@ -1,0 +1,164 @@
+Commands
+artifacts
+assets
+attached_assets
+dist
+docs
+CRM_ROADMAP.md
+INTEGRATIONS.md
+PUBLIC_SITE_ROADMAP.md
+migrations
+public
+screenshots
+scripts
+server
+src
+firebase-applet-config.json
+firestore.rules
+index.html
+MENU_ITEMS.md
+metadata.json
+NAVIGATION.md
+replit.md
+SECRETS.md
+server.ts
+skills-lock.json
+tsconfig.json
+vite.config.ts
+zipFile.zip
+Packager files
+bun.lock
+package-lock.json
+package.json
+Replit Cloud
+Publish a sharable version of your App, unaffected by changes made in the project editorManage custom domains for your published projectView app health, request metrics, and alerts for your published app.Find, fix, and monitor SEO and growth opportunitiesStores structured data such as user profiles, game scores, and product catalogs.Let users log in to your App using a prebuilt login pageFind, fix, and monitor security vulnerabilities and privacy issuesHost and save uploads like images, videos, and documents
+Setup
+Connect to Replit-native and external servicesVersion control for your AppStore sensitive information (like API keys) securely in your AppManage skills that extend Agent capabilities
+Git
+Version control for your App
+Remote Updates
+subrepl-395ptwtw/master•upstreamlast fetched just now
+Commit
+There are no changes to commit.
+<!doctype html>
+<html lang="es-AR" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="application-name" content="ClientumCRM" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>ClientumCRM | CRM comercial para PyMEs en Argentina</title>
+    <meta
+      name="description"
+      content="ClientumCRM es el CRM comercial para PyMEs argentinas: WhatsApp, pipeline Kanban, seguimiento de clientes y facturación AFIP en un solo lugar."
+    />
+    <meta property="og:locale" content="es_AR" />
+    <meta
+      property="og:title"
+      content="ClientumCRM | CRM comercial para PyMEs en Argentina"
+    />
+    <meta
+      property="og:description"
+      content="Organizá tus ventas, conversaciones de WhatsApp y clientes en un solo CRM pensado para PyMEs argentinas."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="ClientumCRM | CRM comercial para PyMEs en Argentina"
+    />
+    <meta
+      name="twitter:description"
+      content="El CRM comercial argentino para convertir conversaciones en ventas."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body
+    class="h-full antialiased bg-white text-slate-900 selection:bg-blue-600 selection:text-white font-['Plus_Jakarta_Sans',sans-serif]"
+  >
+    <div id="root" class="h-full flex flex-col"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+y con clerk?
+Free
+5 minutes ago
+Configuring Clerk integration
+Configuring Clerk integration
+
+Sí, se puede usar Clerk, pero antes de recomendar cambiarlo voy a revisar cómo está configurado Clerk en Replit y comparar el esfuerzo con Firebase, que ya está integrado en tu aplicación.
+2 actions
+
+Con Clerk también se puede, pero sería cambiar el sistema de autenticación actual. Voy a comprobar primero si tu workspace ya tiene Clerk configurado y qué ofrece exactamente en Replit, para no recomendarte una migración innecesaria.
+5 actions
+
+Sí, puedes usar Clerk. De hecho, Clerk también ofrece email, contraseña y Google, y actualmente está disponible gratuitamente en Replit.
+
+Pero hay una diferencia importante:
+Firebase
+
+Ya está conectado en tu aplicación.
+
+    Es la opción más rápida.
+    Solo falta activar Email/Password y Google.
+    No hay que cambiar el código principal.
+
+Clerk
+
+También funciona, pero actualmente no está configurado en tu proyecto.
+
+Cambiar a Clerk implicaría:
+
+    Reemplazar el login actual.
+    Cambiar la validación del backend.
+    Conectar nuevamente los workspaces.
+    Migrar o volver a registrar los usuarios existentes de Firebase.
+    Eliminar parte del código actual de Firebase.
+
+Por eso, para tu caso recomiendo seguir con Firebase: es más rápido y ya está funcionando.
+
+Si prefieres Clerk porque quieres usar el sistema de autenticación administrado por Replit, también puedo migrarlo, pero es un cambio más grande.
+
+¿Qué prefieres?
+
+    Continuar con Firebase
+    Migrar a Clerk
+
+Worked for 29 seconds
+
+Migrar a Clerk
+Free
+3 minutes ago
+Considering migration options
+Considering migration options
+
+Perfecto. Voy a migrar la autenticación de Firebase a Clerk de forma controlada: primero prepararé Clerk y revisaré los puntos de integración actuales, después cambiaré login, registro, sesión y validación del backend, y finalmente verificaré que los workspaces sigan aislados por usuario. Los usuarios existentes de Firebase no se transfieren automáticamente; te indicaré ese impacto antes de cerrar.
+5 actions
+
+Clerk no está configurado todavía, así que voy a activar el Clerk administrado por Replit primero. Después instalaré sus dependencias y adaptaré el código actual; no voy a pedirte claves ni contraseñas.
+1 action
+
+La activación automática se detuvo por un problema del nombre del proyecto: Replit está intentando crear Clerk con el nombre de archivo ClientumAPP-main.zip, que Clerk rechaza por parecer una URL. No es un fallo del código. Voy a revisar si el flujo permite asignar un nombre válido como ClientumCRM y continuar sin pedirte credenciales.
+5 actions
+
+El sistema de Replit confirma que el problema se debe al nombre heredado del proyecto (ClientumAPP-main.zip). Voy a reintentar la provisión con un nombre válido para Clerk: ClientumCRM.
+2 actions
+
+La migración quedó bloqueada antes de tocar el código.
+
+Clerk intenta crear la aplicación con este nombre:
+ClientumAPP-main.zip
+
+Clerk rechaza ese nombre porque parece el nombre de un archivo o una URL.
+Qué debes hacer
+
+Renombra el proyecto de Replit a un nombre simple, por ejemplo:
+ClientumCRM
+
+No hace falta cambiar archivos ni código. Solo cambia el nombre del proyecto desde la configuración de Replit.

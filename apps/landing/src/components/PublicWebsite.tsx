@@ -96,6 +96,7 @@ import { MobileBottomNav } from "./public/MobileBottomNav";
 import { FloatingWhatsAppButton } from "./public/FloatingWhatsAppButton";
 import { PymeTeamsGallery } from "./public/PymeTeamsGallery";
 import { ClientumCrmLanding } from "./public/ClientumCrmLanding";
+import { ClientumLoginModal } from "./auth/ClientumLoginModal";
 import pymeTeamMeetingImg from "../assets/images/pyme_team_meeting_1787518635370.jpg";
 import pymeCommercialSalesImg from "../assets/images/pyme_commercial_sales_1787518652661.jpg";
 import pymeAgroLogisticsImg from "../assets/images/pyme_agro_logistics_1787518669322.jpg";
@@ -447,6 +448,7 @@ export default function PublicWebsite({
   // New CRO and Interactive Modals State
   const [isQuoteWizardOpen, setIsQuoteWizardOpen] = useState<boolean>(false);
   const [isExpressAuditOpen, setIsExpressAuditOpen] = useState<boolean>(false);
+  const [isClientumLoginModalOpen, setIsClientumLoginModalOpen] = useState<boolean>(false);
 
   // Interactive ROI Calculator state
   const [calcLeads, setCalcLeads] = useState<number>(150);
@@ -1453,43 +1455,11 @@ export default function PublicWebsite({
             <span>{isPortuguese ? "Cotar" : "Cotizar"}</span>
           </button>
 
-          {/* Standalone Demo CTA */}
+          {/* Dedicated Login / Registro Button opening the Login Modal */}
           <button
-            onClick={() => {
-              setActiveTab("contacto");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase px-3 py-2 rounded-xl tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border border-slate-300/80"
-          >
-            <span>Demo</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-slate-600" />
-          </button>
-
-          {/* CRM Suite Quick Action */}
-          <button
-            onClick={() => navigate('/crm')}
-            className="bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-xs uppercase px-3 py-2 rounded-xl tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border border-blue-200 shadow-sm"
-            title="Abrir Clientum CRM & ERP Suite"
-          >
-            <Briefcase className="w-3.5 h-3.5 text-blue-600" />
-            <span>CRM OS</span>
-          </button>
-
-          {/* Gmail Suite Quick Action */}
-          <button
-            onClick={() => navigate('/gmail')}
-            className="bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs uppercase px-3 py-2 rounded-xl tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border border-red-200 shadow-sm"
-            title="Abrir Clientum Gmail Suite"
-          >
-            <Mail className="w-3.5 h-3.5 text-red-600" />
-            <span>Gmail</span>
-          </button>
-
-          {/* Dedicated Login / Registro Button linking to CRM OS */}
-          <button
-            onClick={() => navigate('/crm')}
+            onClick={() => setIsClientumLoginModalOpen(true)}
             className="bg-gradient-to-r from-[#1A3461] to-[#0A2558] hover:from-[#234580] hover:to-[#0f3475] text-white font-extrabold text-xs uppercase px-4 py-2 rounded-xl tracking-wider transition-all flex items-center gap-2 shadow-md border border-blue-500/30 hover:scale-[1.02] cursor-pointer group"
-            title="Acceder a la Consola y Suite ClientumCRM"
+            title="Acceder a tu cuenta ClientumOS y Dashboard"
           >
             <LogIn className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
             <span>Login / Registro</span>
@@ -1598,24 +1568,13 @@ export default function PublicWebsite({
 
             <button
               onClick={() => {
-                navigate('/gmail');
+                setIsClientumLoginModalOpen(true);
                 setMobileMenuOpen(false);
               }}
-              className="mt-3 w-full bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-xs uppercase py-3 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 border border-red-200 shadow-sm cursor-pointer"
-            >
-              <Mail className="w-4 h-4 text-red-600" />
-              <span>Clientum Gmail Suite</span>
-            </button>
-
-            <button
-              onClick={() => {
-                navigate('/crm');
-                setMobileMenuOpen(false);
-              }}
-              className="mt-2 w-full bg-gradient-to-r from-[#1A3461] to-[#0A2558] text-white font-extrabold text-xs uppercase py-3 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 shadow-md border border-blue-500/30 cursor-pointer"
+              className="mt-3 w-full bg-gradient-to-r from-[#1A3461] to-[#0A2558] text-white font-extrabold text-xs uppercase py-3 rounded-xl tracking-wider text-center flex items-center justify-center gap-2 shadow-md border border-blue-500/30 cursor-pointer"
             >
               <LogIn className="w-4 h-4 text-emerald-400" />
-              <span>Login / Registro CRM OS</span>
+              <span>Login / Registro</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
             </button>
 
@@ -5054,7 +5013,7 @@ export default function PublicWebsite({
             {activeTab === "crm_inteligente" && (
               <ClientumCrmLanding 
                 onNavigateTab={(t) => { setActiveTab(t); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-                onOpenAuthModal={() => setIsAuthModalOpen(true)} 
+                onOpenAuthModal={() => setIsClientumLoginModalOpen(true)} 
               />
             )}
 
@@ -6368,6 +6327,12 @@ export default function PublicWebsite({
         isOpen={isExpressAuditOpen}
         onClose={() => setIsExpressAuditOpen(false)}
         onOpenWizard={() => setIsQuoteWizardOpen(true)}
+      />
+
+      {/* Clientum Login / Registro Modal with direct redirect to Dashboard */}
+      <ClientumLoginModal
+        isOpen={isClientumLoginModalOpen}
+        onClose={() => setIsClientumLoginModalOpen(false)}
       />
 
       {/* Live Social Proof Activity Ticker */}

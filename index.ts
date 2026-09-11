@@ -9,7 +9,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { app, initUsersTable, initChatbotLeadsTable, initSantiTables } from './server.js';
+import { app, initUsersTable, initChatbotLeadsTable, initSantiTables } from './apps/api/src/index.js';
 
 // Run DB setup sequentially — later tables may depend on earlier ones.
 await initUsersTable();

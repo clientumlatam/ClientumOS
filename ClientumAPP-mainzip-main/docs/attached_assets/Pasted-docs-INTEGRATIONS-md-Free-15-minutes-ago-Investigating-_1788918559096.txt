@@ -1,0 +1,177 @@
+docs/INTEGRATIONS.md
+Free
+15 minutes ago
+Investigating user request
+Investigating user request
+
+I’ll inspect docs/INTEGRATIONS.md and the surrounding integration setup to determine the intended change or current status.
+4 actions
+
+docs/INTEGRATIONS.md already exists and documents Gemini, WhatsApp, Firebase, Apify, Hunter.io, email SMTP providers, and Neon PostgreSQL.
+
+What would you like me to do with it?
+
+    Review for accuracy
+    Update it to match the current codebase
+    Translate or improve the Spanish documentation
+    Fix security issues, such as exposed credential examples
+    Add another integration
+
+Worked for 11 seconds
+Checkpoint made 14 minutes ago
+Attached Image
+
+?
+Free
+14 minutes ago
+
+Veo la captura del CRM y el archivo docs/INTEGRATIONS.md abierto en el proyecto. ¿Qué quieres que haga con esta referencia?
+
+    Ajustar la interfaz para que coincida con la captura
+    Actualizar la documentación de integraciones
+    Diagnosticar un problema visible en la captura
+    Hacer otra modificación específica
+
+Worked for 9 seconds
+Checkpoint made 14 minutes ago
+
+Diagnosticar un problema visible en la captura
+Free
+14 minutes ago
+Reviewing logs and code
+Reviewing logs and code
+
+Voy a comparar la captura con la aplicación que está corriendo y revisar los logs del navegador para aislar si el problema es de layout, datos o errores de frontend.
+4 actions
+
+La app no muestra un fallo de renderizado en la vista pública actual; el único error técnico registrado es una desconexión temporal del WebSocket de Vite. Ahora voy a ampliar la captura adjunta y revisar la ruta del CRM para identificar el problema visual concreto que aparece allí.
+25 actions
+
+El problema visible en la captura es el bloque “Atención prioritaria”: aparece como texto plano, sin tarjeta, separación ni jerarquía visual, y además queda por encima de “Resumen ejecutivo” aunque en el JSX está después del encabezado.
+Causa
+
+    ExecutiveDashboardView.tsx renderiza clases como:
+        crm-attention-panel
+        crm-attention-list
+        crm-attention-item
+        crm-stale-deals
+
+    Esas clases no tienen reglas CSS definidas en src/index.css, por lo que el navegador muestra el contenido prácticamente sin estilos.
+
+    En el modo claro, .crm-dashboard__content usa display: flex y ordena explícitamente otras secciones:
+        Encabezado: order: 1
+        KPIs: order: 2
+        Analíticas: order: 3
+        Pipeline: order: 4
+        Tablero: order: 5
+
+    Pero crm-attention-panel no tiene order, así que usa el valor predeterminado 0 y aparece antes del encabezado.
+
+Diagnóstico secundario
+
+La captura también tiene el navegador configurado al 60% de zoom, lo que hace que toda la interfaz se vea más pequeña, pero eso no explica el bloque sin formato.
+
+No hay un fallo actual de React ni un error de renderizado en los logs. El error de WebSocket de Vite fue temporal y no parece estar relacionado con este problema.
+Worked for 1 minute
+
+docs/INTEGRATIONS.md and the surrounding integration setup to determine the intended change or current status. 4 actions
+
+docs/INTEGRATIONS.md already exists and documents Gemini, WhatsApp, Firebase, Apify, Hunter.io, email SMTP providers, and Neon PostgreSQL.
+
+What would you like me to do with it?
+Review for accuracy
+Update it to match the current codebase
+Free
+12 minutes ago
+Planning documentation updates
+Planning documentation updates
+
+Voy a auditar la documentación contra las integraciones realmente presentes en el código, corregir afirmaciones desactualizadas y dejar ejemplos de configuración seguros, sin incluir secretos ni servicios que el proyecto no use.
+17 actions
+
+La auditoría muestra que el documento anterior describía servicios que no existen en el runtime actual y afirmaba cuotas gratuitas que pueden cambiar. Voy a reemplazarlo por una guía basada en el código: integraciones activas, integraciones parciales, variables correctas y límites de seguridad.
+Edited INTEGRATIONS.md
+
+La guía ya quedó alineada con el runtime actual. Haré una verificación final del diff y de los nombres de variables/endpoints para asegurar que la documentación no vuelva a prometer integraciones no conectadas.
+5 actions
+
+Encontré un desajuste adicional útil de documentar: Mercado Pago tiene tres campos en la interfaz, pero el checkout del servidor consume actualmente el ACCESS_TOKEN; los otros dos quedan como configuración reservada. También dejaré ese matiz explícito para evitar falsas expectativas.
+2 actions
+
+La documentación quedó lista y el chequeo de consistencia pasó. Antes de cerrar, voy a guardar como criterio del proyecto que el catálogo de módulos no debe confundirse con integraciones realmente conectadas.
+3 actions
+
+Haré la comprobación final del formato y del estado de los archivos modificados, y luego te resumo exactamente qué quedó actualizado.
+Viewed code changes and 5 other actions
+
+Actualicé docs/INTEGRATIONS.md para que coincida con el código actual.
+
+Cambios principales:
+
+    Reemplacé las afirmaciones de “Free Tier permanente” por referencias a documentación oficial y advertencias sobre cuotas variables.
+    Documenté las integraciones realmente activas:
+        Gemini
+        Firebase Auth/Analytics
+        PostgreSQL
+        SMTP/Nodemailer
+        Google Places
+        Mercado Pago
+        Webhook de WhatsApp
+    Aclaré qué servicios aparecen en el inventario, pero todavía no están conectados al runtime:
+        Apify, Hunter.io, Resend, SendGrid, Slack, Google Calendar, Cloudflare, AFIP, Shopify, n8n, Make, Zapier y PostHog.
+    Corregí los nombres de variables y endpoints.
+    Añadí los límites de seguridad entre credenciales de plataforma y credenciales por workspace.
+    Aclaré que Mercado Pago actualmente usa MERCADOPAGO_ACCESS_TOKEN; los otros campos están reservados.
+    Eliminé ejemplos de credenciales que podían parecer válidos.
+    Confirmé que Firebase no se usa como base de datos Firestore del CRM.
+
+Verificación realizada:
+
+    git diff --check pasó correctamente.
+    No se modificó código de producción.
+    Dejé propuesta una tarea adicional para alinear .env.example con esta documentación, ya que todavía contiene estados antiguos de algunas integraciones.
+
+También guardé como criterio del proyecto que la documentación debe distinguir entre proveedores conectados, parciales y solo catalogados.
+Worked for 2 minutes
+Attached Image
+
+agrega todo lo que falta en esta pantalla agregando todo los modulos super completo
+Free
+10 minutes ago
+
+Voy a revisar la pantalla actual de “Centro de funciones”, el catálogo de módulos y las rutas disponibles para convertirla en un hub completo, sin inventar módulos que el CRM no pueda abrir. Luego integraré las tarjetas, categorías, estados y accesos directos funcionales.
+Show less
+Searched src/components/features and 3 other files for "FeatureHubView|featureHub|MODULE_CREDENTIALS|PowerSuiteView|activeTab"
+Opened FeatureHubView.tsx
+Opened moduleCredentials.ts
+Opened types.ts
+Opened PowerSuiteView.tsx
+Evaluating implementation needs
+Evaluating implementation needs
+Searched src/components/power/PowerSuiteView.tsx for "const FEATURE_CARDS|featureCards|selectedModule === null|column"
+Searched src/components/layout/Sidebar.tsx for "const navigationSections|id: '.*'"
+Searched src/components/features/FeatureHubView.tsx and 1 other file for "setActiveTab\('([^']+)'\)|defaultModule=|activeTab === '"
+Opened FeatureHubView.tsx
+Opened CRMContext.tsx
+Planning Feature Expansion
+Planning Feature Expansion
+Read lines 220–310 of src/components/power/PowerSuiteView.tsx and 1 other action
+Identifying missing modules
+Identifying missing modules
+Considering user interface design
+Considering user interface design
+Opened ModuleCredentialsModal.tsx
+Implementing design changes
+Implementing design changes
+Searched src/components/features/FeatureHubView.tsx for "\b(Check|ChevronRight|KeyRound|CircleAlert|CreditCard|Database|Gauge|LockKeyhole|ShieldCheck|Sparkles|Zap)\b"
+Considering icon choices
+Considering icon choices
+
+La pantalla actual solo muestra seis acciones destacadas, aunque el CRM ya tiene muchas más rutas funcionales. Voy a conservar esas acciones rápidas y agregar un catálogo completo de módulos con búsqueda, filtros por categoría, estados de configuración, apertura directa y configuración segura de credenciales.
+18 actions
+
+El catálogo ya quedó integrado en la pantalla. Ahora voy a hacer una comprobación de tipos y corregir cualquier incompatibilidad con las rutas reales del CRM; después levantaré nuevamente el workflow para revisar que el preview cargue.
+17 actions
+Worked for 8 minutes
+
+You've reached your daily free quota limit. It will reset at 12:00 AM UTC.

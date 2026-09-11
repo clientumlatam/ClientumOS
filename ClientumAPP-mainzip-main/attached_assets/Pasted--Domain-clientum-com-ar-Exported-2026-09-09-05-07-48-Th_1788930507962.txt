@@ -1,0 +1,71 @@
+;;
+;; Domain:     clientum.com.ar.
+;; Exported:   2026-09-09 05:07:48
+;;
+;; This file is intended for use for informational and archival
+;; purposes ONLY and MUST be edited before use on a production
+;; DNS server.  In particular, you must:
+;;   -- update the SOA record with the correct authoritative name server
+;;   -- update the SOA record with the contact e-mail address information
+;;   -- update the NS record(s) with the authoritative name servers for this domain.
+;;
+;; For further information, please consult the BIND documentation
+;; located on the following website:
+;;
+;; http://www.isc.org/
+;;
+;; And RFC 1035:
+;;
+;; http://www.ietf.org/rfc/rfc1035.txt
+;;
+;; Please note that we do NOT offer technical support for any use
+;; of this zone data, the BIND name server, or any other third-party
+;; DNS software.
+;;
+;; Use at your own risk.
+;; SOA Record
+clientum.com.ar	3600	IN	SOA	braelyn.ns.cloudflare.com. dns.cloudflare.com. 2054059706 10000 2400 604800 3600
+
+;; NS Records
+clientum.com.ar.	86400	IN	NS	braelyn.ns.cloudflare.com.
+clientum.com.ar.	86400	IN	NS	bryce.ns.cloudflare.com.
+
+;; CNAME Records
+accounts.clientum.com.ar.	3600	IN	CNAME	accounts.clerk.services. ; cf_tags=cf-proxied:false
+aiclient.clientum.com.ar.	1	IN	CNAME	remix.replit.app. ; cf_tags=cf-proxied:true
+api.clientum.com.ar.	1	IN	CNAME	66225d57-bd5b-46f5-a312-753865fff6f4.cfargotunnel.com. ; cf_tags=cf-proxied:true
+app.clientum.com.ar.	1	IN	CNAME	clientumcrm.ai.studio. ; cf_tags=cf-proxied:false
+clerk.clientum.com.ar.	3600	IN	CNAME	frontend-api.clerk.services. ; cf_tags=cf-proxied:false
+clerk.crm.clientum.com.ar.	3600	IN	CNAME	frontend-api.clerk.services. ; cf_tags=cf-proxied:false
+clientum.com.ar.	1	IN	CNAME	3385e1289e038f19.vercel-dns-017.com. ; cf_tags=cf-proxied:false
+clk2._domainkey.clientum.com.ar.	3600	IN	CNAME	dkim2.gy4x9xfzqr0z.clerk.services. ; cf_tags=cf-proxied:false
+clk._domainkey.clientum.com.ar.	3600	IN	CNAME	dkim1.gy4x9xfzqr0z.clerk.services. ; cf_tags=cf-proxied:false
+clkmail2.clientum.com.ar.	1	IN	CNAME	mail2.gy4x9xfzqr0z.clerk.services. ; cf_tags=cf-proxied:true
+clkmail.clientum.com.ar.	3600	IN	CNAME	mail.gy4x9xfzqr0z.clerk.services. ; cf_tags=cf-proxied:false
+evo.clientum.com.ar.	1	IN	CNAME	66225d57-bd5b-46f5-a312-753865fff6f4.cfargotunnel.com. ; cf_tags=cf-proxied:true
+pdk1._domainkey.clkmail2.clientum.com.ar.	3600	IN	CNAME	dkim3.gy4x9xfzqr0z.clerk.services. ; cf_tags=cf-proxied:false
+pdk2._domainkey.clkmail2.clientum.com.ar.	3600	IN	CNAME	dkim4.gy4x9xfzqr0z.clerk.services. ; cf_tags=cf-proxied:false
+track.clkmail2.clientum.com.ar.	3600	IN	CNAME	track.clkmail2.clerk.services. ; cf_tags=cf-proxied:false
+www.clientum.com.ar.	1	IN	CNAME	3385e1289e038f19.vercel-dns-017.com. ; cf_tags=cf-proxied:false
+
+;; MX Records
+clientum.com.ar.	1	IN	MX	70 route3.mx.cloudflare.net.
+clientum.com.ar.	1	IN	MX	72 route2.mx.cloudflare.net.
+clientum.com.ar.	1	IN	MX	37 route1.mx.cloudflare.net.
+send.clientum.com.ar.	3600	IN	MX	10 feedback-smtp.sa-east-1.amazonses.com.
+
+;; SRV Records
+_autodiscover._tcp.clientum.com.ar.	1	IN	SRV	0 0 443 cpanelemaildiscovery.cpanel.net.
+
+;; TXT Records
+_caldavs._tcp.clientum.com.ar.	1	IN	TXT	"path=/"
+_caldav._tcp.clientum.com.ar.	1	IN	TXT	"path=/"
+_carddavs._tcp.clientum.com.ar.	1	IN	TXT	"path=/"
+_carddav._tcp.clientum.com.ar.	1	IN	TXT	"path=/"
+cf2024-1._domainkey.clientum.com.ar.	1	IN	TXT	"v=DKIM1; h=sha256; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiweykoi+o48IOGuP7GR3X0MOExCUDY/BCRHoWBnh3rChl7WhdyCxW3jgq1daEjPPqoi7sJvdg5hEQVsgVRQP4DcnQDVjGMbASQtrY4WmB1VebF+RPJB2ECPsEDTpeiI5ZyUAwJaVX7r6bznU67g7LvFq35yIo4sdlmtZGV+i0H4cpYH9+3JJ78k" "m4KXwaf9xUJCWF6nxeD+qG6Fyruw1Qlbds2r85U9dkNDVAS3gioCvELryh1TxKGiVTkg4wqHTyHfWsp7KD3WQHYJn0RyfJJu6YEmL77zonn7p2SRMvTMP3ZEXibnC9gz3nnhR6wcYL8Q7zXypKTMD58bTixDSJwIDAQAB"
+clientum.com.ar.	1	IN	TXT	"v=spf1 include:_spf.mx.cloudflare.net ~all"
+clientum.com.ar.	3600	IN	TXT	"google-site-verification=k3wi3Q8R1ksH4v_iPe_eDITXVmrPd0VIcr-K9RpGrok"
+_dmarc.clientum.com.ar.	1	IN	TXT	"v=DMARC1; p=none; rua=mailto:618127c491584b2ab89c5995f45d63d6@dmarc-reports.cloudflare.net"
+resend._domainkey.clientum.com.ar.	3600	IN	TXT	"p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDPuzExeOebyg5XvckmFGQtvad5fGMz0Xy7vcEnaJ5NcHvurnAF9d01kBewy1SEEuhjGA+1CxJ1isui5PR83s4QWCIERKnFqMOWryWh6kRP/UhiTR0ggTYK7ws2TmCPOQ1GjY/FH688f/+Z0wCxte1zw/LxkRqUbN5Dke12WTgeZQIDAQAB"
+send.clientum.com.ar.	3600	IN	TXT	"v=spf1 include:amazonses.com ~all"
+zmail._domainkey.clientum.com.ar.	600	IN	TXT	"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3Z9MeIqaNiCdQr5/b5VJ0uPnjjVt0qwQvkceibTyx/kTXH+JIjjWmpjb5mAcYR4G8P0otM2T7rkHz8Dbft0Qx9obqqIjURNNWztBtudqjF+3EFbcXMCwCNvKIL28sG4cxb81JM4MQlKfd1/W4UVDtkQZ1hEv/0c7D0HZ8wqMOEwIDAQAB"

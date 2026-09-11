@@ -8,6 +8,7 @@ import { IndustryLandingPage } from './components/public/IndustryLandingPage';
 import { IndustryDirectoryPage } from './components/public/IndustryDirectoryPage';
 import { PublicStorefrontPage } from './components/public/PublicStorefrontPage';
 import { ClientumCrmLanding } from './components/public/ClientumCrmLanding';
+import { UserDashboardApp } from './components/dashboard/UserDashboardApp';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { ThemeContextProvider } from './lib/ThemeContext';
 
@@ -23,6 +24,16 @@ export default function App() {
       <Routes>
         <Route path="/about" element={<div className="w-screen min-h-screen bg-slate-900 overflow-y-auto"><AboutUs /></div>} />
         
+        {/* User Dashboard matching specification and visual design */}
+        <Route path="/app" element={<UserDashboardApp />} />
+        <Route path="/app/*" element={<UserDashboardApp />} />
+        <Route path="/crm" element={<UserDashboardApp />} />
+        <Route path="/crm/*" element={<UserDashboardApp />} />
+        <Route path="/dashboard" element={<UserDashboardApp />} />
+        <Route path="/dashboard/*" element={<UserDashboardApp />} />
+        <Route path="/user-portal" element={<UserDashboardApp />} />
+        <Route path="/user-portal/*" element={<UserDashboardApp />} />
+
         {/* Industry Landing Pages & SEO Verticals */}
         <Route path="/clientum-crm" element={<ClientumCrmLanding />} />
         <Route path="/tienda/:slug" element={<PublicStorefrontPage />} />
